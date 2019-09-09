@@ -2,6 +2,7 @@
 
 #include "BallStrikingComponent.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Player/PlayerTargetActor.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
 
@@ -35,9 +36,16 @@ void UBallStrikingComponent::StopBallStriking()
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
+	APlayerTargetActor* PlayerTarget = (OwnerCharacter) ? OwnerCharacter->TargetActor : nullptr;
+
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
-	if (TennisBall)
+	if (PlayerTarget && TennisBall)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Hit a tennis ball!"));
+
+		FVector Trajectory = PlayerTarget->GetActorLocation() - TennisBall->GetActorLocation();
+		TennisBall->SetActorRotation(Trajectory.ToOrientationQuat());
+		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(FVector(1000.0f, 0.0f, 0.0f));
 	}
 }

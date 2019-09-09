@@ -88,7 +88,6 @@ protected:
 	UAbilitySystemComponent* AbilitySystemComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
-	//TArray<TSubclassOf<class UGameplayAbility>> AbilityClassesToGive;
 	TArray<FGrantedAbilityInfo> AbilitiesToGive;
 
 	FGameplayTagContainer TestTagContainer;
