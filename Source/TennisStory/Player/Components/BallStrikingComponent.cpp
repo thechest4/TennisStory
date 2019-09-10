@@ -46,6 +46,6 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		FVector Trajectory = PlayerTarget->GetActorLocation() - TennisBall->GetActorLocation();
 		TennisBall->SetActorRotation(Trajectory.GetSafeNormal2D().ToOrientationQuat());
-		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(FVector(1000.0f, 0.0f, 0.0f));
+		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(BallSpeed * BallTrajectory.GetSafeNormal());
 	}
 }

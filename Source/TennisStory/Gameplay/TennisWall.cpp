@@ -25,7 +25,7 @@ void ATennisWall::HandleWallMeshBeginOverlap(UPrimitiveComponent* OverlappedComp
 	if (TennisBall)
 	{
 		FVector NewTrajectory = TennisBall->GetActorForwardVector() * -1;
-		TennisBall->SetActorRotation(NewTrajectory.GetSafeNormal2D().ToOrientationQuat());
+		TennisBall->SetActorRotation(NewTrajectory.ToOrientationQuat());
 		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(FVector(BallReflectionSpeed, 0.0f, 0.0f));
 	}
 }
