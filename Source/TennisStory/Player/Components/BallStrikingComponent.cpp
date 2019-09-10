@@ -45,7 +45,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Hit a tennis ball!"));
 
 		FVector Trajectory = PlayerTarget->GetActorLocation() - TennisBall->GetActorLocation();
-		TennisBall->SetActorRotation(Trajectory.ToOrientationQuat());
+		TennisBall->SetActorRotation(Trajectory.GetSafeNormal2D().ToOrientationQuat());
 		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(FVector(1000.0f, 0.0f, 0.0f));
 	}
 }

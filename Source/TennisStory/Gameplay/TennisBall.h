@@ -14,14 +14,12 @@ class TENNISSTORY_API ATennisBall : public AActor
 public:	
 	ATennisBall();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class UProjectileMovementComponent* ProjMovementComp;
+
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjMovementComp;
-
-	friend class UBallStrikingComponent;
 };
