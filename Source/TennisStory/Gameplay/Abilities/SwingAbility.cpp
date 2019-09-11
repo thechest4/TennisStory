@@ -33,11 +33,8 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	{
 		FVector DirToBall = TennisBall->GetActorLocation() - OwnerChar->GetActorLocation();
-		FVector OwnerRight = OwnerChar->GetActorRightVector();
-		DirToBall.Normalize();
-		OwnerRight.Normalize();
 
-		float DotProd = FVector::DotProduct(DirToBall, OwnerRight);
+		float DotProd = FVector::DotProduct(DirToBall.GetSafeNormal(), FVector::RightVector);
 
 		if (DotProd < 0.0f)
 		{

@@ -91,33 +91,47 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
 	if (GameMode)
 	{
-		if (TargetActor)
-		{
-			//Make Character look at target
-			FVector TargetLocation = TargetActor->GetActorLocation();
-			FVector CharacterLocation = GetActorLocation();
-			FVector TranslationVector = TargetLocation - CharacterLocation;
-			TranslationVector = FVector(TranslationVector.X, TranslationVector.Y, 0.0f);
-
-			FQuat OrientationQuat = TranslationVector.ToOrientationQuat();
-
-			SetActorRotation(OrientationQuat);
-		}
+		AActor* LookAtTarget = TargetActor;
 
 		ATennisBall* TennisBall = GameMode->GetTennisBall();
 		if (TennisBall)
 		{
-			//Set upper body rotation to be facing the ball
-			FVector BallLocation = TennisBall->GetActorLocation();
-			FVector CharacterLocation = GetActorLocation();
-			FVector TranslationVector = BallLocation - CharacterLocation;
-			TranslationVector = FVector(TranslationVector.X, TranslationVector.Y, 0.0f);
-
-			FVector TransformedVector = CachedUpperBodyRootBoneTransform.InverseTransformVector(TranslationVector);
-
-			//UpperBodyRotation = TransformedVector.ToOrientationRotator();
-			UpperBodyRotation = TranslationVector.ToOrientationRotator();
+			LookAtTarget = TennisBall;
 		}
+
+		if (LookAtTarget)
+		{
+			//Make Character look at target
+			FVector TargetLocation = LookAtTarget->GetActorLocation();
+			FVector CharacterLocation = GetActorLocation();
+			FVector TranslationVector = TargetLocation - CharacterLocation;
+
+			const static bool bApplyRotationOffset = true;
+			if (bApplyRotationOffset)
+			{
+				TranslationVector = TranslationVector.RotateAngleAxis(-30.0f, FVector::UpVector);
+			}
+
+			FQuat OrientationQuat = TranslationVector.GetSafeNormal2D().ToOrientationQuat();
+
+			SetActorRotation(OrientationQuat);
+		}
+
+		//Upper body face tennis ball (didn't work at all though).  Also probably not needed going forward
+		//ATennisBall* TennisBall = GameMode->GetTennisBall();
+		//if (TennisBall)
+		//{
+		//	//Set upper body rotation to be facing the ball
+		//	FVector BallLocation = TennisBall->GetActorLocation();
+		//	FVector CharacterLocation = GetActorLocation();
+		//	FVector TranslationVector = BallLocation - CharacterLocation;
+		//	TranslationVector = FVector(TranslationVector.X, TranslationVector.Y, 0.0f);
+
+		//	FVector TransformedVector = CachedUpperBodyRootBoneTransform.InverseTransformVector(TranslationVector);
+
+		//	//UpperBodyRotation = TransformedVector.ToOrientationRotator();
+		//	UpperBodyRotation = TranslationVector.ToOrientationRotator();
+		//}
 	}
 }
 
