@@ -2,10 +2,12 @@
 
 
 #include "SwingAbility.h"
-#include "GameplayAbilities/Public/Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "TennisStoryGameMode.h"
 #include "Gameplay/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
+
+#include "Engine.h"
 
 void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -42,7 +44,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		}
 	}
 
-	CurrentMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay);
+	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 }
@@ -53,4 +55,12 @@ void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool
 	CurrentMontageTask = nullptr;
 	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->JumpToSection(TEXT("Swing"));
+	}
 }

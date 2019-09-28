@@ -25,5 +25,7 @@ protected:
 	UAnimMontage* BackhandMontage;
 
 	UPROPERTY()
-	class UAbilityTask_PlayMontageAndWait* CurrentMontageTask;
+	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+
+	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 };
