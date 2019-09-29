@@ -33,6 +33,16 @@ void UBallStrikingComponent::StopBallStriking()
 	}
 }
 
+void UBallStrikingComponent::SetChargeStartTime()
+{
+	LastChargeStartTime = GetWorld()->GetTimeSeconds();
+}
+
+void UBallStrikingComponent::SetChargeEndTime()
+{
+	LastChargeEndTime = GetWorld()->GetTimeSeconds();
+}
+
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
@@ -41,6 +51,8 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
 	if (PlayerTarget && TennisBall)
 	{
+		float BallSpeed = CalculateChargedBallSpeed();
+
 		//The math expects a positive gravity, but the ProjMovementComponent returns a negative one.  So multiply by -1
 		float Gravity = -1 * TennisBall->ProjMovementComp->GetGravityZ();
 		FRotator BallRotation = GetTrajectoryRotation(TennisBall->GetActorLocation(), PlayerTarget->GetActorLocation(), BallSpeed, Gravity);
@@ -78,4 +90,10 @@ FRotator UBallStrikingComponent::GetTrajectoryRotation(FVector BallLocation, FVe
 	FVector LaunchDirection = FRotationMatrix::MakeFromXZ(DirectionVector, FVector::UpVector).TransformVector(RelativeLaunchDirection);
 
 	return LaunchDirection.Rotation();
+}
+
+float UBallStrikingComponent::CalculateChargedBallSpeed()
+{
+	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
+	return FMath::Lerp(MinBallSpeed, MaxBallSpeed, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
 }

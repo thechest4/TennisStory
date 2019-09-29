@@ -19,15 +19,28 @@ public:
 
 	void StopBallStriking();
 
+	void SetChargeStartTime();
+
+	void SetChargeEndTime();
+
 protected:
 	UFUNCTION()
 	void HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector BallTrajectory = FVector(1.0f, 0.0f, 0.1f);
+	float MinBallSpeed = 1000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BallSpeed = 1000.0f;
+	float MaxBallSpeed = 3000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxChargeDuration = 3.0f;
 
 	FRotator GetTrajectoryRotation(FVector BallLocation, FVector TargetLocation, float DesiredSpeed, float Gravity);
+
+	float CalculateChargedBallSpeed();
+
+	//Charge State
+	float LastChargeStartTime = 0.0f;
+	float LastChargeEndTime = 0.0f;
 };

@@ -6,6 +6,7 @@
 #include "TennisStoryGameMode.h"
 #include "Gameplay/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Player/Components/BallStrikingComponent.h"
 
 void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -16,7 +17,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	ATennisStoryCharacter* OwnerChar = (OwnerInfo->OwnerActor.IsValid()) ? Cast<ATennisStoryCharacter>(OwnerInfo->OwnerActor) : nullptr;
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(OwnerInfo->OwnerActor);
 	if (!OwnerChar)
 	{
 		return;
@@ -45,6 +46,8 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
+
+	OwnerChar->BallStrikingComp->SetChargeStartTime();
 }
 
 void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool bInterrupted*/)
@@ -60,5 +63,11 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	if (CurrentMontageTask)
 	{
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
+	}
+
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+	if (OwnerChar)
+	{
+		OwnerChar->BallStrikingComp->SetChargeEndTime();
 	}
 }
