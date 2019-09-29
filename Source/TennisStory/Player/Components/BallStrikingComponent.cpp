@@ -5,12 +5,13 @@
 #include "Player/PlayerTargetActor.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/SphereComponent.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
-
 
 void UBallStrikingComponent::AllowBallStriking()
 {
