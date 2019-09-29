@@ -7,8 +7,6 @@
 #include "Gameplay/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 
-#include "Engine.h"
-
 void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, OwnerInfo, ActivationInfo, TriggerEventData);

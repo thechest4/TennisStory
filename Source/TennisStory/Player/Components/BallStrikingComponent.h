@@ -28,4 +28,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BallSpeed = 1000.0f;
+
+	FRotator GetTrajectoryRotation(FVector BallLocation, FVector TargetLocation, float DesiredSpeed, float Gravity);
 };
