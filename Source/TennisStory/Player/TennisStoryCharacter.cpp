@@ -48,7 +48,10 @@ void ATennisStoryCharacter::BeginPlay()
 		FActorSpawnParameters SpawnParams = FActorSpawnParameters();
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, GetActorLocation() + GetActorForwardVector() * 500.0f, GetActorRotation(), SpawnParams);
+		FVector ActorLocationOnGround = GetActorLocation();
+		ActorLocationOnGround.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f, GetActorRotation(), SpawnParams);
 	}
 
 	TArray<FName> BoneNames;
