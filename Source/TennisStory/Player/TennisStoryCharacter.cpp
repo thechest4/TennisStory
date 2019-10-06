@@ -11,6 +11,7 @@
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
+#include "Gameplay/HalfCourt.h"
 
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
@@ -96,10 +97,10 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 	{
 		AActor* LookAtTarget = TargetActor;
 
-		ATennisBall* TennisBall = GameMode->GetTennisBall();
-		if (TennisBall)
+		TWeakObjectPtr<ATennisBall> TennisBall = GameMode->GetTennisBall();
+		if (TennisBall.IsValid())
 		{
-			LookAtTarget = TennisBall;
+			LookAtTarget = TennisBall.Get();
 		}
 
 		if (LookAtTarget)
@@ -135,6 +136,22 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 		//	//UpperBodyRotation = TransformedVector.ToOrientationRotator();
 		//	UpperBodyRotation = TranslationVector.ToOrientationRotator();
 		//}
+	}
+}
+
+void ATennisStoryCharacter::EnablePlayerTargeting()
+{
+	if (TargetActor)
+	{
+		TargetActor->ShowTargetOnCourt(GetCourtToAimAt());
+	}
+}
+
+void ATennisStoryCharacter::DisablePlayerTargeting()
+{
+	if (TargetActor)
+	{
+		TargetActor->HideTarget();
 	}
 }
 
@@ -200,4 +217,51 @@ void ATennisStoryCharacter::MoveTargetRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		TargetActor->AddInputVector(Direction, Value);
 	}
+}
+
+TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()
+{
+	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+	if (GameMode)
+	{
+		TArray<TWeakObjectPtr<AHalfCourt>> AvailableCourts = GameMode->GetAllCourts();
+
+		if (AvailableCourts.Num() == 0)
+		{
+			return nullptr;
+		}
+		else if (AvailableCourts.Num() == 1)
+		{
+			return AvailableCourts[0];
+		}
+		else
+		{
+			//The court to aim at will be the one furthest from the character, so just find out whichever one that is
+			//TODO(achester): use court registration once that feature exists
+
+			TWeakObjectPtr<AHalfCourt> CurrentFurthestCourt = nullptr;
+
+			for (TWeakObjectPtr<AHalfCourt> Court : AvailableCourts)
+			{
+				if (!CurrentFurthestCourt.IsValid())
+				{
+					CurrentFurthestCourt = Court;
+				}
+				else
+				{
+					float DistanceToCourt = FVector::Dist(GetActorLocation(), Court->GetActorLocation());
+					float DistanceToFurthestCourt = FVector::Dist(GetActorLocation(), CurrentFurthestCourt->GetActorLocation());
+
+					if (DistanceToCourt > DistanceToFurthestCourt)
+					{
+						CurrentFurthestCourt = Court;
+					}
+				}
+			}
+
+			return CurrentFurthestCourt;
+		}
+	}
+
+	return nullptr;
 }

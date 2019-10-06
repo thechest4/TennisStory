@@ -47,6 +47,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UBallStrikingComponent* BallStrikingComp;
 
+	void EnablePlayerTargeting();
+
+	void DisablePlayerTargeting();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -59,6 +63,8 @@ protected:
 	void MoveTargetForward(float Value);
 
 	void MoveTargetRight(float Value);
+
+	TWeakObjectPtr<class AHalfCourt> GetCourtToAimAt();
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

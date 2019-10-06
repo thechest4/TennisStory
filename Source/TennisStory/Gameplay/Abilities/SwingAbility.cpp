@@ -24,7 +24,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	ATennisBall* TennisBall = (GameMode) ? GameMode->GetTennisBall() : nullptr;
+	ATennisBall* TennisBall = (GameMode) ? GameMode->GetTennisBall().Get() : nullptr;
 	if (!TennisBall)
 	{
 		return;
@@ -48,13 +48,21 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->ReadyForActivation();
 
 	OwnerChar->BallStrikingComp->SetChargeStartTime();
+
+	OwnerChar->EnablePlayerTargeting();
 }
 
 void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool bInterrupted*/)
 {
 	CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask = nullptr;
-	
+
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+	if (OwnerChar)
+	{
+		OwnerChar->DisablePlayerTargeting();
+	}
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 

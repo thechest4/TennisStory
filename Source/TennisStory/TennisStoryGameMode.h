@@ -14,16 +14,29 @@ class ATennisStoryGameMode : public AGameModeBase
 public:
 	ATennisStoryGameMode();
 
-	class ATennisBall* const GetTennisBall() { return CurrentBallActor; }
-	void SetCurrentTennisBall(ATennisBall* TennisBall) 
+	TWeakObjectPtr<class ATennisBall> GetTennisBall() { return CurrentBallActor; }
+	void SetCurrentTennisBall(TWeakObjectPtr<ATennisBall> TennisBall) 
 	{ 
 		//TODO(achester): Do we handle here destroying the old ball?  We probably only ever need one tennis ball actor for a whole match
 		CurrentBallActor = TennisBall;
 	};
 
+	void AddCourt(TWeakObjectPtr<class AHalfCourt> HalfCourt)
+	{
+		Courts.Add(HalfCourt);
+	}
+
+	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts()
+	{
+		return Courts;
+	}
+
 protected:
 	UPROPERTY()
-	ATennisBall* CurrentBallActor;
+	TWeakObjectPtr<ATennisBall> CurrentBallActor;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 };
 
 

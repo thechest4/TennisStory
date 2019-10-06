@@ -2,6 +2,7 @@
 
 
 #include "HalfCourt.h"
+#include "TennisStoryGameMode.h"
 
 #if WITH_EDITOR
 #include "Components/BoxComponent.h"
@@ -72,10 +73,51 @@ FVector2D AHalfCourt::GetCourtBounds2D()
 	return FVector2D(CourtLength, CourtWidth);
 }
 
+FVector AHalfCourt::GetSnapPointLocation(ESnapPoint SnapPoint)
+{
+	FVector LocationToReturn;
+
+	switch (SnapPoint)
+	{
+		case ESnapPoint::Mid:
+		{
+			LocationToReturn = MidSnapPoint->GetComponentLocation();
+			break;
+		}
+		case ESnapPoint::Right:
+		{
+			LocationToReturn = RightSnapPoint->GetComponentLocation();
+			break;
+		}
+		case ESnapPoint::Left:
+		{
+			LocationToReturn = LeftSnapPoint->GetComponentLocation();
+			break;
+		}
+		default:
+		{
+			LocationToReturn = MidSnapPoint->GetComponentLocation();
+			break;
+		}
+	}
+
+	return LocationToReturn;
+}
+
+void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
+{
+	return;
+}
+
 void AHalfCourt::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+	if (GameMode)
+	{
+		GameMode->AddCourt(this);
+	}
 }
 
 #if WITH_EDITOR

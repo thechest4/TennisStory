@@ -20,9 +20,23 @@ public:
 
 	void Tick(float DeltaSeconds) override;
 
+	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt);
+
+	void HideTarget();
+
 protected:
-	UPROPERTY(EditAnywhere)
+	bool bCurrentlyVisible;
+	float TargetingStartedTime;
+	TWeakObjectPtr<AHalfCourt> CurrentTargetCourt;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player Target")
+	UStaticMeshComponent* TargetMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Player Target")
 	float MoveSpeed = 3.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Player Target")
+	float LockedTargetingDuration = 0.5f;
 
 	FVector LastInputVector = FVector::ZeroVector;
 	FVector CurrentInputVector = FVector::ZeroVector;

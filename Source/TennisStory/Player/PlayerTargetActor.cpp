@@ -2,10 +2,19 @@
 
 
 #include "PlayerTargetActor.h"
+#include "Gameplay/HalfCourt.h"
+#include "Components/StaticMeshComponent.h"
 
 APlayerTargetActor::APlayerTargetActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = TargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TargetMesh"));
+	TargetMesh->SetVisibility(false);
+	TargetMesh->SetGenerateOverlapEvents(false);
+	TargetMesh->SetCollisionProfileName(TEXT("NoCollision"));
+
+	bCurrentlyVisible = false;
 }
 
 void APlayerTargetActor::AddInputVector(FVector Direction, float Value)
@@ -17,13 +26,36 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	FVector MovementVector = ConsumeCurrentInputVector();
-	MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
-
-	if (MovementVector != FVector::ZeroVector)
+	if (bCurrentlyVisible)
 	{
-		SetActorLocation(GetActorLocation() + MovementVector);
+		FVector MovementVector = ConsumeCurrentInputVector();
+		MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
+
+		if (MovementVector != FVector::ZeroVector)
+		{
+			SetActorLocation(GetActorLocation() + MovementVector);
+		}
 	}
+}
+
+void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt)
+{
+	if (CourtToAimAt.IsValid())
+	{
+		SetActorLocation(CourtToAimAt->GetSnapPointLocation(ESnapPoint::Mid));
+
+		bCurrentlyVisible = true;
+		TargetingStartedTime = GetWorld()->GetTimeSeconds();
+
+		TargetMesh->SetVisibility(true);
+	}
+}
+
+void APlayerTargetActor::HideTarget()
+{
+	bCurrentlyVisible = false;
+
+	TargetMesh->SetVisibility(false);
 }
 
 FVector APlayerTargetActor::ConsumeCurrentInputVector()

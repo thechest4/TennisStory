@@ -6,6 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "HalfCourt.generated.h"
 
+UENUM(BlueprintType)
+enum class ESnapPoint : uint8
+{
+	Mid,
+	Left,
+	Right
+};
+
 UCLASS()
 class TENNISSTORY_API AHalfCourt : public AActor
 {
@@ -15,6 +23,10 @@ public:
 	AHalfCourt();
 
 	FVector2D GetCourtBounds2D();
+
+	FVector GetSnapPointLocation(ESnapPoint SnapPoint);
+
+	void ClampLocationToCourtBounds(FVector& Location);
 
 protected:
 	virtual void BeginPlay() override;
