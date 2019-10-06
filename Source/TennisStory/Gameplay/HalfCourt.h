@@ -19,6 +19,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* MidSnapPoint;
+
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* RightSnapPoint;
+
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* LeftSnapPoint;
+
 	UPROPERTY(EditAnywhere, Category = "Court Dimensions")
 	float CourtLength = 1188.5f;
 
@@ -31,6 +40,15 @@ protected:
 #if WITH_EDITOR
 	UPROPERTY(VisibleDefaultsOnly)
 	class UBoxComponent* EditorCourtBounds;
+
+	UPROPERTY()
+	class UBillboardComponent* MidSnapPointIcon;
+
+	UPROPERTY()
+	class UBillboardComponent* RightSnapPointIcon;
+
+	UPROPERTY()
+	class UBillboardComponent* LeftSnapPointIcon;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
