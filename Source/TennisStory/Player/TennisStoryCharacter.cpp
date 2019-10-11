@@ -152,6 +152,14 @@ void ATennisStoryCharacter::EnablePlayerTargeting()
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;
 }
 
+void ATennisStoryCharacter::FreezePlayerTarget()
+{
+	if (TargetActor)
+	{
+		TargetActor->DisableTargetMovement();
+	}
+}
+
 void ATennisStoryCharacter::DisablePlayerTargeting()
 {
 	if (TargetActor)

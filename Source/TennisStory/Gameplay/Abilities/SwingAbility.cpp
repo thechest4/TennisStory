@@ -77,5 +77,6 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	if (OwnerChar)
 	{
 		OwnerChar->BallStrikingComp->SetChargeEndTime();
+		OwnerChar->FreezePlayerTarget();
 	}
 }

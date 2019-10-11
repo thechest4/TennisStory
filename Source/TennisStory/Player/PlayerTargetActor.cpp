@@ -26,7 +26,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bCurrentlyVisible)
+	if (bCurrentlyVisible && bCurrentlyMovable)
 	{
 		FVector MovementVector = ConsumeCurrentInputVector();
 		MovementVector.Normalize();
@@ -74,12 +74,18 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(ESnapPoint::Mid));
 
 		bCurrentlyVisible = true;
+		bCurrentlyMovable = true;
 		TargetingStartedTime = GetWorld()->GetTimeSeconds();
 
 		TargetMesh->SetVisibility(true);
 
 		CurrentInputVector = FVector::ZeroVector;
 	}
+}
+
+void APlayerTargetActor::DisableTargetMovement()
+{
+	bCurrentlyMovable = false;
 }
 
 void APlayerTargetActor::HideTarget()

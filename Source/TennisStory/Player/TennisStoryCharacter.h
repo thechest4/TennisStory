@@ -49,6 +49,8 @@ public:
 
 	void EnablePlayerTargeting();
 
+	void FreezePlayerTarget();
+
 	void DisablePlayerTargeting();
 
 protected:

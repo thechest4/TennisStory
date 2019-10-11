@@ -23,10 +23,13 @@ public:
 
 	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt);
 
+	void DisableTargetMovement();
+
 	void HideTarget();
 
 protected:
 	bool bCurrentlyVisible;
+	bool bCurrentlyMovable;
 	float TargetingStartedTime;
 	TWeakObjectPtr<AHalfCourt> CurrentTargetCourt;
 	ESnapPoint LastSnapPoint;
