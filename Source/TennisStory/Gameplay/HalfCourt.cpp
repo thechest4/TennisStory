@@ -106,7 +106,23 @@ FVector AHalfCourt::GetSnapPointLocation(ESnapPoint SnapPoint)
 
 void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
 {
-	return;
+	if (Location.X < LowerCorner.X)
+	{
+		Location.X = LowerCorner.X;
+	}
+	else if (Location.X > UpperCorner.X)
+	{
+		Location.X = UpperCorner.X;
+	}
+
+	if (Location.Y < LowerCorner.Y)
+	{
+		Location.Y = LowerCorner.Y;
+	}
+	else if (Location.Y > UpperCorner.Y)
+	{
+		Location.Y = UpperCorner.Y;
+	}
 }
 
 void AHalfCourt::BeginPlay()
@@ -118,6 +134,18 @@ void AHalfCourt::BeginPlay()
 	{
 		GameMode->AddCourt(this);
 	}
+
+	CalculateCourtCorners();
+}
+
+void AHalfCourt::CalculateCourtCorners()
+{
+	float XOffset = CourtLength / 2.0f;
+	float YOffset = CourtWidth / 2.0f;
+
+	FVector ActorLocation = GetActorLocation();
+	LowerCorner = FVector2D(ActorLocation.X - XOffset, ActorLocation.Y - YOffset);
+	UpperCorner = FVector2D(ActorLocation.X + XOffset, ActorLocation.Y + YOffset);
 }
 
 #if WITH_EDITOR

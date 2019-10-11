@@ -49,6 +49,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Court Dimensions")
 	float AlleyWidth = 274.0f; //AlleyWidth should be added to CourtWidth in doubles
 
+	void CalculateCourtCorners();
+
+	FVector2D LowerCorner;
+	FVector2D UpperCorner;
+
 #if WITH_EDITOR
 	UPROPERTY(VisibleDefaultsOnly)
 	class UBoxComponent* EditorCourtBounds;

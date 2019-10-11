@@ -98,6 +98,11 @@ protected:
 
 	FGameplayTagContainer TestTagContainer;
 
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MoveSpeedWhileSwinging = 150.0f;
+
+	float CachedMaxWalkSpeed;
+
 	friend class UBallStrikingComponent;
 };
 

@@ -29,11 +29,37 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 	if (bCurrentlyVisible)
 	{
 		FVector MovementVector = ConsumeCurrentInputVector();
-		MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
+		MovementVector.Normalize();
 
-		if (MovementVector != FVector::ZeroVector)
+		if (GetWorld()->GetTimeSeconds() - TargetingStartedTime < LockedTargetingDuration)
 		{
-			SetActorLocation(GetActorLocation() + MovementVector);
+			ESnapPoint SnapPointToAimAt = ESnapPoint::Mid;
+
+			if (MovementVector.Y > 0.f)
+			{
+				SnapPointToAimAt = ESnapPoint::Right;
+			}
+			else if (MovementVector.Y < -0.f)
+			{
+				SnapPointToAimAt = ESnapPoint::Left;
+			}
+
+			if (MovementVector.Y != 0.f)
+			{
+				LastSnapPoint = SnapPointToAimAt;
+				SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(SnapPointToAimAt));
+			}
+		}
+		else
+		{
+			MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
+
+			if (MovementVector != FVector::ZeroVector)
+			{
+				FVector NewLocation = GetActorLocation() + MovementVector;
+				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation);
+				SetActorLocation(NewLocation);
+			}
 		}
 	}
 }
@@ -42,12 +68,17 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 {
 	if (CourtToAimAt.IsValid())
 	{
-		SetActorLocation(CourtToAimAt->GetSnapPointLocation(ESnapPoint::Mid));
+		CurrentTargetCourt = CourtToAimAt;
+
+		LastSnapPoint = ESnapPoint::Mid;
+		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(ESnapPoint::Mid));
 
 		bCurrentlyVisible = true;
 		TargetingStartedTime = GetWorld()->GetTimeSeconds();
 
 		TargetMesh->SetVisibility(true);
+
+		CurrentInputVector = FVector::ZeroVector;
 	}
 }
 
@@ -60,7 +91,7 @@ void APlayerTargetActor::HideTarget()
 
 FVector APlayerTargetActor::ConsumeCurrentInputVector()
 {
-	LastInputVector = CurrentInputVector;
+	FVector LastInputVector = CurrentInputVector;
 	CurrentInputVector = FVector::ZeroVector;
 
 	return LastInputVector;

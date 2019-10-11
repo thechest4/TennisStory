@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Gameplay/HalfCourt.h"
 #include "PlayerTargetActor.generated.h"
 
 UCLASS()
@@ -28,6 +29,7 @@ protected:
 	bool bCurrentlyVisible;
 	float TargetingStartedTime;
 	TWeakObjectPtr<AHalfCourt> CurrentTargetCourt;
+	ESnapPoint LastSnapPoint;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player Target")
 	UStaticMeshComponent* TargetMesh;
@@ -36,9 +38,8 @@ protected:
 	float MoveSpeed = 3.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Player Target")
-	float LockedTargetingDuration = 0.5f;
+	float LockedTargetingDuration = 1.0f;
 
-	FVector LastInputVector = FVector::ZeroVector;
 	FVector CurrentInputVector = FVector::ZeroVector;
 
 	FVector ConsumeCurrentInputVector();

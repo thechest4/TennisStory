@@ -145,6 +145,11 @@ void ATennisStoryCharacter::EnablePlayerTargeting()
 	{
 		TargetActor->ShowTargetOnCourt(GetCourtToAimAt());
 	}
+
+	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
+	//also put some thought into how to best store stats like move speed while swinging and such.
+	CachedMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;
 }
 
 void ATennisStoryCharacter::DisablePlayerTargeting()
@@ -153,6 +158,8 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	{
 		TargetActor->HideTarget();
 	}
+
+	GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
 }
 
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
