@@ -24,12 +24,28 @@ public:
 
 	FVector2D GetCourtBounds2D();
 
+	FVector GetPlayerServiceLocation() const
+	{
+		return PlayerServiceLocation->GetComponentLocation();
+	}
+
+	FVector GetBallServiceLocation() const
+	{
+		return BallServiceLocation->GetComponentLocation();
+	}
+
 	FVector GetSnapPointLocation(ESnapPoint SnapPoint);
 
 	void ClampLocationToCourtBounds(FVector& Location);
 
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* PlayerServiceLocation;
+
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* BallServiceLocation;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
 	USceneComponent* MidSnapPoint;
@@ -57,6 +73,12 @@ protected:
 #if WITH_EDITOR
 	UPROPERTY(VisibleDefaultsOnly)
 	class UBoxComponent* EditorCourtBounds;
+
+	UPROPERTY()
+	class UBillboardComponent* PlayerServiceIcon;
+
+	UPROPERTY()
+	class UBillboardComponent* BallServiceIcon;
 
 	UPROPERTY()
 	class UBillboardComponent* MidSnapPointIcon;

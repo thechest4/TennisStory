@@ -16,6 +16,14 @@ AHalfCourt::AHalfCourt()
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene Root"));
 
+	PlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Player Service Location"));
+	PlayerServiceLocation->SetupAttachment(RootComponent);
+	PlayerServiceLocation->SetRelativeLocation(FVector(0.6f * CourtLength, -0.25f * CourtWidth, 0.0f));
+
+	BallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ball Service Location"));
+	BallServiceLocation->SetupAttachment(RootComponent);
+	BallServiceLocation->SetRelativeLocation(FVector(0.5f * CourtLength, -0.25f * CourtWidth, 0.0f));
+
 	MidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Mid Target Snap Point"));
 	MidSnapPoint->SetupAttachment(RootComponent);
 	MidSnapPoint->SetRelativeLocation(FVector(0.25f * CourtLength, 0.0f, 0.0f));
@@ -36,8 +44,34 @@ AHalfCourt::AHalfCourt()
 	EditorCourtBounds->SetCollisionProfileName(TEXT("NoCollision"));
 	EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f)); //10 height just to make the bounds visible
 
-	static const float IconHeight = 15.0f;
+	static const float IconHeight = 25.0f;
 	static const float IconEditorScale = 0.5f;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> PlayerServiceSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/throwing-ball"));
+
+	PlayerServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Player Service Icon"));
+	PlayerServiceIcon->SetupAttachment(PlayerServiceLocation);
+	PlayerServiceIcon->SetHiddenInGame(true);
+	PlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+	PlayerServiceIcon->SetEditorScale(IconEditorScale);
+
+	if (PlayerServiceSprite.Succeeded())
+	{
+		PlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisBallSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-ball"));
+
+	BallServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ball Service Icon"));
+	BallServiceIcon->SetupAttachment(BallServiceLocation);
+	BallServiceIcon->SetHiddenInGame(true);
+	BallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+	BallServiceIcon->SetEditorScale(IconEditorScale);
+
+	if (TennisBallSprite.Succeeded())
+	{
+		BallServiceIcon->SetSprite(TennisBallSprite.Object);
+	}
 
 	MidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Mid Snap Point Icon"));
 	MidSnapPointIcon->SetupAttachment(MidSnapPoint);
@@ -156,6 +190,13 @@ void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	{
 		EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f));
 	}
+
+	//Reset all court locations to be at ground level, in case the z coordinate was accidentally modified
+	FVector PlayerServiceRelativeLocation = PlayerServiceLocation->GetRelativeTransform().GetLocation();
+	PlayerServiceLocation->SetRelativeLocation(FVector(PlayerServiceRelativeLocation.X, PlayerServiceRelativeLocation.Y, 0.0f));
+
+	FVector BallServiceRelativeLocation = BallServiceLocation->GetRelativeTransform().GetLocation();
+	BallServiceLocation->SetRelativeLocation(FVector(BallServiceRelativeLocation.X, BallServiceRelativeLocation.Y, 0.0f));
 
 	FVector MidSnapPointLocation = MidSnapPoint->GetRelativeTransform().GetLocation();
 	MidSnapPoint->SetRelativeLocation(FVector(MidSnapPointLocation.X, MidSnapPointLocation.Y, 0.0f));
