@@ -46,6 +46,8 @@ public:
 
 	virtual void RestartPlayer(AController* NewPlayer) override;
 
+	virtual void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation) override;
+
 	TWeakObjectPtr<AHalfCourt> FindPlayerCourt(AController* NewPlayer);
 
 protected:

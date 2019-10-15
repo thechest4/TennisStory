@@ -79,6 +79,25 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
+void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation)
+{
+	NewPlayer->Possess(NewPlayer->GetPawn());
+
+	if (NewPlayer->GetPawn() == nullptr)
+	{
+		NewPlayer->FailedToSpawnPawn();
+	}
+	else
+	{
+		NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
+		NewPlayer->SetControlRotation(FRotator::ZeroRotator);
+
+		SetPlayerDefaults(NewPlayer->GetPawn());
+
+		K2_OnRestartPlayer(NewPlayer);
+	}
+}
+
 TWeakObjectPtr<AHalfCourt> ATennisStoryGameMode::FindPlayerCourt(AController* NewPlayer)
 {
 	if (!Courts.Num())
