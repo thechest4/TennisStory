@@ -14,14 +14,3 @@ ATennisBall::ATennisBall()
 	ProjMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 }
 
-void ATennisBall::BeginPlay()
-{
-	Super::BeginPlay();
-
-	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if (GameMode)
-	{
-		GameMode->SetCurrentTennisBall(this);
-	}
-}
-

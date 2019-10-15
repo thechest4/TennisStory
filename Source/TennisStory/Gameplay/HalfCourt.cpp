@@ -102,11 +102,6 @@ AHalfCourt::AHalfCourt()
 #endif
 }
 
-FVector2D AHalfCourt::GetCourtBounds2D()
-{
-	return FVector2D(CourtLength, CourtWidth);
-}
-
 FVector AHalfCourt::GetSnapPointLocation(ESnapPoint SnapPoint)
 {
 	FVector LocationToReturn;
@@ -162,13 +157,7 @@ void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
 void AHalfCourt::BeginPlay()
 {
 	Super::BeginPlay();
-
-	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if (GameMode)
-	{
-		GameMode->AddCourt(this);
-	}
-
+	
 	CalculateCourtCorners();
 }
 

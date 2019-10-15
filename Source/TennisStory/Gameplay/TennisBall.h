@@ -18,8 +18,6 @@ public:
 	class UProjectileMovementComponent* ProjMovementComp;
 
 protected:
-	virtual void BeginPlay() override;
-
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;
 };

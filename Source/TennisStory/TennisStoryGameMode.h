@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Gameplay/HalfCourt.h"
 #include "TennisStoryGameMode.generated.h"
+
+class ATennisBall;
 
 UCLASS(minimalapi)
 class ATennisStoryGameMode : public AGameModeBase
@@ -14,29 +17,50 @@ class ATennisStoryGameMode : public AGameModeBase
 public:
 	ATennisStoryGameMode();
 
-	TWeakObjectPtr<class ATennisBall> GetTennisBall() { return CurrentBallActor; }
-	void SetCurrentTennisBall(TWeakObjectPtr<ATennisBall> TennisBall) 
-	{ 
-		//TODO(achester): Do we handle here destroying the old ball?  We probably only ever need one tennis ball actor for a whole match
-		CurrentBallActor = TennisBall;
-	};
+	TWeakObjectPtr<ATennisBall> GetTennisBall() const { return CurrentBallActor; }
 
-	void AddCourt(TWeakObjectPtr<class AHalfCourt> HalfCourt)
-	{
-		Courts.Add(HalfCourt);
-	}
-
-	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts()
+	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts() const
 	{
 		return Courts;
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	AHalfCourt* GetCourt(ECourtSide Side) const
+	{
+		for (TWeakObjectPtr<AHalfCourt> Court : Courts)
+		{
+			if (Court.IsValid() && Court->GetCourtSide() == Side)
+			{
+				return Court.Get();
+			}
+		}
+
+		return nullptr;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	AHalfCourt* GetCourtForPlayer(APlayerController* PlayerController) const
+	{
+		return GetCourt(static_cast<ECourtSide>(PlayerController->NetPlayerIndex));
+	}
+
+	virtual void StartPlay() override;
+
+	virtual void RestartPlayer(AController* NewPlayer) override;
+
+	TWeakObjectPtr<AHalfCourt> FindPlayerCourt(AController* NewPlayer);
+
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
+	TSubclassOf<ATennisBall> DefaultBallClass;
+
 	UPROPERTY()
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
+
+	void GetCourtsFromWorld();
 };
 
 

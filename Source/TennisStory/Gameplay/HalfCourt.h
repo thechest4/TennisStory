@@ -7,6 +7,13 @@
 #include "HalfCourt.generated.h"
 
 UENUM(BlueprintType)
+enum class ECourtSide : uint8
+{
+	NearCourt,
+	FarCourt
+};
+
+UENUM(BlueprintType)
 enum class ESnapPoint : uint8
 {
 	Mid,
@@ -22,24 +29,35 @@ class TENNISSTORY_API AHalfCourt : public AActor
 public:	
 	AHalfCourt();
 
-	FVector2D GetCourtBounds2D();
-
-	FVector GetPlayerServiceLocation() const
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	FTransform GetPlayerServiceTransform() const
 	{
-		return PlayerServiceLocation->GetComponentLocation();
+		return PlayerServiceLocation->GetComponentTransform();
 	}
 
-	FVector GetBallServiceLocation() const
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	FTransform GetBallServiceTransform() const
 	{
-		return BallServiceLocation->GetComponentLocation();
+		FTransform BallSpawnOffset = FTransform::Identity;
+		BallSpawnOffset.SetTranslation(FVector(0.0f, 0.0f, 120.0f));
+
+		return BallSpawnOffset * BallServiceLocation->GetComponentTransform();
 	}
 
 	FVector GetSnapPointLocation(ESnapPoint SnapPoint);
 
 	void ClampLocationToCourtBounds(FVector& Location);
 
+	ECourtSide GetCourtSide()
+	{
+		return CourtSide;
+	}
+
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, Category = "Tennis Court")
+	ECourtSide CourtSide;
 
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
 	USceneComponent* PlayerServiceLocation;
