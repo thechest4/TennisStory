@@ -1,4 +1,3 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "TennisStoryCharacter.h"
 #include "Components/CapsuleComponent.h"
