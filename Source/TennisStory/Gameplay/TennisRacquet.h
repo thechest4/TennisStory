@@ -15,7 +15,7 @@ public:
 	ATennisRacquet();
 
 	UPROPERTY(VisibleAnywhere)
-	class USphereComponent* OverlapDetectionComp;
+	class UCapsuleComponent* OverlapDetectionComp;
 
 protected:
 	UPROPERTY(VisibleAnywhere)

@@ -6,7 +6,7 @@
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {

@@ -2,7 +2,7 @@
 
 
 #include "TennisRacquet.h"
-#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 
 ATennisRacquet::ATennisRacquet()
 {
@@ -10,7 +10,7 @@ ATennisRacquet::ATennisRacquet()
 
 	RootComponent = RacquetMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RacquetMeshComp"));
 
-	OverlapDetectionComp = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapDetectionComp"));
+	OverlapDetectionComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("OverlapDetectionComp"));
 	OverlapDetectionComp->SetupAttachment(RootComponent, RacquetHeadSocket);
 }
 
