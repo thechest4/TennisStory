@@ -75,8 +75,7 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 		ATennisStoryCharacter* TennisChar = Cast<ATennisStoryCharacter>(NewPawn);
 		if (TennisChar)
 		{
-			//Invert the court forward so we get an aim vector pointing towards the opposing court
-			TennisChar->CacheCourtAimVector(-1 * SpawnCourt->GetActorForwardVector());
+			TennisChar->CacheCourtAimVector(SpawnCourt->GetActorForwardVector());
 		}
 
 		FinishRestartPlayer(NewPlayer, SpawnTransform.GetRotation().Rotator());

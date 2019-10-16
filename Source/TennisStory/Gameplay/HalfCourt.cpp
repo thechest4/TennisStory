@@ -19,23 +19,23 @@ AHalfCourt::AHalfCourt()
 
 	PlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Player Service Location"));
 	PlayerServiceLocation->SetupAttachment(RootComponent);
-	PlayerServiceLocation->SetRelativeLocation(FVector(0.6f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	PlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, 0.25f * CourtWidth, 0.0f));
 
 	BallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ball Service Location"));
 	BallServiceLocation->SetupAttachment(RootComponent);
-	BallServiceLocation->SetRelativeLocation(FVector(0.5f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	BallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.25f * CourtWidth, 0.0f));
 
 	MidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Mid Target Snap Point"));
 	MidSnapPoint->SetupAttachment(RootComponent);
-	MidSnapPoint->SetRelativeLocation(FVector(0.25f * CourtLength, 0.0f, 0.0f));
+	MidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
 
 	RightSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Right Target Snap Point"));
 	RightSnapPoint->SetupAttachment(RootComponent);
-	RightSnapPoint->SetRelativeLocation(FVector(0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	RightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
 
 	LeftSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Left Target Snap Point"));
 	LeftSnapPoint->SetupAttachment(RootComponent);
-	LeftSnapPoint->SetRelativeLocation(FVector(0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
 
 #if WITH_EDITOR
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
@@ -47,6 +47,7 @@ AHalfCourt::AHalfCourt()
 
 	CourtForwardArrow = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Court Forward Arrow"));
 	CourtForwardArrow->SetupAttachment(RootComponent);
+	CourtForwardArrow->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.0f, 0.0f));
 
 	static const float IconHeight = 25.0f;
 	static const float IconEditorScale = 0.5f;
@@ -106,35 +107,31 @@ AHalfCourt::AHalfCourt()
 #endif
 }
 
-FVector AHalfCourt::GetSnapPointLocation(ESnapPoint SnapPoint)
+FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint)
 {
-	FVector LocationToReturn;
-
-	switch (SnapPoint)
+	if (SnapPoint == ESnapPoint::Mid)
 	{
-		case ESnapPoint::Mid:
+		return MidSnapPoint->GetComponentLocation();
+	}
+	else
+	{
+		//Figure out if the Control Rotation (AimRightVector) is the same as this court
+		FVector AimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
+		FVector CourtRightVector = GetActorRightVector();
+		float DotProd = FVector::DotProduct(CourtRightVector, AimRightVector);
+
+		//If rotation are the same, return what was requested.  Otherwise return the inverse of the request
+		if (DotProd > 0.f)
 		{
-			LocationToReturn = MidSnapPoint->GetComponentLocation();
-			break;
+			return (SnapPoint == ESnapPoint::Right) ? RightSnapPoint->GetComponentLocation() : LeftSnapPoint->GetComponentLocation();
 		}
-		case ESnapPoint::Right:
+		else if (DotProd < 0.f)
 		{
-			LocationToReturn = RightSnapPoint->GetComponentLocation();
-			break;
-		}
-		case ESnapPoint::Left:
-		{
-			LocationToReturn = LeftSnapPoint->GetComponentLocation();
-			break;
-		}
-		default:
-		{
-			LocationToReturn = MidSnapPoint->GetComponentLocation();
-			break;
+			return (SnapPoint == ESnapPoint::Right) ? LeftSnapPoint->GetComponentLocation() : RightSnapPoint->GetComponentLocation();
 		}
 	}
 
-	return LocationToReturn;
+	return FVector::ZeroVector;
 }
 
 void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)

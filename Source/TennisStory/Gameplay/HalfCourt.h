@@ -46,7 +46,7 @@ public:
 		return BallSpawnOffset * BallServiceLocation->GetComponentTransform();
 	}
 
-	FVector GetSnapPointLocation(ESnapPoint SnapPoint);
+	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
 
 	void ClampLocationToCourtBounds(FVector& Location);
 

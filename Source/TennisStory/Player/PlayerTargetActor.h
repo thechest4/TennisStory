@@ -46,4 +46,6 @@ protected:
 	FVector CurrentInputVector = FVector::ZeroVector;
 
 	FVector ConsumeCurrentInputVector();
+
+	FVector GetOwnerControlRotationVector();
 };

@@ -39,15 +39,17 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			{
 				SnapPointToAimAt = ESnapPoint::Right;
 			}
-			else if (MovementVector.Y < -0.f)
+			else if (MovementVector.Y < 0.f)
 			{
 				SnapPointToAimAt = ESnapPoint::Left;
 			}
 
 			if (MovementVector.Y != 0.f)
 			{
+				FVector AimVector = GetOwnerControlRotationVector();
+
 				LastSnapPoint = SnapPointToAimAt;
-				SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(SnapPointToAimAt));
+				SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, SnapPointToAimAt));
 			}
 		}
 		else
@@ -70,8 +72,10 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 	{
 		CurrentTargetCourt = CourtToAimAt;
 
+		FVector AimVector = GetOwnerControlRotationVector();
+
 		LastSnapPoint = ESnapPoint::Mid;
-		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(ESnapPoint::Mid));
+		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, ESnapPoint::Mid));
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
@@ -103,3 +107,11 @@ FVector APlayerTargetActor::ConsumeCurrentInputVector()
 	return LastInputVector;
 }
 
+FVector APlayerTargetActor::GetOwnerControlRotationVector()
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	AController* OwnerController = (OwnerPawn) ? OwnerPawn->GetController() : nullptr;
+	FVector OwnerControlRotationVector = (OwnerController) ? OwnerController->GetControlRotation().Vector() : FVector::ZeroVector;
+
+	return OwnerControlRotationVector;
+}
