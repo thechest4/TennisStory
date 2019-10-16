@@ -35,9 +35,6 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	UFUNCTION(BlueprintPure, Category = "Tennis Story Character")
-	FRotator const GetUpperBodyRotation() { return UpperBodyRotation; };
-
 	class UAbilitySystemComponent* GetAbilitySystemComponent() const override
 	{
 		return AbilitySystemComp;
@@ -97,11 +94,6 @@ protected:
 
 	UPROPERTY(Instanced)
 	APlayerTargetActor* TargetActor;
-
-	FRotator UpperBodyRotation = FRotator::ZeroRotator;
-
-	const FName UpperBodyRootBone = TEXT("spine_01");
-	FTransform CachedUpperBodyRootBoneTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
 	UAbilitySystemComponent* AbilitySystemComp;

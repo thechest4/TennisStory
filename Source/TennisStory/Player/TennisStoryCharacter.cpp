@@ -54,18 +54,6 @@ void ATennisStoryCharacter::BeginPlay()
 		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f, GetActorRotation(), SpawnParams);
 	}
 
-	TArray<FName> BoneNames;
-	GetMesh()->GetBoneNames(BoneNames);
-
-	for (int i = 0; i < BoneNames.Num(); i++)
-	{
-		if (BoneNames[i] == UpperBodyRootBone)
-		{
-			CachedUpperBodyRootBoneTransform = GetMesh()->GetBoneTransform(i);
-			break;
-		}
-	}
-
 	if (AbilitySystemComp && HasAuthority())
 	{
 		AbilitySystemComp->InitAbilityActorInfo(this, this);
