@@ -52,6 +52,18 @@ public:
 
 	void DisablePlayerTargeting();
 
+	void CacheCourtAimVector(FVector AimVector);
+
+	FVector GetAimVector() const
+	{
+		return CachedAimVector;
+	}
+
+	FVector GetAimRightVector() const
+	{
+		return CachedAimRightVector;
+	}
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -103,6 +115,11 @@ protected:
 	float MoveSpeedWhileSwinging = 150.0f;
 
 	float CachedMaxWalkSpeed;
+
+	//These vectors are used to orient the character relative to the court it's aiming at
+	//Set whenever a character is assigned to a court
+	FVector CachedAimVector;
+	FVector CachedAimRightVector;
 
 	friend class UBallStrikingComponent;
 };

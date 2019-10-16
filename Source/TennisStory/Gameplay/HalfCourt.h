@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "HalfCourt.generated.h"
 
+class UBillboardComponent;
+
 UENUM(BlueprintType)
 enum class ECourtSide : uint8
 {
@@ -93,19 +95,22 @@ protected:
 	class UBoxComponent* EditorCourtBounds;
 
 	UPROPERTY()
-	class UBillboardComponent* PlayerServiceIcon;
+	class UArrowComponent* CourtForwardArrow;
 
 	UPROPERTY()
-	class UBillboardComponent* BallServiceIcon;
+	UBillboardComponent* PlayerServiceIcon;
 
 	UPROPERTY()
-	class UBillboardComponent* MidSnapPointIcon;
+	UBillboardComponent* BallServiceIcon;
 
 	UPROPERTY()
-	class UBillboardComponent* RightSnapPointIcon;
+	UBillboardComponent* MidSnapPointIcon;
 
 	UPROPERTY()
-	class UBillboardComponent* LeftSnapPointIcon;
+	UBillboardComponent* RightSnapPointIcon;
+
+	UPROPERTY()
+	UBillboardComponent* LeftSnapPointIcon;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif

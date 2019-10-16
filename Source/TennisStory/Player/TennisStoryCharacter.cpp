@@ -153,6 +153,12 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
 }
 
+void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
+{
+	CachedAimVector = AimVector;
+	CachedAimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
+}
+
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);

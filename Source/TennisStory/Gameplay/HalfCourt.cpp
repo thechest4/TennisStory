@@ -7,6 +7,7 @@
 #if WITH_EDITOR
 #include "Components/BoxComponent.h"
 #include "Components/BillboardComponent.h"
+#include "Components/ArrowComponent.h"
 #include "Engine/Texture2D.h"
 #endif
 
@@ -43,6 +44,9 @@ AHalfCourt::AHalfCourt()
 	EditorCourtBounds->SetGenerateOverlapEvents(false);
 	EditorCourtBounds->SetCollisionProfileName(TEXT("NoCollision"));
 	EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f)); //10 height just to make the bounds visible
+
+	CourtForwardArrow = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Court Forward Arrow"));
+	CourtForwardArrow->SetupAttachment(RootComponent);
 
 	static const float IconHeight = 25.0f;
 	static const float IconEditorScale = 0.5f;

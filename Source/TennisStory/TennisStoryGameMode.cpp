@@ -63,11 +63,20 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 	if (SpawnCourt.IsValid())
 	{
 		FTransform SpawnTransform = SpawnCourt->GetPlayerServiceTransform();
-		NewPlayer->SetPawn(SpawnDefaultPawnAtTransform(NewPlayer, SpawnTransform));
+
+		APawn* NewPawn = SpawnDefaultPawnAtTransform(NewPlayer, SpawnTransform);
+		NewPlayer->SetPawn(NewPawn);
 
 		if (!NewPlayer->GetPawn())
 		{
 			NewPlayer->FailedToSpawnPawn();
+		}
+
+		ATennisStoryCharacter* TennisChar = Cast<ATennisStoryCharacter>(NewPawn);
+		if (TennisChar)
+		{
+			//Invert the court forward so we get an aim vector pointing towards the opposing court
+			TennisChar->CacheCourtAimVector(-1 * SpawnCourt->GetActorForwardVector());
 		}
 
 		FinishRestartPlayer(NewPlayer, SpawnTransform.GetRotation().Rotator());
