@@ -59,6 +59,10 @@ protected:
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 
 	void GetCourtsFromWorld();
+
+	void GetCamPositioningCompFromWorld();
+
+	TWeakObjectPtr<class UCamPositioningComponent> CameraPositioningComp;
 };
 
 

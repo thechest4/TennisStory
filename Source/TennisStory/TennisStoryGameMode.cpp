@@ -5,6 +5,8 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Gameplay/HalfCourt.h"
 #include "Gameplay/TennisBall.h"
+#include "Camera/CameraActor.h"
+#include "Camera/CamPositioningComponent.h"
 
 //TODO(achester): get rid of this when we have a different solution for logging
 #include "Engine.h"
@@ -21,6 +23,11 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 
 void ATennisStoryGameMode::StartPlay()
 {
+	if (!CameraPositioningComp.IsValid())
+	{
+		GetCamPositioningCompFromWorld();
+	}
+
 	if (!Courts.Num())
 	{
 		GetCourtsFromWorld();
@@ -40,6 +47,11 @@ void ATennisStoryGameMode::StartPlay()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		
 		CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
+
+		if (CameraPositioningComp.IsValid())
+		{
+			CameraPositioningComp->AddTrackedActor(Cast<AActor>(CurrentBallActor));
+		}
 	}
 
 	Super::StartPlay();
@@ -76,6 +88,16 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 		if (TennisChar)
 		{
 			TennisChar->CacheCourtAimVector(SpawnCourt->GetActorForwardVector());
+
+			if (!CameraPositioningComp.IsValid())
+			{
+				GetCamPositioningCompFromWorld();
+			}
+
+			if (CameraPositioningComp.IsValid())
+			{
+				CameraPositioningComp->AddTrackedActor(Cast<AActor>(TennisChar));
+			}
 		}
 
 		FinishRestartPlayer(NewPlayer, SpawnTransform.GetRotation().Rotator());
@@ -135,4 +157,22 @@ void ATennisStoryGameMode::GetCourtsFromWorld()
 		AHalfCourt* Court = *It;
 		Courts.Add(Court);
 	}
+}
+
+void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
+{
+	//Find all CameraActors and cache a pointer to the one with a CamPositioningComponent
+	for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It)
+	{
+		ACameraActor* CamActor = *It;
+
+		UActorComponent* ActorComp = CamActor->GetComponentByClass(UCamPositioningComponent::StaticClass());
+		if (ActorComp)
+		{
+			CameraPositioningComp = Cast<UCamPositioningComponent>(ActorComp);
+			return;
+		}
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::GetCamPositioningCompFromWorld - Could not find Camera Positioning Component!"));
 }
