@@ -54,10 +54,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
 
-	UPROPERTY()
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;
 
-	UPROPERTY()
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 
 	void GetCourtsFromWorld();
