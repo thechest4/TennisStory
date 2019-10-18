@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -53,9 +54,65 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			}
 		}
 
-		for (FVector TrackedLocation : LocationsToTrack)
+		//TODO(achester): Not sure if this is a good way to get the player controller in online play?
+		APlayerController* LocalPlayerController = UGameplayStatics::GetPlayerController(this, 0);
+		if (LocalPlayerController)
 		{
-			//DrawDebugSphere(GetWorld(), TrackedLocation, 10.0f, 20, FColor::Blue, true, 0.01f);
+			TArray<FVector2D> TrackedLocationsOnScreen;
+			for (FVector TrackedLocation : LocationsToTrack)
+			{
+				FVector2D LocationOnScreen;
+				UGameplayStatics::ProjectWorldToScreen(LocalPlayerController, TrackedLocation, LocationOnScreen);
+
+				TrackedLocationsOnScreen.Add(LocationOnScreen);
+			}
+
+			int32 ScreenWidth, ScreenHeight;
+			LocalPlayerController->GetViewportSize(ScreenWidth, ScreenHeight);
+
+			float CalculatedScreenLeft = MarginFromScreenEdges * ScreenWidth;
+			float CalculatedScreenRight = (1.f - MarginFromScreenEdges) * ScreenWidth;
+			float CalculatedScreenTop = MarginFromScreenEdges * ScreenHeight;
+			float CalculatedScreenBottom = (1.f - MarginFromScreenEdges) * ScreenHeight;
+
+			FVector CameraForward2D = OwnerPtr->GetActorForwardVector().GetSafeNormal2D();
+			FVector CameraRight2D = OwnerPtr->GetActorRightVector().GetSafeNormal2D();
+
+			FVector CameraTranslationVector = FVector::ZeroVector;
+			bool bMoveLeft = false;
+			bool bMoveRight = false; 
+			bool bMoveForward = false; 
+			bool bMoveBackward = false;
+
+			for (FVector2D ScreenLocation : TrackedLocationsOnScreen)
+			{
+				if (ScreenLocation.X < CalculatedScreenLeft && !bMoveLeft)
+				{
+					CameraTranslationVector -= CameraRight2D;
+					bMoveLeft = true;
+				}
+				else if (ScreenLocation.X > CalculatedScreenRight && !bMoveRight)
+				{
+					CameraTranslationVector += CameraRight2D;
+					bMoveRight = true;
+				}
+
+				if (ScreenLocation.Y < CalculatedScreenTop && !bMoveForward)
+				{
+					CameraTranslationVector += CameraForward2D;
+					bMoveForward = true;
+				}
+				else if (ScreenLocation.Y > CalculatedScreenBottom && !bMoveBackward)
+				{
+					CameraTranslationVector -= CameraForward2D;
+					bMoveBackward = true;
+				}
+			}
+
+			CameraTranslationVector.Normalize();
+			CameraTranslationVector = CameraTranslationVector * PositioningSpeed * DeltaTime;
+
+			OwnerPtr->SetActorLocation(OwnerPtr->GetActorLocation() + CameraTranslationVector);
 		}
 	}
 }

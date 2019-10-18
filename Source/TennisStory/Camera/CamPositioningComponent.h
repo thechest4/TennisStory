@@ -22,6 +22,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	//The desired distance from the edge of the screen for each tracked point, as a percentage
+	float MarginFromScreenEdges = 0.05f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	float PositioningSpeed = 500.f;
+
 	TWeakObjectPtr<AActor> OwnerPtr;
 	TWeakObjectPtr<class UCameraComponent> OwnerCamComp;
 
