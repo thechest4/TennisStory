@@ -17,6 +17,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UProjectileMovementComponent* ProjMovementComp;
 
+	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
+	bool IsInServiceState();
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
+	void SetBallStateForService();
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
+	void SetBallStateForPlay();
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;

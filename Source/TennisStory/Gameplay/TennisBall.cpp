@@ -14,3 +14,18 @@ ATennisBall::ATennisBall()
 	ProjMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 }
 
+bool ATennisBall::IsInServiceState()
+{
+	return ProjMovementComp->ProjectileGravityScale == 0.0f;
+}
+
+void ATennisBall::SetBallStateForService()
+{
+	ProjMovementComp->ProjectileGravityScale = 0.f;
+}
+
+void ATennisBall::SetBallStateForPlay()
+{
+	ProjMovementComp->ProjectileGravityScale = 1.f;
+}
+

@@ -13,7 +13,6 @@
 
 ATennisStoryGameMode::ATennisStoryGameMode()
 {
-	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Player/TennisStoryCharacter_BP"));
 	if (PlayerPawnBPClass.Class != NULL)
 	{
@@ -47,6 +46,7 @@ void ATennisStoryGameMode::StartPlay()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		
 		CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
+		CurrentBallActor->SetBallStateForService();
 
 		if (CameraPositioningComp.IsValid())
 		{
