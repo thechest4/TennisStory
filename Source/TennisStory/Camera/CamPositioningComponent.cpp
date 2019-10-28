@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Curves/CurveFloat.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -25,6 +26,10 @@ void UCamPositioningComponent::BeginPlay()
 void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	UWorld* World = GetWorld();
+
+	checkf(World, TEXT("UCamPositioningComponent::TickComponent - Somehow unable to get a World pointer!"));
 
 	if (OwnerCamComp.IsValid())
 	{
@@ -70,47 +75,155 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			int32 ScreenWidth, ScreenHeight;
 			LocalPlayerController->GetViewportSize(ScreenWidth, ScreenHeight);
 
+			FVector CameraTranslationVector = FVector::ZeroVector;
+			float AdjustmentSpeed;
+
+			//Logic to move camera to center of all tracked actors, when other adjustments are not necessary
+			{
+				FVector2D AverageScreenLocation;
+
+				for (FVector2D ScreenLoc : TrackedLocationsOnScreen)
+				{
+					AverageScreenLocation += ScreenLoc;
+				}
+
+				AverageScreenLocation /= TrackedLocationsOnScreen.Num();
+
+				float ScreenCenterX = ScreenWidth / 2.f;
+				float ScreenCenterY = ScreenHeight / 2.f;
+
+				FVector2D ScreenCenterOffset = FVector2D(AverageScreenLocation.X - ScreenCenterX, AverageScreenLocation.Y - ScreenCenterY);
+				int LateralOffsetSign = FMath::Sign(ScreenCenterOffset.X);
+				int ForwardOffsetSign = FMath::Sign(ScreenCenterOffset.Y);
+				
+				float LateralOffsetPercent = ScreenCenterOffset.X / ScreenWidth;
+				float ForwardOffsetPercent = ScreenCenterOffset.Y / ScreenHeight;
+
+				//Handle Lateral Translation
+				{
+					FVector CameraRight2D = OwnerPtr->GetActorRightVector().GetSafeNormal2D();
+					AdjustmentSpeed = (HorizontalPositioningSpeedCurve) ? HorizontalPositioningSpeedCurve->GetFloatValue(FMath::Abs(LateralOffsetPercent)) : FallbackPositioningSpeed;
+					
+					if (World->GetTimeSeconds() - LastLateralMoveTimestamp >= MoveDuration || LastLateralMoveTimestamp < 0.f)
+					{
+						CurrentLateralDirectionSign = LateralOffsetSign;
+						LastLateralMoveTimestamp = World->GetTimeSeconds();
+					}
+
+					if (LateralOffsetSign == CurrentLateralDirectionSign)
+					{
+
+						CameraTranslationVector += CurrentLateralDirectionSign * CameraRight2D * AdjustmentSpeed * DeltaTime;
+					}
+				}
+
+				//Handle Forward Translation
+				{
+					FVector CameraForward2D = OwnerPtr->GetActorForwardVector().GetSafeNormal2D();
+					AdjustmentSpeed = (HorizontalPositioningSpeedCurve) ? HorizontalPositioningSpeedCurve->GetFloatValue(FMath::Abs(ForwardOffsetPercent)) : FallbackPositioningSpeed;
+
+					if (World->GetTimeSeconds() - LastForwardMoveTimestamp >= MoveDuration || LastForwardMoveTimestamp < 0.f)
+					{
+						CurrentForwardDirectionSign = ForwardOffsetSign;
+						LastForwardMoveTimestamp = World->GetTimeSeconds();
+					}
+
+					if (ForwardOffsetSign == CurrentForwardDirectionSign)
+					{
+
+						//Subtraction because the screen y-axis is reversed, 0 is the top of the screen
+						CameraTranslationVector -= CurrentForwardDirectionSign * CameraForward2D * AdjustmentSpeed * DeltaTime;
+					}
+				}
+			}
+
 			float CalculatedScreenLeft = MarginFromScreenEdges * ScreenWidth;
 			float CalculatedScreenRight = (1.f - MarginFromScreenEdges) * ScreenWidth;
 			float CalculatedScreenTop = MarginFromScreenEdges * ScreenHeight;
 			float CalculatedScreenBottom = (1.f - MarginFromScreenEdges) * ScreenHeight;
 
-			FVector CameraForward2D = OwnerPtr->GetActorForwardVector().GetSafeNormal2D();
-			FVector CameraRight2D = OwnerPtr->GetActorRightVector().GetSafeNormal2D();
+			float LeftMargin = 0.f;
+			float RightMargin = 0.f;
+			float TopMargin = 0.f;
+			float BottomMargin = 0.f;
 
-			FVector CameraTranslationVector = FVector::ZeroVector;
-			bool bMoveLeft = false;
-			bool bMoveRight = false; 
-			bool bMoveForward = false; 
-			bool bMoveBackward = false;
+			bool bHasConflictingVerticalAdjustments = false;
+			bool bHasConflictingHorizontalAdjustments = false;
 
+			//Cache all margins, normalized such that a negative value indicates off screen and a positive value indicates on screen regardless of which side
+			bool bHasInitializedMargins = false;
 			for (FVector2D ScreenLocation : TrackedLocationsOnScreen)
 			{
-				if (ScreenLocation.X < CalculatedScreenLeft && !bMoveLeft)
-				{
-					CameraTranslationVector -= CameraRight2D;
-					bMoveLeft = true;
-				}
-				else if (ScreenLocation.X > CalculatedScreenRight && !bMoveRight)
-				{
-					CameraTranslationVector += CameraRight2D;
-					bMoveRight = true;
-				}
+				float NewLeft = ScreenLocation.X - CalculatedScreenLeft;
+				LeftMargin = (NewLeft < LeftMargin || !bHasInitializedMargins) ? NewLeft : LeftMargin;
 
-				if (ScreenLocation.Y < CalculatedScreenTop && !bMoveForward)
+				float NewRight = CalculatedScreenRight - ScreenLocation.X;
+				RightMargin = (NewRight < RightMargin || !bHasInitializedMargins) ? NewRight : RightMargin;
+
+				float NewTop = ScreenLocation.Y - CalculatedScreenTop;
+				TopMargin = (NewTop < TopMargin || !bHasInitializedMargins) ? NewTop : TopMargin;
+
+				float NewBottom = CalculatedScreenBottom - ScreenLocation.Y;
+				BottomMargin = (NewBottom < BottomMargin || !bHasInitializedMargins) ? NewBottom : BottomMargin;
+
+				bHasInitializedMargins = true;
+			}
+
+			float Margins[] = { LeftMargin / ScreenWidth, RightMargin / ScreenWidth, TopMargin / ScreenHeight, BottomMargin / ScreenHeight };
+
+			int VerticalDirectionSign = 0;
+			//If any margin is negative, move the camera up to get a better view
+			if (LeftMargin < 0.f || RightMargin < 0.f || TopMargin < 0.f || BottomMargin < 0.f)
+			{
+				VerticalDirectionSign = 1;
+			}
+			else
+			{
+				//If all margins are within our approach margin threshold, lower the camera to get a better view
+				float HorzApproachMargin = ApproachMargin * ScreenWidth;
+				float VertApproachMargin = ApproachMargin * ScreenHeight;
+				//if (LeftMargin >= HorzApproachMargin && RightMargin >= HorzApproachMargin && TopMargin >= VertApproachMargin && BottomMargin >= VertApproachMargin)
+				if (LeftMargin >= ApproachMargin && RightMargin >= ApproachMargin && TopMargin >= ApproachMargin && BottomMargin >= ApproachMargin)
 				{
-					CameraTranslationVector += CameraForward2D;
-					bMoveForward = true;
-				}
-				else if (ScreenLocation.Y > CalculatedScreenBottom && !bMoveBackward)
-				{
-					CameraTranslationVector -= CameraForward2D;
-					bMoveBackward = true;
+					VerticalDirectionSign = -1;
 				}
 			}
 
-			CameraTranslationVector.Normalize();
-			CameraTranslationVector = CameraTranslationVector * PositioningSpeed * DeltaTime;
+			if (World->GetTimeSeconds() - LastVerticalMoveTimestamp >= MoveDuration || LastVerticalMoveTimestamp < 0.f)
+			{
+				CurrentVerticalDirectionSign = VerticalDirectionSign;
+
+				if (CurrentVerticalDirectionSign)
+				{
+					LastVerticalMoveTimestamp = World->GetTimeSeconds();
+				}
+			}
+
+			FVector CamForward = OwnerPtr->GetActorForwardVector();
+			float SmallestMargin = LeftMargin;
+
+			for (int i = 0; i < ARRAY_COUNT(Margins); i++)
+			{
+				if (Margins[i] < SmallestMargin)
+				{
+					SmallestMargin = Margins[i];
+				}
+			}
+
+			//Logic for moving camera up
+			if (CurrentVerticalDirectionSign > 0/* && VerticalDirectionSign > 0*/)
+			{
+				AdjustmentSpeed = (PullBackSpeedCurve) ? PullBackSpeedCurve->GetFloatValue(FMath::Abs(SmallestMargin)) : FallbackPositioningSpeed;
+				CameraTranslationVector -= CamForward * AdjustmentSpeed * DeltaTime;
+			}
+			else if (CurrentVerticalDirectionSign < 0/* && VerticalDirectionSign < 0*/) //Logic for moving camera down
+			{
+				float AverageMargin = (LeftMargin / ScreenWidth + RightMargin / ScreenWidth + TopMargin / ScreenHeight + BottomMargin / ScreenHeight) / 4.f;
+
+				//AdjustmentSpeed = (ApproachSpeedCurve) ? ApproachSpeedCurve->GetFloatValue(AverageMargin) : FallbackPositioningSpeed;
+				AdjustmentSpeed = (ApproachSpeedCurve) ? ApproachSpeedCurve->GetFloatValue(FMath::Abs(SmallestMargin)) : FallbackPositioningSpeed;
+				CameraTranslationVector += CamForward * AdjustmentSpeed * DeltaTime;
+			}
 
 			OwnerPtr->SetActorLocation(OwnerPtr->GetActorLocation() + CameraTranslationVector);
 		}
