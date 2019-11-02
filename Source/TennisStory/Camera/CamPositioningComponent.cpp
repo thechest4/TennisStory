@@ -8,8 +8,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
 
-#include "DrawDebugHelpers.h"
-
 UCamPositioningComponent::UCamPositioningComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -112,7 +110,6 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 					if (LateralOffsetSign == CurrentLateralDirectionSign)
 					{
-
 						CameraTranslationVector += CurrentLateralDirectionSign * CameraRight2D * AdjustmentSpeed * DeltaTime;
 					}
 				}
@@ -130,7 +127,6 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 					if (ForwardOffsetSign == CurrentForwardDirectionSign)
 					{
-
 						//Subtraction because the screen y-axis is reversed, 0 is the top of the screen
 						CameraTranslationVector -= CurrentForwardDirectionSign * CameraForward2D * AdjustmentSpeed * DeltaTime;
 					}
@@ -180,10 +176,10 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			else
 			{
 				//If all margins are within our approach margin threshold, lower the camera to get a better view
-				float HorzApproachMargin = ApproachMargin * ScreenWidth;
-				float VertApproachMargin = ApproachMargin * ScreenHeight;
-				//if (LeftMargin >= HorzApproachMargin && RightMargin >= HorzApproachMargin && TopMargin >= VertApproachMargin && BottomMargin >= VertApproachMargin)
-				if (LeftMargin >= ApproachMargin && RightMargin >= ApproachMargin && TopMargin >= ApproachMargin && BottomMargin >= ApproachMargin)
+				float HorzApproachMargin = (ApproachMargin + MarginFromScreenEdges) * ScreenWidth;
+				float VertApproachMargin = (ApproachMargin + MarginFromScreenEdges) * ScreenHeight;
+
+				if (LeftMargin >= HorzApproachMargin && RightMargin >= HorzApproachMargin && TopMargin >= VertApproachMargin && BottomMargin >= VertApproachMargin)
 				{
 					VerticalDirectionSign = -1;
 				}
@@ -200,7 +196,7 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			}
 
 			FVector CamForward = OwnerPtr->GetActorForwardVector();
-			float SmallestMargin = LeftMargin;
+			float SmallestMargin = LeftMargin / ScreenWidth;
 
 			for (int i = 0; i < ARRAY_COUNT(Margins); i++)
 			{
@@ -211,16 +207,13 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			}
 
 			//Logic for moving camera up
-			if (CurrentVerticalDirectionSign > 0/* && VerticalDirectionSign > 0*/)
+			if (CurrentVerticalDirectionSign > 0)
 			{
 				AdjustmentSpeed = (PullBackSpeedCurve) ? PullBackSpeedCurve->GetFloatValue(FMath::Abs(SmallestMargin)) : FallbackPositioningSpeed;
 				CameraTranslationVector -= CamForward * AdjustmentSpeed * DeltaTime;
 			}
-			else if (CurrentVerticalDirectionSign < 0/* && VerticalDirectionSign < 0*/) //Logic for moving camera down
+			else if (CurrentVerticalDirectionSign < 0) //Logic for moving camera down
 			{
-				float AverageMargin = (LeftMargin / ScreenWidth + RightMargin / ScreenWidth + TopMargin / ScreenHeight + BottomMargin / ScreenHeight) / 4.f;
-
-				//AdjustmentSpeed = (ApproachSpeedCurve) ? ApproachSpeedCurve->GetFloatValue(AverageMargin) : FallbackPositioningSpeed;
 				AdjustmentSpeed = (ApproachSpeedCurve) ? ApproachSpeedCurve->GetFloatValue(FMath::Abs(SmallestMargin)) : FallbackPositioningSpeed;
 				CameraTranslationVector += CamForward * AdjustmentSpeed * DeltaTime;
 			}
@@ -234,5 +227,3 @@ void UCamPositioningComponent::AddTrackedActor(AActor* ActorToTrack)
 {
 	TrackedActors.Add(ActorToTrack);
 }
-
-
