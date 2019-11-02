@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "CamPositioningComponent.generated.h"
 
+class UCurveFloat;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UCamPositioningComponent : public UActorComponent
@@ -27,10 +28,33 @@ protected:
 	float MarginFromScreenEdges = 0.05f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
-	float PositioningSpeed = 500.f;
+	float ApproachMargin = 0.08f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	UCurveFloat* HorizontalPositioningSpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	UCurveFloat* PullBackSpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	UCurveFloat* ApproachSpeedCurve;
+
+	const float FallbackPositioningSpeed = 500.f;
 
 	TWeakObjectPtr<AActor> OwnerPtr;
 	TWeakObjectPtr<class UCameraComponent> OwnerCamComp;
 
 	TArray<TWeakObjectPtr<AActor>> TrackedActors;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	float MoveDuration = 0.2f;
+
+	int CurrentLateralDirectionSign = 0;
+	float LastLateralMoveTimestamp = -1.f;
+
+	int CurrentForwardDirectionSign = 0;
+	float LastForwardMoveTimestamp = -1.f;
+
+	int CurrentVerticalDirectionSign = 0;
+	float LastVerticalMoveTimestamp = -1.f;
 };
