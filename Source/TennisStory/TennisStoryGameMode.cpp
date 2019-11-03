@@ -98,6 +98,12 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			{
 				CameraPositioningComp->AddTrackedActor(Cast<AActor>(TennisChar));
 			}
+
+			APlayerController* PlayerController = Cast<APlayerController>(NewPlayer);
+			if (PlayerController && CameraPositioningComp.IsValid())
+			{
+				PlayerController->SetViewTarget(CameraPositioningComp->GetOwner());
+			}
 		}
 
 		FinishRestartPlayer(NewPlayer, SpawnTransform.GetRotation().Rotator());
