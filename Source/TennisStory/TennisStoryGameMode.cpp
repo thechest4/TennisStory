@@ -46,7 +46,7 @@ void ATennisStoryGameMode::StartPlay()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		
 		CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
-		CurrentBallActor->SetBallStateForService();
+		CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
 
 		if (CameraPositioningComp.IsValid())
 		{

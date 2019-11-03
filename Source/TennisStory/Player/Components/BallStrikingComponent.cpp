@@ -49,13 +49,13 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 	APlayerTargetActor* PlayerTarget = (OwnerCharacter) ? OwnerCharacter->TargetActor : nullptr;
 
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
-	if (PlayerTarget && TennisBall)
+	if (PlayerTarget && TennisBall && TennisBall->HasAuthority())
 	{
 		if (TennisBall->IsInServiceState())
 		{
-			TennisBall->SetBallStateForPlay();
+			TennisBall->SetBallState(ETennisBallState::PlayState);
 		}
-	
+			
 		float BallSpeed = CalculateChargedBallSpeed();
 
 		//The math expects a positive gravity, but the ProjMovementComponent returns a negative one.  So multiply by -1

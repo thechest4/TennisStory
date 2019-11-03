@@ -6,6 +6,13 @@
 #include "GameFramework/Actor.h"
 #include "TennisBall.generated.h"
 
+UENUM(BlueprintType)
+enum class ETennisBallState : uint8
+{
+	ServiceState,
+	PlayState
+};
+
 UCLASS()
 class TENNISSTORY_API ATennisBall : public AActor
 {
@@ -20,13 +27,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	bool IsInServiceState();
 
-	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
-	void SetBallStateForService();
-
-	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
-	void SetBallStateForPlay();
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Tennis Ball")
+	void SetBallState(ETennisBallState NewState);
 
 protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;
+
+	ETennisBallState CurrentBallState;
+
+	void ApplyBallState();
 };
