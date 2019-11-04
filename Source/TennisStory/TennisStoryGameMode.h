@@ -38,6 +38,9 @@ protected:
 	void GetCamPositioningCompFromWorld();
 
 	TWeakObjectPtr<class UCamPositioningComponent> CameraPositioningComp;
+
+private:
+	int NextPlayerNumberToAssign = 0;
 };
 
 

@@ -4,6 +4,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Player/TennisStoryPlayerController.h"
 #include "Gameplay/HalfCourt.h"
 #include "Gameplay/TennisBall.h"
 #include "Camera/CameraActor.h"
@@ -21,6 +22,7 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	}
 
 	GameStateClass = ATennisStoryGameState::StaticClass();
+	PlayerControllerClass = ATennisStoryPlayerController::StaticClass();
 }
 
 void ATennisStoryGameMode::InitGameState()
@@ -82,6 +84,13 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 		GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::RestartPlayer - Default Pawn Class was null"));
 		return;
 	}
+
+	ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(NewPlayer);
+
+	checkf(TSPC, TEXT("ATennisStoryGameMode::PostLogin - PlayerController was not derived from ATennisStoryPlayerController!"));
+
+	TSPC->SetPlayerNumber(NextPlayerNumberToAssign);
+	NextPlayerNumberToAssign++;
 
 	TWeakObjectPtr<AHalfCourt> SpawnCourt = FindPlayerCourt(NewPlayer);
 	if (SpawnCourt.IsValid())
@@ -153,12 +162,12 @@ TWeakObjectPtr<AHalfCourt> ATennisStoryGameMode::FindPlayerCourt(AController* Ne
 		GetCourtsFromWorld();
 	}
 
-	APlayerController* PlayerController = Cast<APlayerController>(NewPlayer);
+	ATennisStoryPlayerController* PlayerController = Cast<ATennisStoryPlayerController>(NewPlayer);
 	if (PlayerController)
 	{
 		for (TWeakObjectPtr<AHalfCourt> Court : TSGameState->Courts)
 		{
-			if (Court.IsValid() && static_cast<int>(Court->GetCourtSide()) == PlayerController->NetPlayerIndex)
+			if (Court.IsValid() && static_cast<int>(Court->GetCourtSide()) == PlayerController->GetPlayerNumber())
 			{
 				return Court;
 			}

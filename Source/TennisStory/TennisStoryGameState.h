@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
 #include "Gameplay/HalfCourt.h"
+#include "Player/TennisStoryPlayerController.h"
 #include "TennisStoryGameState.generated.h"
 
 class ATennisBall;
@@ -37,9 +38,9 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	AHalfCourt* GetCourtForPlayer(APlayerController* PlayerController) const
+	AHalfCourt* GetCourtForPlayer(ATennisStoryPlayerController* PlayerController) const
 	{
-		return GetCourt(static_cast<ECourtSide>(PlayerController->NetPlayerIndex));
+		return GetCourt(static_cast<ECourtSide>(PlayerController->GetPlayerNumber()));
 	}
 
 protected:
