@@ -44,6 +44,7 @@ protected:
 	TWeakObjectPtr<AActor> OwnerPtr;
 	TWeakObjectPtr<class UCameraComponent> OwnerCamComp;
 
+	UPROPERTY(Replicated)
 	TArray<TWeakObjectPtr<AActor>> TrackedActors;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")

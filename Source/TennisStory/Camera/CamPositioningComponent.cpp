@@ -7,10 +7,20 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
+#include "Net/UnrealNetwork.h"
 
 UCamPositioningComponent::UCamPositioningComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	
+	bReplicates = true;
+}
+
+void UCamPositioningComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCamPositioningComponent, TrackedActors);
 }
 
 void UCamPositioningComponent::BeginPlay()
@@ -24,6 +34,11 @@ void UCamPositioningComponent::BeginPlay()
 void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!TrackedActors.Num())
+	{
+		return;
+	}
 
 	UWorld* World = GetWorld();
 
@@ -57,8 +72,7 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			}
 		}
 
-		//TODO(achester): Not sure if this is a good way to get the player controller in online play?
-		APlayerController* LocalPlayerController = UGameplayStatics::GetPlayerController(this, 0);
+		APlayerController* LocalPlayerController = GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(GetWorld());
 		if (LocalPlayerController)
 		{
 			TArray<FVector2D> TrackedLocationsOnScreen;
