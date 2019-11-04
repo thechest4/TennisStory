@@ -48,6 +48,15 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	{
 		TArray<FVector> LocationsToTrack;
 
+		//Prune the tracked actors list before we do anything
+		for (int i = TrackedActors.Num() - 1; i >= 0; i--)
+		{
+			if (!TrackedActors[i].IsValid())
+			{
+				TrackedActors.RemoveAt(i);
+			}
+		}
+
 		for (TWeakObjectPtr<AActor> Actor : TrackedActors)
 		{
 			if (Actor.IsValid())
@@ -65,10 +74,6 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 				{
 					LocationsToTrack.Add(Actor->GetActorLocation());
 				}
-			}
-			else
-			{
-				TrackedActors.Remove(Actor);
 			}
 		}
 
