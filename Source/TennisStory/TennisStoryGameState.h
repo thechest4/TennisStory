@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "Gameplay/HalfCourt.h"
 #include "TennisStoryGameState.generated.h"
 
 class ATennisBall;
@@ -16,9 +17,37 @@ class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 public:
 	TWeakObjectPtr<ATennisBall> GetTennisBall() const { return CurrentBallActor; }
 
+	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts() const
+	{
+		return Courts;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	AHalfCourt* GetCourt(ECourtSide Side) const
+	{
+		for (TWeakObjectPtr<AHalfCourt> Court : Courts)
+		{
+			if (Court.IsValid() && Court->GetCourtSide() == Side)
+			{
+				return Court.Get();
+			}
+		}
+
+		return nullptr;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	AHalfCourt* GetCourtForPlayer(APlayerController* PlayerController) const
+	{
+		return GetCourt(static_cast<ECourtSide>(PlayerController->NetPlayerIndex));
+	}
+
 protected:
-	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
+	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;
+
+	UPROPERTY(Transient, Replicated)
+	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 
 	friend class ATennisStoryGameMode;
 };

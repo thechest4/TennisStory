@@ -23,48 +23,46 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	GameStateClass = ATennisStoryGameState::StaticClass();
 }
 
+void ATennisStoryGameMode::InitGameState()
+{
+	Super::InitGameState();
+
+	TSGameState = Cast<ATennisStoryGameState>(GameState);
+
+	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
+}
+
 void ATennisStoryGameMode::StartPlay()
 {
-	checkf(GameState, TEXT("ATennisStoryGameMode::StartPlay - GameState was null!"));
-
-	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(GameState);
-	if (!TSGameState)
+	if (!CameraPositioningComp.IsValid())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::StartPlay - GameState was not derived from TennisStoryGameState!"));
+		GetCamPositioningCompFromWorld();
 	}
 
-	if (TSGameState)
+	if (!TSGameState->Courts.Num())
 	{
-		if (!CameraPositioningComp.IsValid())
+		GetCourtsFromWorld();
+	}
+
+	if (DefaultBallClass)
+	{
+		FTransform BallSpawnTransform = FTransform::Identity;
+
+		AHalfCourt* NearCourt = TSGameState->GetCourt(ECourtSide::NearCourt);
+		if (NearCourt)
 		{
-			GetCamPositioningCompFromWorld();
+			BallSpawnTransform = NearCourt->GetBallServiceTransform();
 		}
 
-		if (!Courts.Num())
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		TSGameState->CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
+		TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
+
+		if (CameraPositioningComp.IsValid())
 		{
-			GetCourtsFromWorld();
-		}
-
-		if (DefaultBallClass)
-		{
-			FTransform BallSpawnTransform = FTransform::Identity;
-		
-			AHalfCourt* NearCourt = GetCourt(ECourtSide::NearCourt);
-			if (NearCourt)
-			{
-				BallSpawnTransform = NearCourt->GetBallServiceTransform();
-			}
-
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		
-			TSGameState->CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
-			TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
-
-			if (CameraPositioningComp.IsValid())
-			{
-				CameraPositioningComp->AddTrackedActor(Cast<AActor>(TSGameState->CurrentBallActor));
-			}
+			CameraPositioningComp->AddTrackedActor(Cast<AActor>(TSGameState->CurrentBallActor));
 		}
 	}
 
@@ -150,7 +148,7 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 
 TWeakObjectPtr<AHalfCourt> ATennisStoryGameMode::FindPlayerCourt(AController* NewPlayer)
 {
-	if (!Courts.Num())
+	if (!TSGameState->Courts.Num())
 	{
 		GetCourtsFromWorld();
 	}
@@ -158,7 +156,7 @@ TWeakObjectPtr<AHalfCourt> ATennisStoryGameMode::FindPlayerCourt(AController* Ne
 	APlayerController* PlayerController = Cast<APlayerController>(NewPlayer);
 	if (PlayerController)
 	{
-		for (TWeakObjectPtr<AHalfCourt> Court : Courts)
+		for (TWeakObjectPtr<AHalfCourt> Court : TSGameState->Courts)
 		{
 			if (Court.IsValid() && static_cast<int>(Court->GetCourtSide()) == PlayerController->NetPlayerIndex)
 			{
@@ -175,7 +173,7 @@ void ATennisStoryGameMode::GetCourtsFromWorld()
 	for (TActorIterator<AHalfCourt> It(GetWorld()); It; ++It)
 	{
 		AHalfCourt* Court = *It;
-		Courts.Add(Court);
+		TSGameState->Courts.Add(Court);
 	}
 }
 

@@ -4,7 +4,6 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
-#include "TennisStoryGameMode.h"
 #include "TennisStoryGameState.h"
 #include "Player/PlayerTargetActor.h"
 #include "Player/Components/BallStrikingComponent.h"
@@ -215,10 +214,10 @@ void ATennisStoryCharacter::MoveTargetRight(float Value)
 
 TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()
 {
-	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if (GameMode)
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	if (GameState)
 	{
-		TArray<TWeakObjectPtr<AHalfCourt>> AvailableCourts = GameMode->GetAllCourts();
+		TArray<TWeakObjectPtr<AHalfCourt>> AvailableCourts = GameState->GetAllCourts();
 
 		if (AvailableCourts.Num() == 0)
 		{

@@ -5,6 +5,7 @@
 #include "Gameplay/HalfCourt.h"
 #include "TennisStoryGameMode.generated.h"
 
+class ATennisStoryGameState;
 class ATennisBall;
 
 UCLASS(minimalapi)
@@ -14,31 +15,8 @@ class ATennisStoryGameMode : public AGameModeBase
 
 public:
 	ATennisStoryGameMode();
-
-	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts() const
-	{
-		return Courts;
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	AHalfCourt* GetCourt(ECourtSide Side) const
-	{
-		for (TWeakObjectPtr<AHalfCourt> Court : Courts)
-		{
-			if (Court.IsValid() && Court->GetCourtSide() == Side)
-			{
-				return Court.Get();
-			}
-		}
-
-		return nullptr;
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	AHalfCourt* GetCourtForPlayer(APlayerController* PlayerController) const
-	{
-		return GetCourt(static_cast<ECourtSide>(PlayerController->NetPlayerIndex));
-	}
+	
+	virtual void InitGameState() override;
 
 	virtual void StartPlay() override;
 
@@ -52,7 +30,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
 
-	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
+	UPROPERTY(Transient)
+	ATennisStoryGameState* TSGameState;
 
 	void GetCourtsFromWorld();
 
