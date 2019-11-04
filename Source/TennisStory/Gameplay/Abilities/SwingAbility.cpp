@@ -8,14 +8,24 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
 
+USwingAbility::USwingAbility(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+	, bSwingReleased(false)
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	bReplicateInputDirectly = true;
+}
+
+bool USwingAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
+{
+	bool bSuperResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+
+	return !CurrentMontageTask && bSuperResult;
+}
+
 void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, OwnerInfo, ActivationInfo, TriggerEventData);
-
-	if (!CommitAbility(Handle, OwnerInfo, ActivationInfo))
-	{
-		return;
-	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(OwnerInfo->OwnerActor);
 	if (!OwnerChar)
@@ -30,6 +40,12 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
+	if (!CommitAbility(Handle, OwnerInfo, ActivationInfo))
+	{
+		return;
+	}
+
+	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
 	{
@@ -52,6 +68,11 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	OwnerChar->EnablePlayerTargeting();
 }
 
+void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
 void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool bInterrupted*/)
 {
 	CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
@@ -63,14 +84,20 @@ void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool
 		OwnerChar->DisablePlayerTargeting();
 	}
 
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
 void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
+	if (bSwingReleased)
+	{
+		return;
+	}
+
 	if (CurrentMontageTask)
 	{
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
+		bSwingReleased = true;
 	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);

@@ -11,6 +11,7 @@
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
 #include "Gameplay/HalfCourt.h"
+#include "Net/UnrealNetwork.h"
 
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
@@ -28,6 +29,15 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
 	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
+}
+
+void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATennisStoryCharacter, CachedAimVector);
+	DOREPLIFETIME(ATennisStoryCharacter, CachedAimRightVector);
+	DOREPLIFETIME(ATennisStoryCharacter, bIsCharging);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -55,13 +65,16 @@ void ATennisStoryCharacter::BeginPlay()
 		TargetActor->SetOwner(this);
 	}
 
-	if (AbilitySystemComp && HasAuthority())
+	if (AbilitySystemComp)
 	{
 		AbilitySystemComp->InitAbilityActorInfo(this, this);
 
-		for (FGrantedAbilityInfo AbilityInfo : AbilitiesToGive)
+		if (HasAuthority())
 		{
-			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
+			for (FGrantedAbilityInfo AbilityInfo : AbilitiesToGive)
+			{
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
+			}
 		}
 	}
 }
@@ -113,20 +126,23 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 
 void ATennisStoryCharacter::EnablePlayerTargeting()
 {
-	if (TargetActor)
+	if (IsLocallyControlled() && TargetActor)
 	{
 		TargetActor->ShowTargetOnCourt(GetCourtToAimAt());
 	}
 
 	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
 	//also put some thought into how to best store stats like move speed while swinging and such.
-	CachedMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;
+	if (HasAuthority())
+	{
+		bIsCharging = true;
+		OnRep_IsCharging();
+	}
 }
 
 void ATennisStoryCharacter::FreezePlayerTarget()
 {
-	if (TargetActor)
+	if (IsLocallyControlled() && TargetActor)
 	{
 		TargetActor->DisableTargetMovement();
 	}
@@ -134,12 +150,16 @@ void ATennisStoryCharacter::FreezePlayerTarget()
 
 void ATennisStoryCharacter::DisablePlayerTargeting()
 {
-	if (TargetActor)
+	if (IsLocallyControlled() && TargetActor)
 	{
 		TargetActor->HideTarget();
 	}
 
-	GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
+	if (HasAuthority())
+	{
+		bIsCharging = false;
+		OnRep_IsCharging();
+	}
 }
 
 void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
@@ -158,6 +178,19 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("MoveTargetRight", this, &ATennisStoryCharacter::MoveTargetRight);
 
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
+}
+
+void ATennisStoryCharacter::OnRep_IsCharging()
+{
+	if (bIsCharging)
+	{
+		CachedMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+		GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
+	}
 }
 
 void ATennisStoryCharacter::MoveForward(float Value)

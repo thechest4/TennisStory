@@ -106,11 +106,20 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MoveSpeedWhileSwinging = 150.0f;
 
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_IsCharging)
+	bool bIsCharging;
+
+	UFUNCTION()
+	virtual void OnRep_IsCharging();
+
 	float CachedMaxWalkSpeed;
 
 	//These vectors are used to orient the character relative to the court it's aiming at
 	//Set whenever a character is assigned to a court
+	UPROPERTY(Transient, Replicated)
 	FVector CachedAimVector;
+
+	UPROPERTY(Transient, Replicated)
 	FVector CachedAimRightVector;
 
 	friend class UBallStrikingComponent;

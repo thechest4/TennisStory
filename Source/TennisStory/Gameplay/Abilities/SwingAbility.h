@@ -9,10 +9,14 @@
 UCLASS()
 class TENNISSTORY_API USwingAbility : public UGameplayAbility
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 	
 public:
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const;
+
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	UFUNCTION()
 	void HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool bInterrupted*/);
@@ -26,6 +30,8 @@ protected:
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+
+	bool bSwingReleased;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 };
