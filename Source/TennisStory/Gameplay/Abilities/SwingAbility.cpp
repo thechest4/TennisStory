@@ -63,7 +63,10 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 
-	OwnerChar->BallStrikingComp->SetChargeStartTime();
+	if (OwnerChar->HasAuthority())
+	{
+		OwnerChar->BallStrikingComp->SetChargeStartTime();
+	}
 
 	OwnerChar->EnablePlayerTargeting();
 }
@@ -103,7 +106,11 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
-		OwnerChar->BallStrikingComp->SetChargeEndTime();
 		OwnerChar->FreezePlayerTarget();
+
+		if (OwnerChar->HasAuthority())
+		{
+			OwnerChar->BallStrikingComp->SetChargeEndTime();
+		}
 	}
 }

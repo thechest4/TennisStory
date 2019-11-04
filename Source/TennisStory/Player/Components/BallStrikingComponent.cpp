@@ -15,21 +15,27 @@ UBallStrikingComponent::UBallStrikingComponent()
 
 void UBallStrikingComponent::AllowBallStriking()
 {
-	ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
-	ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
-	if (OwnerRacquet)
+	if (GetOwner()->HasAuthority())
 	{
-		OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+		ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
+		ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
+		if (OwnerRacquet)
+		{
+			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+		}
 	}
 }
 
 void UBallStrikingComponent::StopBallStriking()
 {
-	ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
-	ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
-	if (OwnerRacquet)
+	if (GetOwner()->HasAuthority())
 	{
-		OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+		ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
+		ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
+		if (OwnerRacquet)
+		{
+			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+		}
 	}
 }
 
@@ -49,7 +55,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 	APlayerTargetActor* PlayerTarget = (OwnerCharacter) ? OwnerCharacter->TargetActor : nullptr;
 
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
-	if (PlayerTarget && TennisBall && TennisBall->HasAuthority())
+	if (PlayerTarget && TennisBall)
 	{
 		if (TennisBall->IsInServiceState())
 		{
