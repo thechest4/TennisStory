@@ -9,3 +9,8 @@ void ATennisStoryPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimePr
 
 	DOREPLIFETIME(ATennisStoryPlayerController, PlayerNumber);
 }
+
+void ATennisStoryPlayerController::BeginPlay()
+{
+	SetControlRotation(FRotator::ZeroRotator);
+}

@@ -147,7 +147,6 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 	else
 	{
 		NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
-		NewPlayer->SetControlRotation(FRotator::ZeroRotator);
 
 		SetPlayerDefaults(NewPlayer->GetPawn());
 

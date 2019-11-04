@@ -21,6 +21,8 @@ public:
 	}
 
 protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(Transient, Replicated)
 	int PlayerNumber = -1;
 };
