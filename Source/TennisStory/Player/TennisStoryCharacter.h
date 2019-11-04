@@ -74,6 +74,9 @@ protected:
 
 	void MoveTargetRight(float Value);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_CommitTargetPosition(FVector WorldLocation);
+
 	TWeakObjectPtr<class AHalfCourt> GetCourtToAimAt();
 
 	// APawn interface

@@ -21,7 +21,7 @@ public:
 
 	void Tick(float DeltaSeconds) override;
 
-	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt);
+	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt, bool bShowTarget);
 
 	void DisableTargetMovement();
 

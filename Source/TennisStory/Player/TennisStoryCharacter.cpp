@@ -126,9 +126,16 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 
 void ATennisStoryCharacter::EnablePlayerTargeting()
 {
-	if (IsLocallyControlled() && TargetActor)
+	if (TargetActor)
 	{
-		TargetActor->ShowTargetOnCourt(GetCourtToAimAt());
+		TargetActor->ShowTargetOnCourt(GetCourtToAimAt(), IsLocallyControlled());
+
+		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
+		//Basically a fallback in case another position isn't committed
+		if (!HasAuthority())
+		{
+			Server_CommitTargetPosition(TargetActor->GetActorLocation());
+		}
 	}
 
 	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
@@ -142,15 +149,20 @@ void ATennisStoryCharacter::EnablePlayerTargeting()
 
 void ATennisStoryCharacter::FreezePlayerTarget()
 {
-	if (IsLocallyControlled() && TargetActor)
+	if (TargetActor)
 	{
 		TargetActor->DisableTargetMovement();
+
+		if (!HasAuthority())
+		{
+			Server_CommitTargetPosition(TargetActor->GetActorLocation());
+		}
 	}
 }
 
 void ATennisStoryCharacter::DisablePlayerTargeting()
 {
-	if (IsLocallyControlled() && TargetActor)
+	if (TargetActor)
 	{
 		TargetActor->HideTarget();
 	}
@@ -243,6 +255,16 @@ void ATennisStoryCharacter::MoveTargetRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		TargetActor->AddInputVector(Direction, Value);
 	}
+}
+
+bool ATennisStoryCharacter::Server_CommitTargetPosition_Validate(FVector WorldLocation)
+{
+	return TargetActor;
+}
+
+void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector WorldLocation)
+{
+	TargetActor->SetActorLocation(WorldLocation);
 }
 
 TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()

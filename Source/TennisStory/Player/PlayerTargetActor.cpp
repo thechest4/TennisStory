@@ -66,7 +66,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 	}
 }
 
-void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt)
+void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt, bool bShowTarget)
 {
 	if (CourtToAimAt.IsValid())
 	{
@@ -81,7 +81,7 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 		bCurrentlyMovable = true;
 		TargetingStartedTime = GetWorld()->GetTimeSeconds();
 
-		TargetMesh->SetVisibility(true);
+		TargetMesh->SetVisibility(bShowTarget);
 
 		CurrentInputVector = FVector::ZeroVector;
 	}
