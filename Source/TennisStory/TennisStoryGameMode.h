@@ -15,8 +15,6 @@ class ATennisStoryGameMode : public AGameModeBase
 public:
 	ATennisStoryGameMode();
 
-	TWeakObjectPtr<ATennisBall> GetTennisBall() const { return CurrentBallActor; }
-
 	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts() const
 	{
 		return Courts;
@@ -53,8 +51,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
-
-	TWeakObjectPtr<ATennisBall> CurrentBallActor;
 
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 

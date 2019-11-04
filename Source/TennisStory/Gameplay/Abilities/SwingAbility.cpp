@@ -3,7 +3,7 @@
 
 #include "SwingAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
-#include "TennisStoryGameMode.h"
+#include "TennisStoryGameState.h"
 #include "Gameplay/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
@@ -23,8 +23,8 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	ATennisBall* TennisBall = (GameMode) ? GameMode->GetTennisBall().Get() : nullptr;
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
 	if (!TennisBall)
 	{
 		return;

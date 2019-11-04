@@ -1,5 +1,6 @@
 
 #include "TennisStoryGameMode.h"
+#include "TennisStoryGameState.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "Player/TennisStoryCharacter.h"
@@ -18,39 +19,52 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
+	GameStateClass = ATennisStoryGameState::StaticClass();
 }
 
 void ATennisStoryGameMode::StartPlay()
 {
-	if (!CameraPositioningComp.IsValid())
+	checkf(GameState, TEXT("ATennisStoryGameMode::StartPlay - GameState was null!"));
+
+	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(GameState);
+	if (!TSGameState)
 	{
-		GetCamPositioningCompFromWorld();
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::StartPlay - GameState was not derived from TennisStoryGameState!"));
 	}
 
-	if (!Courts.Num())
+	if (TSGameState)
 	{
-		GetCourtsFromWorld();
-	}
-
-	if (DefaultBallClass)
-	{
-		FTransform BallSpawnTransform = FTransform::Identity;
-		
-		AHalfCourt* NearCourt = GetCourt(ECourtSide::NearCourt);
-		if (NearCourt)
+		if (!CameraPositioningComp.IsValid())
 		{
-			BallSpawnTransform = NearCourt->GetBallServiceTransform();
+			GetCamPositioningCompFromWorld();
 		}
 
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		
-		CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
-		CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
-
-		if (CameraPositioningComp.IsValid())
+		if (!Courts.Num())
 		{
-			CameraPositioningComp->AddTrackedActor(Cast<AActor>(CurrentBallActor));
+			GetCourtsFromWorld();
+		}
+
+		if (DefaultBallClass)
+		{
+			FTransform BallSpawnTransform = FTransform::Identity;
+		
+			AHalfCourt* NearCourt = GetCourt(ECourtSide::NearCourt);
+			if (NearCourt)
+			{
+				BallSpawnTransform = NearCourt->GetBallServiceTransform();
+			}
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		
+			TSGameState->CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
+			TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
+
+			if (CameraPositioningComp.IsValid())
+			{
+				CameraPositioningComp->AddTrackedActor(Cast<AActor>(TSGameState->CurrentBallActor));
+			}
 		}
 	}
 

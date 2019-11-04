@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "TennisStoryGameMode.h"
+#include "TennisStoryGameState.h"
 #include "Player/PlayerTargetActor.h"
 #include "Player/Components/BallStrikingComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
@@ -20,7 +21,7 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
@@ -80,12 +81,12 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if (GameMode)
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	if (GameState)
 	{
 		AActor* LookAtTarget = TargetActor;
 
-		TWeakObjectPtr<ATennisBall> TennisBall = GameMode->GetTennisBall();
+		TWeakObjectPtr<ATennisBall> TennisBall = GameState->GetTennisBall();
 		if (TennisBall.IsValid())
 		{
 			LookAtTarget = TennisBall.Get();
