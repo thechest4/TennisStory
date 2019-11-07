@@ -39,15 +39,21 @@ AHalfCourt::AHalfCourt()
 
 #if WITH_EDITOR
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
-	EditorCourtBounds->bVisible = true;
-	EditorCourtBounds->bHiddenInGame = false;
-	EditorCourtBounds->SetGenerateOverlapEvents(false);
-	EditorCourtBounds->SetCollisionProfileName(TEXT("NoCollision"));
-	EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f)); //10 height just to make the bounds visible
+	if (EditorCourtBounds)
+	{
+		EditorCourtBounds->bVisible = true;
+		EditorCourtBounds->bHiddenInGame = false;
+		EditorCourtBounds->SetGenerateOverlapEvents(false);
+		EditorCourtBounds->SetCollisionProfileName(TEXT("NoCollision"));
+		EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f)); //10 height just to make the bounds visible
+	}
 
 	CourtForwardArrow = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Court Forward Arrow"));
-	CourtForwardArrow->SetupAttachment(RootComponent);
-	CourtForwardArrow->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.0f, 0.0f));
+	if (CourtForwardArrow)
+	{
+		CourtForwardArrow->SetupAttachment(RootComponent);
+		CourtForwardArrow->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.0f, 0.0f));
+	}
 
 	static const float IconHeight = 25.0f;
 	static const float IconEditorScale = 0.5f;
@@ -55,54 +61,77 @@ AHalfCourt::AHalfCourt()
 	static ConstructorHelpers::FObjectFinder<UTexture2D> PlayerServiceSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/throwing-ball"));
 
 	PlayerServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Player Service Icon"));
-	PlayerServiceIcon->SetupAttachment(PlayerServiceLocation);
-	PlayerServiceIcon->SetHiddenInGame(true);
-	PlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-	PlayerServiceIcon->SetEditorScale(IconEditorScale);
-
-	if (PlayerServiceSprite.Succeeded())
+	if (PlayerServiceIcon)
 	{
-		PlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
+		PlayerServiceIcon->SetupAttachment(PlayerServiceLocation);
+		PlayerServiceIcon->SetHiddenInGame(true);
+		PlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		PlayerServiceIcon->SetEditorScale(IconEditorScale);
+
+		if (PlayerServiceSprite.Succeeded())
+		{
+			PlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
+		}
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisBallSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-ball"));
 
 	BallServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ball Service Icon"));
-	BallServiceIcon->SetupAttachment(BallServiceLocation);
-	BallServiceIcon->SetHiddenInGame(true);
-	BallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-	BallServiceIcon->SetEditorScale(IconEditorScale);
-
-	if (TennisBallSprite.Succeeded())
+	if (BallServiceIcon)
 	{
-		BallServiceIcon->SetSprite(TennisBallSprite.Object);
+		BallServiceIcon->SetupAttachment(BallServiceLocation);
+		BallServiceIcon->SetHiddenInGame(true);
+		BallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		BallServiceIcon->SetEditorScale(IconEditorScale);
+
+		if (TennisBallSprite.Succeeded())
+		{
+			BallServiceIcon->SetSprite(TennisBallSprite.Object);
+		}
 	}
-
-	MidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Mid Snap Point Icon"));
-	MidSnapPointIcon->SetupAttachment(MidSnapPoint);
-	MidSnapPointIcon->SetHiddenInGame(true);
-	MidSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-	MidSnapPointIcon->SetEditorScale(IconEditorScale);
-	
-	RightSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Right Snap Point Icon"));
-	RightSnapPointIcon->SetupAttachment(RightSnapPoint);
-	RightSnapPointIcon->SetHiddenInGame(true);
-	RightSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-	RightSnapPointIcon->SetEditorScale(IconEditorScale);
-
-	LeftSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Left Snap Point Icon"));
-	LeftSnapPointIcon->SetupAttachment(LeftSnapPoint);
-	LeftSnapPointIcon->SetHiddenInGame(true);
-	LeftSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-	LeftSnapPointIcon->SetEditorScale(IconEditorScale);
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TargetIcon(TEXT("/Game/Art/Icons/TargetIcon"));
 
-	if (TargetIcon.Succeeded())
+	MidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Mid Snap Point Icon"));
+	if (MidSnapPointIcon)
 	{
-		MidSnapPointIcon->SetSprite(TargetIcon.Object);
-		RightSnapPointIcon->SetSprite(TargetIcon.Object);
-		LeftSnapPointIcon->SetSprite(TargetIcon.Object);
+		MidSnapPointIcon->SetupAttachment(MidSnapPoint);
+		MidSnapPointIcon->SetHiddenInGame(true);
+		MidSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		MidSnapPointIcon->SetEditorScale(IconEditorScale);
+
+		if (TargetIcon.Succeeded())
+		{
+			MidSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
+	}
+	
+	RightSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Right Snap Point Icon"));
+	if (RightSnapPointIcon)
+	{
+		RightSnapPointIcon->SetupAttachment(RightSnapPoint);
+		RightSnapPointIcon->SetHiddenInGame(true);
+		RightSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		RightSnapPointIcon->SetEditorScale(IconEditorScale);
+		
+		if (TargetIcon.Succeeded())
+		{
+			RightSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
+	}
+
+	LeftSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Left Snap Point Icon"));
+	if (LeftSnapPointIcon)
+	{
+		LeftSnapPointIcon->SetupAttachment(LeftSnapPoint);
+		LeftSnapPointIcon->SetHiddenInGame(true);
+		LeftSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		LeftSnapPointIcon->SetEditorScale(IconEditorScale);
+
+		if (TargetIcon.Succeeded())
+		{
+			LeftSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
 	}
 #endif
 }
