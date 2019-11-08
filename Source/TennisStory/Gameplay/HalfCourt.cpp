@@ -2,7 +2,6 @@
 
 
 #include "HalfCourt.h"
-#include "TennisStoryGameMode.h"
 
 #if WITH_EDITOR
 #include "Components/BoxComponent.h"
