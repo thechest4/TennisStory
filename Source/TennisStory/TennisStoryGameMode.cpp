@@ -10,9 +10,6 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CamPositioningComponent.h"
 
-//TODO(achester): get rid of this when we have a different solution for logging
-#include "Engine.h"
-
 ATennisStoryGameMode::ATennisStoryGameMode()
 {
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Player/TennisStoryCharacter_BP"));

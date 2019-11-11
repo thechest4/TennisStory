@@ -6,7 +6,6 @@
 #include "Components/SplineComponent.h"
 #include "Curves/CurveFloat.h"
 
-#include "Engine.h"
 #include "DrawDebugHelpers.h"
 
 PRAGMA_DISABLE_OPTIMIZATION
