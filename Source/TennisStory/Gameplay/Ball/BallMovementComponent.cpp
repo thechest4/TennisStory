@@ -19,13 +19,39 @@ void UBallMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UActorComponent* SplineActorComp = GetOwner()->GetComponentByClass(USplineComponent::StaticClass());
-	SplineComp = Cast<USplineComponent>(SplineActorComp);
+	GetOwner()->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
+}
+
+void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("HandleActorHit"));
+
+	UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+	if (PrimComp)
+	{
+		PrimComp->SetSimulatePhysics(true);
+		bIsFollowingPath = false;
+	}
 }
 
 void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsFollowingPath && SplineComp)
+	{
+		FVector CurrentLocation = GetOwner()->GetActorLocation();
+		FVector Direction = SplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
+		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
+		FVector SplineNewLocation = SplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+
+		GetOwner()->SetActorLocation(SplineNewLocation, true);
+	}
+}
+
+void UBallMovementComponent::SetSplineComp(USplineComponent* argSplineComp)
+{
+	SplineComp = argSplineComp;
 }
 
 void UBallMovementComponent::GenerateTrajectory(FVector TargetLocation)
@@ -61,17 +87,18 @@ void UBallMovementComponent::GenerateTrajectory(FVector TargetLocation)
 
 	FVector EndTangent = DirectionVec.RotateAngleAxis(-ArriveAngle, RightVec);
 
-	SplineComp->AddSplinePoint(ActorLoc, ESplineCoordinateSpace::World);
-	SplineComp->SetTangentAtSplinePoint(0, StartTangent * 500.f, ESplineCoordinateSpace::Local);
+	SplineComp->AddSplinePoint(ActorLoc, ESplineCoordinateSpace::World, false);
+	SplineComp->SetTangentAtSplinePoint(0, StartTangent * 500.f, ESplineCoordinateSpace::Local, false);
 
 	MidPoint += FVector(0.f, 0.f, 150.f);
 
-	SplineComp->AddSplinePoint(MidPoint, ESplineCoordinateSpace::World);
+	SplineComp->AddSplinePoint(MidPoint, ESplineCoordinateSpace::World, false);
 	
-	SplineComp->AddSplinePoint(TargetLocation, ESplineCoordinateSpace::World);
-	SplineComp->SetTangentAtSplinePoint(2, EndTangent * 500.f, ESplineCoordinateSpace::Local);
+	SplineComp->AddSplinePoint(TargetLocation, ESplineCoordinateSpace::World, false);
+	SplineComp->SetTangentAtSplinePoint(2, EndTangent * 500.f, ESplineCoordinateSpace::Local, false);
 
 	SplineComp->Duration = 10.f;
+	SplineComp->UpdateSpline();
 }
 
 void UBallMovementComponent::VisualizePath()
@@ -107,7 +134,7 @@ void UBallMovementComponent::VisualizePath()
 			SplineMeshComp = NewObject<USplineMeshComponent>(GetOwner());
 			SplineMeshComp->RegisterComponent();
 			SplineMeshComp->SetMobility(EComponentMobility::Movable);
-			SplineMeshComp->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+			//SplineMeshComp->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 			SplineMeshComp->SetStaticMesh(SplineMesh);
 		}
 		else
@@ -115,12 +142,16 @@ void UBallMovementComponent::VisualizePath()
 			SplineMeshComp = SplineMeshComps[i];
 		}
 
+		SplineMeshComp->SetWorldLocationAndRotation(SplineComp->GetOwner()->GetActorLocation(), SplineComp->GetOwner()->GetActorRotation());
 		SplineMeshComp->SetStartAndEnd(SplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local), 
 									   SplineComp->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Local),
 									   SplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::Local), 
 									   SplineComp->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::Local));
-		
 	}
 }
 
+void UBallMovementComponent::StartFollowingPath()
+{
+	bIsFollowingPath = true;
+}
 PRAGMA_ENABLE_OPTIMIZATION

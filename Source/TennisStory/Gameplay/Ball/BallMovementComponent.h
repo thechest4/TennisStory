@@ -21,10 +21,16 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable)
+	void SetSplineComp(USplineComponent* SplineComp);
+
+	UFUNCTION(BlueprintCallable)
 	void GenerateTrajectory(FVector TargetLocation);
 
 	UFUNCTION(BlueprintCallable)
 	void VisualizePath();
+
+	UFUNCTION(BlueprintCallable)
+	void StartFollowingPath();
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,4 +46,12 @@ protected:
 
 	UPROPERTY()
 	TArray<USplineMeshComponent*> SplineMeshComps;
+
+	bool bIsFollowingPath;
+
+	UPROPERTY(EditAnywhere, Category = "Ball Trajectory")
+	float Velocity = 1500.f;
+
+	UFUNCTION()
+	void HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
 };
