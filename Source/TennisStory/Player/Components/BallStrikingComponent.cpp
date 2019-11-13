@@ -68,6 +68,11 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
 	if (OwnerTarget && TennisBall)
 	{
+		if (TennisBall->LastPlayerToHit.IsValid() && TennisBall->LastPlayerToHit == OwnerChar)
+		{
+			return;
+		}
+
 		float BallSpeed = CalculateChargedBallSpeed();
 
 		GenerateTrajectorySpline();
@@ -77,11 +82,15 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		{
 			BallMovementComp->FollowPath(OwnerChar->BallAimingSplineComp, BallSpeed, TrajectoryCurve);
 		}
+		
+		TennisBall->LastPlayerToHit = OwnerChar;
 	}
 }
 
 void UBallStrikingComponent::GenerateTrajectorySpline()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::GenerateTrajectorySpline"));
+
 	USplineComponent* SplineComp = (OwnerChar) ? OwnerChar->BallAimingSplineComp : nullptr;
 	if (!SplineComp)
 	{
@@ -135,7 +144,7 @@ void UBallStrikingComponent::GenerateTrajectorySpline()
 	{
 		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
 
-		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 100.0f);
+		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.0f);
 	}
 }
 

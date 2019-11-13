@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "TennisBall.generated.h"
 
+class ATennisStoryCharacter;
+
 UENUM(BlueprintType)
 enum class ETennisBallState : uint8
 {
@@ -29,6 +31,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Tennis Ball")
 	void SetBallState(ETennisBallState NewState);
+
+	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 protected:
 	virtual void BeginPlay() override;

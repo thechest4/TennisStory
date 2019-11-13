@@ -51,6 +51,7 @@ void ATennisBall::ApplyBallState()
 	{
 		case ETennisBallState::ServiceState:
 		{
+			LastPlayerToHit.Reset();
 			BallMovementComp->StopMoving();
 			break;
 		}
