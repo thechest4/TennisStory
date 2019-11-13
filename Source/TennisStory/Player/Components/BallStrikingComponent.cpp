@@ -5,20 +5,36 @@
 #include "Player/PlayerTargetActor.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/TennisBall.h"
+#include "Gameplay/Ball/BallMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SplineComponent.h"
+
+#include "DrawDebugHelpers.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UBallStrikingComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	OwnerChar = Cast<ATennisStoryCharacter>(GetOwner());
+	OwnerRacquet = (OwnerChar) ? OwnerChar->RacquetActor : nullptr;
+	OwnerTarget = (OwnerChar) ? OwnerChar->TargetActor : nullptr;
+	
+	if (!OwnerRacquet || !OwnerTarget)
+	{	
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::BeginPlay - OwnerRacquet or OwnerTarget was null!"));
+	}
+}
+
 void UBallStrikingComponent::AllowBallStriking()
 {
-	if (GetOwner()->HasAuthority())
+	if (OwnerChar->HasAuthority())
 	{
-		ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
-		ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
 		if (OwnerRacquet)
 		{
 			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
@@ -28,10 +44,8 @@ void UBallStrikingComponent::AllowBallStriking()
 
 void UBallStrikingComponent::StopBallStriking()
 {
-	if (GetOwner()->HasAuthority())
+	if (OwnerChar->HasAuthority())
 	{
-		ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
-		ATennisRacquet* OwnerRacquet = (OwnerCharacter) ? OwnerCharacter->RacquetActor : nullptr;
 		if (OwnerRacquet)
 		{
 			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
@@ -51,56 +65,78 @@ void UBallStrikingComponent::SetChargeEndTime()
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ATennisStoryCharacter* OwnerCharacter = Cast<ATennisStoryCharacter>(GetOwner());
-	APlayerTargetActor* PlayerTarget = (OwnerCharacter) ? OwnerCharacter->TargetActor : nullptr;
-
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
-	if (PlayerTarget && TennisBall)
+	if (OwnerTarget && TennisBall)
 	{
-		if (TennisBall->IsInServiceState())
-		{
-			TennisBall->SetBallState(ETennisBallState::PlayState);
-		}
-			
 		float BallSpeed = CalculateChargedBallSpeed();
 
-		//The math expects a positive gravity, but the ProjMovementComponent returns a negative one.  So multiply by -1
-		float Gravity = -1 * TennisBall->ProjMovementComp->GetGravityZ();
-		FRotator BallRotation = GetTrajectoryRotation(TennisBall->GetActorLocation(), PlayerTarget->GetActorLocation(), BallSpeed, Gravity);
-		TennisBall->SetActorRotation(BallRotation);
-		TennisBall->ProjMovementComp->SetVelocityInLocalSpace(BallSpeed * FVector(1.0f, 0.0f, 0.0f));
+		GenerateTrajectorySpline();
+
+		UBallMovementComponent* BallMovementComp = TennisBall->FindComponentByClass<UBallMovementComponent>();
+		if (BallMovementComp)
+		{
+			BallMovementComp->FollowPath(OwnerChar->BallAimingSplineComp, BallSpeed, TrajectoryCurve);
+		}
 	}
 }
 
-FRotator UBallStrikingComponent::GetTrajectoryRotation(FVector BallLocation, FVector TargetLocation, float DesiredSpeed, float Gravity)
+void UBallStrikingComponent::GenerateTrajectorySpline()
 {
-	// Projectile trajectory derivation from: https://blog.forrestthewoods.com/solving-ballistic-trajectories-b0165523348c
-
-	FVector TargetRelativeLocation = TargetLocation - BallLocation;
-
-	FVector DirectionVector = TargetRelativeLocation;
-	DirectionVector.Z = 0.0f; //zero out the pitch so that the trajectory is relative to the xy plane, not the direction vector
-	DirectionVector.Normalize();
-
-	//Get the distances to the target, represented in 2 axes
-	float HorzDistance = TargetRelativeLocation.Size2D();
-	float VertDistance = TargetRelativeLocation.Z;
-
-	float ThetaRads = FMath::DegreesToRadians(45.0f);
-
-	float Sqrt_term = FMath::Pow(DesiredSpeed, 4) - Gravity * (Gravity * FMath::Pow(HorzDistance, 2) + 2 * FMath::Pow(DesiredSpeed, 2) * VertDistance);
-	if (Sqrt_term >= 0.0f) //if sqrt is negative that indicates that the trajectory is undefined (out of range or otherwise incalculable).  So fall back to the max range theta value of 45 degrees
+	USplineComponent* SplineComp = (OwnerChar) ? OwnerChar->BallAimingSplineComp : nullptr;
+	if (!SplineComp)
 	{
-		float Top_term = FMath::Pow(DesiredSpeed, 2) - FMath::Sqrt(Sqrt_term);
-		float Bottom_term = Gravity * HorzDistance;
-		ThetaRads = FMath::Atan(Top_term / Bottom_term);
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::GenerateTrajectorySpline - SplineComp was null!"));
+		return;
 	}
 
-	//Calculate final launch direction by applying theta to the direction vector
-	FVector RelativeLaunchDirection(FMath::Cos(ThetaRads), 0.0f, FMath::Sin(ThetaRads));
-	FVector LaunchDirection = FRotationMatrix::MakeFromXZ(DirectionVector, FVector::UpVector).TransformVector(RelativeLaunchDirection);
+	if (!TrajectoryCurve)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::GenerateTrajectorySpline - TrajectoryCurve was null!"));
+		return;
+	}
 
-	return LaunchDirection.Rotation();
+	FVector TargetLocation = OwnerTarget->GetActorLocation();
+
+	SplineComp->SetWorldLocationAndRotation(OwnerChar->GetActorLocation(), OwnerChar->GetActorRotation());
+	SplineComp->ClearSplinePoints();
+
+	FVector ActorLoc = OwnerChar->GetActorLocation();
+	FVector MidPoint = (TargetLocation - ActorLoc) / 2.f + ActorLoc;
+	
+	FVector DirectionVec = TargetLocation - ActorLoc;
+	DirectionVec.Z = 0.f;
+	DirectionVec.Normalize();
+
+	FRichCurve CurveData = TrajectoryCurve->FloatCurve;
+	float LeaveSlope = CurveData.GetFirstKey().LeaveTangent;
+	float ArriveSlope = CurveData.GetLastKey().ArriveTangent;
+
+	float LeaveAngle = FMath::RadiansToDegrees(FMath::Atan(LeaveSlope));
+	float ArriveAngle = FMath::RadiansToDegrees(FMath::Atan(ArriveSlope));
+
+	FVector RightVec = FVector::CrossProduct(FVector::UpVector, DirectionVec);
+	FVector StartTangent = DirectionVec.RotateAngleAxis(-LeaveAngle, RightVec);
+
+	FVector EndTangent = DirectionVec.RotateAngleAxis(-ArriveAngle, RightVec);
+
+	SplineComp->AddSplinePoint(ActorLoc, ESplineCoordinateSpace::World, false);
+	SplineComp->SetTangentAtSplinePoint(0, StartTangent * 500.f, ESplineCoordinateSpace::Local, false);
+
+	MidPoint += FVector(0.f, 0.f, 150.f);
+
+	SplineComp->AddSplinePoint(MidPoint, ESplineCoordinateSpace::World, false);
+	
+	SplineComp->AddSplinePoint(TargetLocation, ESplineCoordinateSpace::World, false);
+	SplineComp->SetTangentAtSplinePoint(2, EndTangent * 500.f, ESplineCoordinateSpace::Local, false);
+
+	SplineComp->UpdateSpline();
+
+	for (float i = 0.f; i < SplineComp->Duration; i += SplineComp->Duration / 15.f)
+	{
+		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
+
+		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 100.0f);
+	}
 }
 
 float UBallStrikingComponent::CalculateChargedBallSpeed()

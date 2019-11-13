@@ -10,6 +10,14 @@ class USplineComponent;
 class USplineMeshComponent;
 class UCurveFloat;
 
+UENUM(BlueprintType)
+enum class EBallMovementState : uint8
+{
+	FollowingPath,
+	Physical,
+	NotMoving
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallMovementComponent : public UActorComponent
 {
@@ -20,38 +28,35 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetSplineComp(USplineComponent* SplineComp);
+	void FollowPath(USplineComponent* PathProviderComp, float Velocity, UCurveFloat* TrajectoryCurve);
 
-	UFUNCTION(BlueprintCallable)
-	void GenerateTrajectory(FVector TargetLocation);
+	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
+	void StopMoving();
 
-	UFUNCTION(BlueprintCallable)
-	void VisualizePath();
-
-	UFUNCTION(BlueprintCallable)
-	void StartFollowingPath();
+	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
+	EBallMovementState GetBallMovementState() const
+	{
+		return CurrentMovementState;
+	}
 
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Ball Trajectory")
-	UCurveFloat* FlatTrajectoryCurve;
-
-	UPROPERTY()
-	USplineComponent* SplineComp;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory Visualization")
-	UStaticMesh* SplineMesh;
-
-	UPROPERTY()
-	TArray<USplineMeshComponent*> SplineMeshComps;
-
-	bool bIsFollowingPath;
-
-	UPROPERTY(EditAnywhere, Category = "Ball Trajectory")
-	float Velocity = 1500.f;
+	void EnterPhysicalMovementState();
 
 	UFUNCTION()
 	void HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+
+	UPROPERTY()
+	UPrimitiveComponent* BallCollisionComponent;
+	
+	// Movement State Properties
+	EBallMovementState CurrentMovementState;
+	float Velocity;
+
+	UPROPERTY()
+	USplineComponent* PathProviderComp;
+
+	UPROPERTY()
+	UCurveFloat* TrajectoryCurve;
 };

@@ -7,6 +7,8 @@
 #include "GameplayTags.h"
 #include "TennisStoryCharacter.generated.h"
 
+class USplineComponent;
+
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
@@ -64,6 +66,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	virtual void PossessedBy(AController* NewController) override;
 
 	void MoveForward(float Value);
@@ -89,13 +93,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Tennis Racquet")
 	TSubclassOf<class ATennisRacquet> RacquetClass;
 
-	UPROPERTY(Instanced)
+	UPROPERTY()
 	ATennisRacquet* RacquetActor;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class APlayerTargetActor> TargetActorClass;
 
-	UPROPERTY(Instanced)
+	UPROPERTY()
 	APlayerTargetActor* TargetActor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
@@ -104,8 +108,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
 	TArray<FGrantedAbilityInfo> AbilitiesToGive;
 
-	FGameplayTagContainer TestTagContainer;
-
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
+	USplineComponent* BallAimingSplineComp;
+	
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MoveSpeedWhileSwinging = 150.0f;
 

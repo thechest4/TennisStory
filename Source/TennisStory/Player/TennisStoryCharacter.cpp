@@ -2,6 +2,7 @@
 #include "TennisStoryCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SplineComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "TennisStoryGameState.h"
@@ -29,6 +30,10 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
 	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
+
+	BallAimingSplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+	/*BallAimingSplineComp->SetMobility(EComponentMobility::Movable);
+	BallAimingSplineComp->SetupAttachment(RootComponent);*/
 }
 
 void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -43,6 +48,24 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 void ATennisStoryCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AbilitySystemComp)
+	{
+		AbilitySystemComp->InitAbilityActorInfo(this, this);
+
+		if (HasAuthority())
+		{
+			for (FGrantedAbilityInfo AbilityInfo : AbilitiesToGive)
+			{
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
+			}
+		}
+	}
+}
+
+void ATennisStoryCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 
 	if (RacquetClass)
 	{
@@ -63,19 +86,6 @@ void ATennisStoryCharacter::BeginPlay()
 
 		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f, GetActorRotation(), SpawnParams);
 		TargetActor->SetOwner(this);
-	}
-
-	if (AbilitySystemComp)
-	{
-		AbilitySystemComp->InitAbilityActorInfo(this, this);
-
-		if (HasAuthority())
-		{
-			for (FGrantedAbilityInfo AbilityInfo : AbilitiesToGive)
-			{
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
-			}
-		}
 	}
 }
 

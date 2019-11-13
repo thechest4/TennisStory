@@ -6,6 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "BallStrikingComponent.generated.h"
 
+class UCurveFloat;
+class ATennisStoryCharacter;
+class ATennisRacquet;
+class APlayerTargetActor;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallStrikingComponent : public UActorComponent
@@ -24,8 +28,12 @@ public:
 	void SetChargeEndTime();
 
 protected:
+	virtual void BeginPlay() override;
+
 	UFUNCTION()
 	void HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void GenerateTrajectorySpline();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MinBallSpeed = 1000.0f;
@@ -36,11 +44,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxChargeDuration = 3.0f;
 
-	FRotator GetTrajectoryRotation(FVector BallLocation, FVector TargetLocation, float DesiredSpeed, float Gravity);
-
 	float CalculateChargedBallSpeed();
 
 	//Charge State
 	float LastChargeStartTime = 0.0f;
 	float LastChargeEndTime = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = Aiming)
+	UCurveFloat* TrajectoryCurve;
+
+	//Cached Owner Pointers
+	UPROPERTY()
+	ATennisStoryCharacter* OwnerChar;
+	
+	UPROPERTY()
+	ATennisRacquet* OwnerRacquet;
+
+	UPROPERTY()
+	APlayerTargetActor* OwnerTarget;
 };

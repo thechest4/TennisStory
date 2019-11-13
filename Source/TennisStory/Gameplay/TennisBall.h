@@ -20,9 +20,9 @@ class TENNISSTORY_API ATennisBall : public AActor
 	
 public:	
 	ATennisBall();
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UProjectileMovementComponent* ProjMovementComp;
+	class UBallMovementComponent* BallMovementComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	bool IsInServiceState();

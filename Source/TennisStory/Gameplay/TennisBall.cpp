@@ -5,6 +5,7 @@
 #include "TennisStoryGameMode.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Gameplay/Ball/BallMovementComponent.h"
 
 ATennisBall::ATennisBall()
 {
@@ -18,8 +19,9 @@ ATennisBall::ATennisBall()
 	CurrentBallState = ETennisBallState::ServiceState;
 
 	RootComponent = BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
+	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
 
-	ProjMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 }
 
 void ATennisBall::BeginPlay()
@@ -27,16 +29,11 @@ void ATennisBall::BeginPlay()
 	Super::BeginPlay();
 
 	ApplyBallState();
-
-	if (!HasAuthority())
-	{
-		ProjMovementComp->SetActive(false);
-	}
 }
 
 bool ATennisBall::IsInServiceState()
 {
-	return ProjMovementComp->ProjectileGravityScale == 0.0f;
+	return BallMovementComp->GetBallMovementState() == EBallMovementState::NotMoving;
 }
 
 void ATennisBall::SetBallState(ETennisBallState NewState)
@@ -52,14 +49,9 @@ void ATennisBall::ApplyBallState()
 {
 	switch (CurrentBallState)
 	{
-		case ETennisBallState::PlayState:
-		{
-			ProjMovementComp->ProjectileGravityScale = 1.f;
-			break;
-		}
 		case ETennisBallState::ServiceState:
 		{
-			ProjMovementComp->ProjectileGravityScale = 0.f;
+			BallMovementComp->StopMoving();
 			break;
 		}
 	}
