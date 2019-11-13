@@ -10,7 +10,7 @@
 #include "Player/Components/BallStrikingComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Gameplay/TennisRacquet.h"
-#include "Gameplay/TennisBall.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/HalfCourt.h"
 #include "Net/UnrealNetwork.h"
 

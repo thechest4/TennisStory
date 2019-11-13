@@ -2,7 +2,7 @@
 
 
 #include "TennisWall.h"
-#include "TennisBall.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 ATennisWall::ATennisWall()

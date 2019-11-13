@@ -4,7 +4,7 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Player/PlayerTargetActor.h"
 #include "Gameplay/TennisRacquet.h"
-#include "Gameplay/TennisBall.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/CapsuleComponent.h"

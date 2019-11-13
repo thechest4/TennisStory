@@ -6,7 +6,7 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Player/TennisStoryPlayerController.h"
 #include "Gameplay/HalfCourt.h"
-#include "Gameplay/TennisBall.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CamPositioningComponent.h"
 

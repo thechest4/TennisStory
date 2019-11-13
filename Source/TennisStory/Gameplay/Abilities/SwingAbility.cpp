@@ -4,7 +4,7 @@
 #include "SwingAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "TennisStoryGameState.h"
-#include "Gameplay/TennisBall.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
 
