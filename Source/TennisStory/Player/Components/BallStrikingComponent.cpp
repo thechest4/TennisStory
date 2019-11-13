@@ -89,8 +89,6 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 void UBallStrikingComponent::GenerateTrajectorySpline()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::GenerateTrajectorySpline"));
-
 	USplineComponent* SplineComp = (OwnerChar) ? OwnerChar->BallAimingSplineComp : nullptr;
 	if (!SplineComp)
 	{
@@ -129,14 +127,14 @@ void UBallStrikingComponent::GenerateTrajectorySpline()
 	FVector EndTangent = DirectionVec.RotateAngleAxis(-ArriveAngle, RightVec);
 
 	SplineComp->AddSplinePoint(ActorLoc, ESplineCoordinateSpace::World, false);
-	SplineComp->SetTangentAtSplinePoint(0, StartTangent * 500.f, ESplineCoordinateSpace::Local, false);
+	SplineComp->SetTangentAtSplinePoint(0, StartTangent * 500.f, ESplineCoordinateSpace::World, false);
 
-	MidPoint += FVector(0.f, 0.f, 150.f);
+	MidPoint += FVector(0.f, 0.f, 200.f);
 
 	SplineComp->AddSplinePoint(MidPoint, ESplineCoordinateSpace::World, false);
 	
 	SplineComp->AddSplinePoint(TargetLocation, ESplineCoordinateSpace::World, false);
-	SplineComp->SetTangentAtSplinePoint(2, EndTangent * 500.f, ESplineCoordinateSpace::Local, false);
+	SplineComp->SetTangentAtSplinePoint(2, EndTangent * 500.f, ESplineCoordinateSpace::World, false);
 
 	SplineComp->UpdateSpline();
 
@@ -144,7 +142,7 @@ void UBallStrikingComponent::GenerateTrajectorySpline()
 	{
 		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
 
-		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.0f);
+		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.f);
 	}
 }
 

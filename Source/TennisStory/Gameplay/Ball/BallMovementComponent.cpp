@@ -24,8 +24,6 @@ void UBallMovementComponent::BeginPlay()
 
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("HandleActorHit"));
-
 	EnterPhysicalMovementState();
 }
 
