@@ -5,26 +5,49 @@
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
 #include "Curves/CurveFloat.h"
-
-#include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 UBallMovementComponent::UBallMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	bReplicates = true;
 }
 
 void UBallMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetOwner()->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
+	if (GetOwner()->HasAuthority())
+	{
+		GetOwner()->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
+	}
 	
 	BallCollisionComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+}
+
+void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UBallMovementComponent, CurrentMovementState);
 }
 
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
 	EnterPhysicalMovementState();
+}
+
+void UBallMovementComponent::OnRep_CurrentMovementState()
+{
+	if (CurrentMovementState == EBallMovementState::Physical)
+	{
+		EnterPhysicalMovementState();
+	}
+	else if (CurrentMovementState == EBallMovementState::NotMoving)
+	{
+		StopMoving();
+	}
 }
 
 void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

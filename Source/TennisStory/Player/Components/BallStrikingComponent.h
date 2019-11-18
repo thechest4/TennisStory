@@ -7,9 +7,47 @@
 #include "BallStrikingComponent.generated.h"
 
 class UCurveFloat;
+class USplineComponent;
 class ATennisStoryCharacter;
 class ATennisRacquet;
 class APlayerTargetActor;
+
+USTRUCT()
+struct FBallTrajectoryPoint
+{
+	GENERATED_BODY()
+
+public:
+	FBallTrajectoryPoint()
+	{
+		Location = FVector::ZeroVector;
+		Tangent = FVector::ZeroVector;
+	}
+
+	FBallTrajectoryPoint(FVector PointLocation, FVector PointTangent)
+	{
+		Location = PointLocation;
+		Tangent = PointTangent;
+	}
+
+	UPROPERTY()
+	FVector Location;
+
+	UPROPERTY()
+	FVector Tangent;
+};
+
+USTRUCT()
+struct FBallTrajectoryData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TArray<FBallTrajectoryPoint> TrajectoryPoints;
+
+	void AddTrajectoryPoint(FVector PointLocation, FVector PointTangent);
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallStrikingComponent : public UActorComponent
@@ -34,6 +72,10 @@ protected:
 	void HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void GenerateTrajectorySpline();
+
+	FBallTrajectoryData GetDataForCurrentSpline();
+
+	void CopySplineFromData(FBallTrajectoryData TrajectoryData);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MinBallSpeed = 1000.0f;
@@ -62,4 +104,9 @@ protected:
 
 	UPROPERTY()
 	APlayerTargetActor* OwnerTarget;
+
+	UPROPERTY()
+	USplineComponent* OwnerSplineComp;
+
+	friend class ATennisStoryCharacter;
 };

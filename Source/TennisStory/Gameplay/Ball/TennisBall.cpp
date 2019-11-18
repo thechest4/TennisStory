@@ -45,6 +45,11 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	}
 }
 
+void ATennisBall::Multicast_FollowPath_Implementation(USplineComponent* PathProviderComp, float Velocity, UCurveFloat* TrajectoryCurve)
+{
+	BallMovementComp->FollowPath(PathProviderComp, Velocity, TrajectoryCurve);
+}
+
 void ATennisBall::ApplyBallState()
 {
 	switch (CurrentBallState)

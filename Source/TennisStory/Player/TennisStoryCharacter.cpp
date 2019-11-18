@@ -32,8 +32,6 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
 
 	BallAimingSplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
-	/*BallAimingSplineComp->SetMobility(EComponentMobility::Movable);
-	BallAimingSplineComp->SetupAttachment(RootComponent);*/
 }
 
 void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -142,7 +140,7 @@ void ATennisStoryCharacter::EnablePlayerTargeting()
 
 		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
 		//Basically a fallback in case another position isn't committed
-		if (!HasAuthority())
+		if (IsLocallyControlled())
 		{
 			Server_CommitTargetPosition(TargetActor->GetActorLocation());
 		}
@@ -162,8 +160,8 @@ void ATennisStoryCharacter::FreezePlayerTarget()
 	if (TargetActor)
 	{
 		TargetActor->DisableTargetMovement();
-
-		if (!HasAuthority())
+		
+		if (IsLocallyControlled())
 		{
 			Server_CommitTargetPosition(TargetActor->GetActorLocation());
 		}
@@ -274,7 +272,37 @@ bool ATennisStoryCharacter::Server_CommitTargetPosition_Validate(FVector WorldLo
 
 void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector WorldLocation)
 {
-	TargetActor->SetActorLocation(WorldLocation);
+	if (!IsLocallyControlled())
+	{	
+		TargetActor->SetActorLocation(WorldLocation);
+	}
+
+	BallStrikingComp->GenerateTrajectorySpline();
+
+	Multicast_ReceiveBallTrajectory(BallStrikingComp->GetDataForCurrentSpline());
+}
+
+void ATennisStoryCharacter::Multicast_ReceiveBallTrajectory_Implementation(FBallTrajectoryData TrajectoryData)
+{
+	//Only clients need to receive Trajectory
+	if (HasAuthority())
+	{
+		return;
+	}
+
+	BallAimingSplineComp->SetWorldLocationAndRotation(GetActorLocation(), GetActorRotation());
+	
+	BallStrikingComp->CopySplineFromData(TrajectoryData);
+	
+	/*#include "DrawDebugHelpers.h"
+	USplineComponent* SplineComp = BallAimingSplineComp;
+	for (float i = 0.f; i < SplineComp->Duration; i += SplineComp->Duration / 15.f)
+	{
+		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
+
+
+		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.f);
+	}*/
 }
 
 TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()

@@ -51,7 +51,12 @@ protected:
 	UPrimitiveComponent* BallCollisionComponent;
 	
 	// Movement State Properties
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentMovementState)
 	EBallMovementState CurrentMovementState;
+
+	UFUNCTION()
+	virtual void OnRep_CurrentMovementState();
+
 	float Velocity;
 
 	UPROPERTY()

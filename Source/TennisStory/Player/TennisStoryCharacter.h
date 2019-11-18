@@ -5,9 +5,9 @@
 #include "GameFramework/Character.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "GameplayTags.h"
+#include "Components/SplineComponent.h"
+#include "Player/Components/BallStrikingComponent.h"
 #include "TennisStoryCharacter.generated.h"
-
-class USplineComponent;
 
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
@@ -80,6 +80,9 @@ protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_CommitTargetPosition(FVector WorldLocation);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ReceiveBallTrajectory(FBallTrajectoryData TrajectoryData);
 
 	TWeakObjectPtr<class AHalfCourt> GetCourtToAimAt();
 
