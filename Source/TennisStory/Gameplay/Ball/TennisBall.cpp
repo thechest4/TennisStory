@@ -20,6 +20,7 @@ ATennisBall::ATennisBall()
 
 	RootComponent = BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
 	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
+	BallMesh->SetEnableGravity(true);
 
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 

@@ -18,6 +18,7 @@ UBallMovementComponent::UBallMovementComponent()
 	Velocity = 0.f;
 	NumBounces = 0;
 	CurrentDirection = FVector::ZeroVector;
+	CurrentMovementState = EBallMovementState::NotMoving;
 }
 
 void UBallMovementComponent::BeginPlay()
