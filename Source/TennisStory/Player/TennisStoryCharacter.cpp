@@ -10,6 +10,7 @@
 #include "Player/Components/BallStrikingComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Gameplay/TennisRacquet.h"
+#include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/HalfCourt.h"
 #include "Net/UnrealNetwork.h"
@@ -277,9 +278,11 @@ void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector W
 		TargetActor->SetActorLocation(WorldLocation);
 	}
 
-	BallStrikingComp->GenerateTrajectorySpline();
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BallStrikingComp->GetTrajectoryCurve(), GetActorLocation(), TargetActor->GetActorLocation(), 200.f, 500.f);
+	BallStrikingComp->SetTrajectory(TrajectoryData);
+	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
 
-	Multicast_ReceiveBallTrajectory(BallStrikingComp->GetDataForCurrentSpline());
+	Multicast_ReceiveBallTrajectory(TrajectoryData);
 }
 
 void ATennisStoryCharacter::Multicast_ReceiveBallTrajectory_Implementation(FBallTrajectoryData TrajectoryData)
@@ -289,20 +292,9 @@ void ATennisStoryCharacter::Multicast_ReceiveBallTrajectory_Implementation(FBall
 	{
 		return;
 	}
-
-	BallAimingSplineComp->SetWorldLocationAndRotation(GetActorLocation(), GetActorRotation());
 	
-	BallStrikingComp->CopySplineFromData(TrajectoryData);
-	
-	/*#include "DrawDebugHelpers.h"
-	USplineComponent* SplineComp = BallAimingSplineComp;
-	for (float i = 0.f; i < SplineComp->Duration; i += SplineComp->Duration / 15.f)
-	{
-		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
-
-
-		DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.f);
-	}*/
+	BallStrikingComp->SetTrajectory(TrajectoryData);
+	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
 }
 
 TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()

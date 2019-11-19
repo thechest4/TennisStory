@@ -6,7 +6,7 @@
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
 #include "GameplayTags.h"
 #include "Components/SplineComponent.h"
-#include "Player/Components/BallStrikingComponent.h"
+#include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "TennisStoryCharacter.generated.h"
 
 UENUM(BlueprintType)
