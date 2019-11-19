@@ -47,11 +47,11 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	}
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit)
 {
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, BallTrajectorySplineComp);
 
-	BallMovementComp->StartFollowingPath(Velocity);
+	BallMovementComp->StartFollowingPath(Velocity, bFromHit);
 }
 
 void ATennisBall::ApplyBallState()

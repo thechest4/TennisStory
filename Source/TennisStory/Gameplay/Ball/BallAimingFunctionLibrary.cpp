@@ -85,11 +85,11 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 
 void UBallAimingFunctionLibrary::DebugVisualizeSplineComp(USplineComponent* SplineComp)
 {
-	#include "DrawDebugHelpers.h"
+	/*#include "DrawDebugHelpers.h"
 	for (float i = 0.f; i < SplineComp->Duration; i += SplineComp->Duration / 15.f)
 	{
 		FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
 
 		DrawDebugSphere(SplineComp->GetOwner()->GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 3.f);
-	}
+	}*/
 }

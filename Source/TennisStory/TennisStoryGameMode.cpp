@@ -20,6 +20,8 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 
 	GameStateClass = ATennisStoryGameState::StaticClass();
 	PlayerControllerClass = ATennisStoryPlayerController::StaticClass();
+
+	AllowedBounces = 1;
 }
 
 void ATennisStoryGameMode::InitGameState()

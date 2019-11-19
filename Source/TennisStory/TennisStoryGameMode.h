@@ -26,6 +26,11 @@ public:
 
 	TWeakObjectPtr<AHalfCourt> FindPlayerCourt(AController* NewPlayer);
 
+	int GetAllowedBounces() const
+	{
+		return AllowedBounces;
+	}
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
@@ -38,6 +43,8 @@ protected:
 	void GetCamPositioningCompFromWorld();
 
 	TWeakObjectPtr<class UCamPositioningComponent> CameraPositioningComp;
+
+	int AllowedBounces;
 
 private:
 	int NextPlayerNumberToAssign = 0;

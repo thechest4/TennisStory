@@ -36,7 +36,7 @@ public:
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity);
+	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit);
 
 protected:
 	virtual void BeginPlay() override;

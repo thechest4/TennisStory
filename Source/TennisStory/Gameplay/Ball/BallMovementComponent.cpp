@@ -1,17 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "BallMovementComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
+#include "TennisStoryGameMode.h"
+#include "Gameplay/Ball/BallAimingFunctionLibrary.h"
+#include "Gameplay/Ball/TennisBall.h"
 
 UBallMovementComponent::UBallMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
 	bReplicates = true;
+
+	Velocity = 0.f;
+	NumBounces = 0;
+	CurrentDirection = FVector::ZeroVector;
 }
 
 void UBallMovementComponent::BeginPlay()
@@ -37,7 +43,16 @@ void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
-	EnterPhysicalMovementState();
+
+	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+	if (NumBounces < GameMode->GetAllowedBounces())
+	{
+		GenerateAndFollowBouncePath(Hit);
+	}
+	else
+	{
+		EnterPhysicalMovementState();
+	}
 }
 
 void UBallMovementComponent::OnRep_CurrentMovementState()
@@ -52,6 +67,28 @@ void UBallMovementComponent::OnRep_CurrentMovementState()
 	}
 }
 
+void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitResult)
+{
+	if (!BounceTrajectoryCurve)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallMovementComponent::GenerateAndFollowBouncePath - BounceTrajectoryCurve was null!"));
+		return;
+	}
+
+	FVector BallLocation = GetOwner()->GetActorLocation();
+	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * 1200.f;
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, 140.f, 500.f);
+
+	ATennisBall* Owner = Cast<ATennisBall>(GetOwner());
+	if (Owner)
+	{
+		Owner->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false);
+		UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
+	}
+
+	NumBounces++;
+}
+
 void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -62,6 +99,9 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
 		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
 		FVector SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+
+		CurrentDirection = SplineNewLocation - CurrentLocation;
+		CurrentDirection.Normalize();
 
 		GetOwner()->SetActorLocation(SplineNewLocation, true);
 	}
@@ -117,10 +157,15 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	//}
 //}
 
-void UBallMovementComponent::StartFollowingPath(float argVelocity)
+void UBallMovementComponent::StartFollowingPath(float argVelocity, bool bResetBounces)
 {
 	CurrentMovementState = EBallMovementState::FollowingPath;
 	Velocity = argVelocity;
+
+	if (bResetBounces)
+	{	
+		NumBounces = 0;
+	}
 	
 	if (BallCollisionComponent)
 	{

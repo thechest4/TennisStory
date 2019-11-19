@@ -28,7 +28,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartFollowingPath(float Velocity);
+	void StartFollowingPath(float Velocity, bool bResetBounces);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -61,4 +61,12 @@ protected:
 	virtual void OnRep_CurrentMovementState();
 
 	float Velocity;
+	int NumBounces;
+	FVector CurrentDirection;
+
+	//Trajectory based bounce logic
+	void GenerateAndFollowBouncePath(const FHitResult& HitResult);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce Trajectory")
+	UCurveFloat* BounceTrajectoryCurve;
 };
