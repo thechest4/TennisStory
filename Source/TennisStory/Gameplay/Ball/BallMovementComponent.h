@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "BallMovementComponent.generated.h"
 
 class USplineComponent;
@@ -28,7 +29,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartFollowingPath(float Velocity, bool bResetBounces);
+	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bResetBounces);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -69,4 +70,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce Trajectory")
 	UCurveFloat* BounceTrajectoryCurve;
+
+	//Cached last path data
+	float LastPathDistance;
+	float LastPathHeight;
 };

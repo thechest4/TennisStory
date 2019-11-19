@@ -19,6 +19,8 @@ UBallMovementComponent::UBallMovementComponent()
 	NumBounces = 0;
 	CurrentDirection = FVector::ZeroVector;
 	CurrentMovementState = EBallMovementState::NotMoving;
+	LastPathHeight = 0.f;
+	LastPathDistance = 0.f;
 }
 
 void UBallMovementComponent::BeginPlay()
@@ -44,7 +46,6 @@ void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
-
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
 	if (NumBounces < GameMode->GetAllowedBounces())
 	{
@@ -77,8 +78,8 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	}
 
 	FVector BallLocation = GetOwner()->GetActorLocation();
-	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * 1200.f;
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, 140.f, 500.f);
+	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.6f;
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, LastPathHeight * 0.6f);
 
 	ATennisBall* Owner = Cast<ATennisBall>(GetOwner());
 	if (Owner)
@@ -158,8 +159,12 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	//}
 //}
 
-void UBallMovementComponent::StartFollowingPath(float argVelocity, bool bResetBounces)
+void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float argVelocity, bool bResetBounces)
 {
+	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
+	LastPathDistance = TrajectoryData.TrajectoryDistance;
+	LastPathHeight = TrajectoryData.ApexHeight;
+
 	CurrentMovementState = EBallMovementState::FollowingPath;
 	Velocity = argVelocity;
 

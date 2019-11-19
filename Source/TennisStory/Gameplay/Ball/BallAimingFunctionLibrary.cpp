@@ -15,7 +15,10 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFlo
 
 	FVector MidPoint = (EndLocation - StartLocation) / 2.f + StartLocation;
 	
-	FVector DirectionVec = EndLocation - StartLocation;
+	FVector DirectPath = EndLocation - StartLocation;
+	TrajectoryData.TrajectoryDistance = DirectPath.Size();
+
+	FVector DirectionVec = DirectPath;
 	DirectionVec.Z = 0.f;
 	DirectionVec.Normalize();
 
@@ -39,28 +42,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFlo
 
 	MidPoint += FVector(0.f, 0.f, ApexHeight);
 
+	TrajectoryData.ApexHeight = MidPoint.Z;
 	TrajectoryData.AddTrajectoryPoint(MidPoint, DirectionVec * TangentLength);
-	
 	TrajectoryData.AddTrajectoryPoint(EndLocation, EndTangent * TangentLength);
-
-	return TrajectoryData;
-}
-
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryDataFromSplineComp(USplineComponent* SplineComp)
-{
-	if (!SplineComp)
-	{
-		return FBallTrajectoryData();
-	}
-
-	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
-
-	for (int i = 0; i < SplineComp->GetNumberOfSplinePoints(); i++)
-	{
-		FVector Location = SplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World);
-		FVector Tangent = SplineComp->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::World);
-		TrajectoryData.AddTrajectoryPoint(Location, Tangent);
-	}
 
 	return TrajectoryData;
 }

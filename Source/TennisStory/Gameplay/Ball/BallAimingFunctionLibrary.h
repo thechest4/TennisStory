@@ -42,6 +42,12 @@ public:
 	UPROPERTY()
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
+	UPROPERTY()
+	float ApexHeight;
+
+	UPROPERTY()
+	float TrajectoryDistance;
+
 	void AddTrajectoryPoint(FVector PointLocation, FVector PointTangent);
 };
 
@@ -52,8 +58,6 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	
 public:
 	static FBallTrajectoryData GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
-
-	static FBallTrajectoryData GenerateTrajectoryDataFromSplineComp(USplineComponent* SplineComp);
 	
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
