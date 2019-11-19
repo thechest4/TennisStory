@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Player/Components/BallStrikingComponent.h"
 #include "TennisBall.generated.h"
 
 class ATennisStoryCharacter;
@@ -35,13 +36,16 @@ public:
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FollowPath(USplineComponent* PathProviderComp, float Velocity, UCurveFloat* TrajectoryCurve);
+	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity);
 
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;
+
+	UPROPERTY()
+	USplineComponent* BallTrajectorySplineComp;
 
 	ETennisBallState CurrentBallState;
 

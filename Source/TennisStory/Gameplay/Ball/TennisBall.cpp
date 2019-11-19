@@ -6,6 +6,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
+#include "Components/SplineComponent.h"
+#include "Player/Components/BallStrikingComponent.h"
 
 ATennisBall::ATennisBall()
 {
@@ -22,6 +24,8 @@ ATennisBall::ATennisBall()
 	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
 
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
+
+	BallTrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
 }
 
 void ATennisBall::BeginPlay()
@@ -45,9 +49,20 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	}
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(USplineComponent* PathProviderComp, float Velocity, UCurveFloat* TrajectoryCurve)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity)
 {
-	BallMovementComp->FollowPath(PathProviderComp, Velocity, TrajectoryCurve);
+	//TODO(achester): this is just code copied from UBallStrikingComponent::CopySplineFromData, probably should move that and related code into a static library
+	BallTrajectorySplineComp->ClearSplinePoints();
+
+	for (int i = 0; i < TrajectoryData.TrajectoryPoints.Num(); i++)
+	{
+		BallTrajectorySplineComp->AddSplinePointAtIndex(TrajectoryData.TrajectoryPoints[i].Location, i, ESplineCoordinateSpace::World, false);
+		BallTrajectorySplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+	}
+
+	BallTrajectorySplineComp->UpdateSpline();
+
+	BallMovementComp->StartFollowingPath(Velocity);
 }
 
 void ATennisBall::ApplyBallState()

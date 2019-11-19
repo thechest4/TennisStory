@@ -28,7 +28,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void FollowPath(USplineComponent* PathProviderComp, float Velocity, UCurveFloat* TrajectoryCurve);
+	void StartFollowingPath(float Velocity);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -49,6 +49,9 @@ protected:
 
 	UPROPERTY()
 	UPrimitiveComponent* BallCollisionComponent;
+
+	UPROPERTY()
+	USplineComponent* TrajectorySplineComp;
 	
 	// Movement State Properties
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentMovementState)
@@ -58,10 +61,4 @@ protected:
 	virtual void OnRep_CurrentMovementState();
 
 	float Velocity;
-
-	UPROPERTY()
-	USplineComponent* PathProviderComp;
-
-	UPROPERTY()
-	UCurveFloat* TrajectoryCurve;
 };

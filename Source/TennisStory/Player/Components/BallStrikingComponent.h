@@ -85,15 +85,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxChargeDuration = 3.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Aiming)
+	UCurveFloat* TrajectoryCurve;
 
 	float CalculateChargedBallSpeed();
 
 	//Charge State
 	float LastChargeStartTime = 0.0f;
 	float LastChargeEndTime = 0.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = Aiming)
-	UCurveFloat* TrajectoryCurve;
 
 	//Cached Owner Pointers
 	UPROPERTY()

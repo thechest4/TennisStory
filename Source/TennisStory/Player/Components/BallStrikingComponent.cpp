@@ -74,7 +74,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		float BallSpeed = CalculateChargedBallSpeed();
 
-		TennisBall->Multicast_FollowPath(OwnerChar->BallAimingSplineComp, BallSpeed, TrajectoryCurve);
+		TennisBall->Multicast_FollowPath(GetDataForCurrentSpline(), BallSpeed);
 
 		TennisBall->LastPlayerToHit = OwnerChar;
 	}

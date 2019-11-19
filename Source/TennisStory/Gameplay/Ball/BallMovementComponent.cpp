@@ -24,6 +24,8 @@ void UBallMovementComponent::BeginPlay()
 	}
 	
 	BallCollisionComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+
+	TrajectorySplineComp = Cast<USplineComponent>(GetOwner()->GetComponentByClass(USplineComponent::StaticClass()));
 }
 
 void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -54,12 +56,12 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (CurrentMovementState == EBallMovementState::FollowingPath && PathProviderComp)
+	if (CurrentMovementState == EBallMovementState::FollowingPath && TrajectorySplineComp)
 	{
 		FVector CurrentLocation = GetOwner()->GetActorLocation();
-		FVector Direction = PathProviderComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
+		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
 		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
-		FVector SplineNewLocation = PathProviderComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+		FVector SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
 
 		GetOwner()->SetActorLocation(SplineNewLocation, true);
 	}
@@ -115,12 +117,10 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	//}
 //}
 
-void UBallMovementComponent::FollowPath(USplineComponent* argPathProviderComp, float argVelocity, UCurveFloat* argTrajectoryCurve)
+void UBallMovementComponent::StartFollowingPath(float argVelocity)
 {
 	CurrentMovementState = EBallMovementState::FollowingPath;
-	PathProviderComp = argPathProviderComp;
 	Velocity = argVelocity;
-	TrajectoryCurve = argTrajectoryCurve;
 	
 	if (BallCollisionComponent)
 	{
@@ -141,9 +141,7 @@ void UBallMovementComponent::StopMoving()
 void UBallMovementComponent::EnterPhysicalMovementState()
 {
 	CurrentMovementState = EBallMovementState::Physical;
-	PathProviderComp = nullptr;
 	Velocity = 0.f;
-	TrajectoryCurve = nullptr;
 	
 	if (BallCollisionComponent)
 	{
