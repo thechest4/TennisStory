@@ -38,6 +38,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SpawnBounceParticleEffect(FVector Location);
 
 	FVector GetCurrentDirection() const
 	{
@@ -61,4 +64,7 @@ protected:
 	ETennisBallState CurrentBallState;
 
 	void ApplyBallState();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	UParticleSystem* BounceParticleEffect;
 };

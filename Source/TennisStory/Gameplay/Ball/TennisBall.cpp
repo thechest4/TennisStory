@@ -8,6 +8,7 @@
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "Components/SplineComponent.h"
 #include "Player/Components/BallStrikingComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ATennisBall::ATennisBall()
 {
@@ -45,6 +46,14 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	{
 		CurrentBallState = NewState;
 		ApplyBallState();
+	}
+}
+
+void ATennisBall::Multicast_SpawnBounceParticleEffect_Implementation(FVector Location)
+{
+	if (BounceParticleEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BounceParticleEffect, Location);
 	}
 }
 

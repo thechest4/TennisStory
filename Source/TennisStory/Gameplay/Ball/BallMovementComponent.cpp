@@ -50,10 +50,22 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	if (NumBounces < GameMode->GetAllowedBounces())
 	{
 		GenerateAndFollowBouncePath(Hit);
+
+		ATennisBall* TennisBall = Cast<ATennisBall>(SelfActor);
+		if (TennisBall)
+		{
+			TennisBall->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+		}
 	}
 	else
 	{
 		EnterPhysicalMovementState();
+
+		ATennisBall* TennisBall = Cast<ATennisBall>(SelfActor);
+		if (TennisBall)
+		{
+			TennisBall->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+		}
 	}
 }
 

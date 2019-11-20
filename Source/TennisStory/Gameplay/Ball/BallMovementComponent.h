@@ -73,7 +73,7 @@ protected:
 	//Trajectory based bounce logic
 	void GenerateAndFollowBouncePath(const FHitResult& HitResult);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Bounce Trajectory")
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	UCurveFloat* BounceTrajectoryCurve;
 
 	//Cached last path data
