@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Player/Components/BallStrikingComponent.h"
+#include "Gameplay/Ball/BallMovementComponent.h"
 #include "TennisBall.generated.h"
 
 class ATennisStoryCharacter;
@@ -37,6 +38,16 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit);
+
+	FVector GetCurrentDirection() const
+	{
+		if (!BallMovementComp)
+		{
+			return FVector::ZeroVector;
+		}
+
+		return BallMovementComp->GetCurrentDirection();
+	}
 
 protected:
 	virtual void BeginPlay() override;

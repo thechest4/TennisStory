@@ -40,6 +40,11 @@ public:
 		return CurrentMovementState;
 	}
 
+	FVector GetCurrentDirection() const
+	{
+		return CurrentDirection;
+	}
+
 protected:
 	virtual void BeginPlay() override;
 

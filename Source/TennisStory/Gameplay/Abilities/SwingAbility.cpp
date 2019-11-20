@@ -48,12 +48,10 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
-	FVector DirToBall = TennisBall->GetActorLocation() - OwnerChar->GetActorLocation();
-	float DotProd = FVector::DotProduct(DirToBall.GetSafeNormal(), OwnerChar->GetAimRightVector());
-	
 	float StrikeZoneSize = OwnerChar->GetStrikeZoneSize();
 
-	if (DotProd < 0.0f)
+	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
+	if (!bIsForehand)
 	{
 		MontageToPlay = BackhandMontage;
 		OwnerChar->PositionStrikeZone(FVector(StrikeZoneSize * 0.5f, -1 * StrikeZoneSize, 0.f));
@@ -117,4 +115,17 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 			OwnerChar->BallStrikingComp->SetChargeEndTime();
 		}
 	}
+}
+
+bool USwingAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
+{
+	FVector BallDirection = TennisBall->GetCurrentDirection();
+	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), OwnerCharacter->GetActorLocation());
+
+	FVector ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+
+	FVector DirToBallProjection = ProjectedBallLocation - OwnerCharacter->GetActorLocation();
+	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), OwnerCharacter->GetAimRightVector());
+	
+	return DotProd >= 0.f;
 }

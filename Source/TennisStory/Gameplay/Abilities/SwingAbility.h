@@ -6,6 +6,9 @@
 #include "Abilities/GameplayAbility.h"
 #include "SwingAbility.generated.h"
 
+class ATennisBall;
+class ATennisStoryCharacter;
+
 UCLASS()
 class TENNISSTORY_API USwingAbility : public UGameplayAbility
 {
@@ -34,4 +37,6 @@ protected:
 	bool bSwingReleased;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+	bool ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
 };
