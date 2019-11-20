@@ -262,7 +262,15 @@ void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector W
 		TargetActor->SetActorLocation(WorldLocation);
 	}
 
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BallStrikingComp->GetTrajectoryCurve(), GetActorLocation(), TargetActor->GetActorLocation(), 200.f, 500.f);
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	TWeakObjectPtr<ATennisBall> TennisBall = (GameState) ? GameState->GetTennisBall() : nullptr;
+	if (!TennisBall.IsValid())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryCharacter::Server_CommitTargetPosition_Implementation - ATennisStoryGameState::GetTennisBall returned null!"));
+		return;
+	}
+
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BallStrikingComp->GetTrajectoryCurve(), TennisBall->GetActorLocation(), TargetActor->GetActorLocation(), 200.f, 500.f);
 	BallStrikingComp->SetTrajectory(TrajectoryData);
 	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
 
