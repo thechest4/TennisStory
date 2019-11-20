@@ -218,6 +218,8 @@ void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryDa
 void UBallMovementComponent::StopMoving()
 {
 	CurrentMovementState = EBallMovementState::NotMoving;
+	Velocity = 0.f;
+	CurrentDirection = FVector::ZeroVector;
 	
 	if (BallCollisionComponent)
 	{
