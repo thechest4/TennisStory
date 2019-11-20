@@ -3,7 +3,7 @@
 
 #include "HalfCourt.h"
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 #include "Components/BoxComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/ArrowComponent.h"
@@ -36,7 +36,7 @@ AHalfCourt::AHalfCourt()
 	LeftSnapPoint->SetupAttachment(RootComponent);
 	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
 	if (EditorCourtBounds)
 	{
@@ -200,7 +200,7 @@ void AHalfCourt::CalculateCourtCorners()
 	UpperCorner = FVector2D(ActorLocation.X + XOffset, ActorLocation.Y + YOffset);
 }
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	FName PropertyName = (PropertyChangedEvent.Property) ? PropertyChangedEvent.Property->GetFName() : NAME_None;

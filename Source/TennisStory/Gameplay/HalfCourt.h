@@ -90,6 +90,7 @@ protected:
 	FVector2D LowerCorner;
 	FVector2D UpperCorner;
 
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(VisibleDefaultsOnly)
 	class UBoxComponent* EditorCourtBounds;
 
@@ -110,8 +111,7 @@ protected:
 
 	UPROPERTY()
 	UBillboardComponent* LeftSnapPointIcon;
-	
-#if WITH_EDITOR
+
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 };
