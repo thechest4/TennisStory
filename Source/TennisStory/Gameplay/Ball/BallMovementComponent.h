@@ -16,7 +16,8 @@ enum class EBallMovementState : uint8
 {
 	FollowingPath,
 	Physical,
-	NotMoving
+	NotMoving,
+	BounceLag
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -29,7 +30,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bResetBounces);
+	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bIsFromHit);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -70,11 +71,17 @@ protected:
 	int NumBounces;
 	FVector CurrentDirection;
 
-	//Trajectory based bounce logic
+	//Bounce Properties
 	void GenerateAndFollowBouncePath(const FHitResult& HitResult);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	UCurveFloat* BounceTrajectoryCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	float DurationOfBounceLag;
+	float CurrentLagTime;
+
+	void DoBounceLag();
 
 	//Cached last path data
 	float LastPathDistance;

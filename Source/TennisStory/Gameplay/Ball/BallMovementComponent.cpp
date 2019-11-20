@@ -21,6 +21,8 @@ UBallMovementComponent::UBallMovementComponent()
 	CurrentMovementState = EBallMovementState::NotMoving;
 	LastPathHeight = 0.f;
 	LastPathDistance = 0.f;
+	DurationOfBounceLag = 5 * 0.01667f; //Default lag value is 5 frames, at 60 fps
+	CurrentLagTime = 0.f;
 }
 
 void UBallMovementComponent::BeginPlay()
@@ -103,11 +105,26 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	NumBounces++;
 }
 
+void UBallMovementComponent::DoBounceLag()
+{
+	CurrentMovementState = EBallMovementState::BounceLag;
+	CurrentLagTime = 0.f;
+}
+
 void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (CurrentMovementState == EBallMovementState::FollowingPath && TrajectorySplineComp)
+	if (CurrentMovementState == EBallMovementState::BounceLag)
+	{
+		CurrentLagTime += DeltaTime;
+
+		if (CurrentLagTime >= DurationOfBounceLag)
+		{
+			CurrentMovementState = EBallMovementState::FollowingPath;
+		}
+	}
+	else if (CurrentMovementState == EBallMovementState::FollowingPath && TrajectorySplineComp)
 	{
 		FVector CurrentLocation = GetOwner()->GetActorLocation();
 		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
@@ -171,7 +188,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	//}
 //}
 
-void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float argVelocity, bool bResetBounces)
+void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float argVelocity, bool bIsFromHit)
 {
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 	LastPathDistance = TrajectoryData.TrajectoryDistance;
@@ -180,9 +197,13 @@ void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryDa
 	CurrentMovementState = EBallMovementState::FollowingPath;
 	Velocity = argVelocity;
 
-	if (bResetBounces)
+	if (bIsFromHit)
 	{	
 		NumBounces = 0;
+	}
+	else
+	{
+		DoBounceLag();
 	}
 	
 	if (BallCollisionComponent)
