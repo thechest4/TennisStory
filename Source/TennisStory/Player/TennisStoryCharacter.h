@@ -9,6 +9,8 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "TennisStoryCharacter.generated.h"
 
+class UBoxComponent;
+
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
@@ -60,6 +62,15 @@ public:
 	{
 		return CachedAimRightVector;
 	}
+
+	UBoxComponent* GetStrikeZone()
+	{
+		return StrikeZone;
+	}
+
+	float GetStrikeZoneSize();
+
+	void PositionStrikeZone(FVector NewRelativeLocation);
 
 protected:
 	virtual void BeginPlay() override;
@@ -130,6 +141,9 @@ protected:
 
 	UPROPERTY(Transient, Replicated)
 	FVector CachedAimRightVector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Swing Detection")
+	UBoxComponent* StrikeZone;
 
 	friend class UBallStrikingComponent;
 };

@@ -8,7 +8,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
@@ -36,9 +36,11 @@ void UBallStrikingComponent::AllowBallStriking()
 {
 	if (OwnerChar->HasAuthority())
 	{
-		if (OwnerRacquet)
+		UBoxComponent* StrikeZone = OwnerChar->GetStrikeZone();
+		if (StrikeZone)
 		{
-			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+			StrikeZone->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+			StrikeZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 	}
 }
@@ -47,9 +49,11 @@ void UBallStrikingComponent::StopBallStriking()
 {
 	if (OwnerChar->HasAuthority())
 	{
-		if (OwnerRacquet)
+		UBoxComponent* StrikeZone = OwnerChar->GetStrikeZone();
+		if (StrikeZone)
 		{
-			OwnerRacquet->OverlapDetectionComp->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+			StrikeZone->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
+			StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
 }

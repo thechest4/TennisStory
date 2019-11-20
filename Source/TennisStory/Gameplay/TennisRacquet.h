@@ -14,9 +14,6 @@ class TENNISSTORY_API ATennisRacquet : public AActor
 public:	
 	ATennisRacquet();
 
-	UPROPERTY(VisibleAnywhere)
-	class UCapsuleComponent* OverlapDetectionComp;
-
 protected:
 	UPROPERTY(VisibleAnywhere)
 	FName RacquetHeadSocket = TEXT("RacquetHead");

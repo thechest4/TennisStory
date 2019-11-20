@@ -48,15 +48,19 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
+	FVector DirToBall = TennisBall->GetActorLocation() - OwnerChar->GetActorLocation();
+	float DotProd = FVector::DotProduct(DirToBall.GetSafeNormal(), OwnerChar->GetAimRightVector());
+	
+	float StrikeZoneSize = OwnerChar->GetStrikeZoneSize();
+
+	if (DotProd < 0.0f)
 	{
-		FVector DirToBall = TennisBall->GetActorLocation() - OwnerChar->GetActorLocation();
-
-		float DotProd = FVector::DotProduct(DirToBall.GetSafeNormal(), OwnerChar->GetAimRightVector());
-
-		if (DotProd < 0.0f)
-		{
-			MontageToPlay = BackhandMontage;
-		}
+		MontageToPlay = BackhandMontage;
+		OwnerChar->PositionStrikeZone(FVector(StrikeZoneSize * 0.5f, -1 * StrikeZoneSize, 0.f));
+	}
+	else
+	{
+		OwnerChar->PositionStrikeZone(FVector(StrikeZoneSize * 0.5f, OwnerChar->GetStrikeZoneSize(), 0.f));
 	}
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));

@@ -1,6 +1,7 @@
 
 #include "TennisStoryCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -35,6 +36,12 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
 
 	BallAimingSplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+
+	StrikeZone = CreateDefaultSubobject<UBoxComponent>(TEXT("StrikeZone"));
+	StrikeZone->SetupAttachment(RootComponent);
+	StrikeZone->SetBoxExtent(FVector(100.f, 100.f, 100.f));
+	StrikeZone->SetCollisionProfileName(TEXT("TennisRacquet"));
+	StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -154,6 +161,16 @@ void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
 {
 	CachedAimVector = AimVector;
 	CachedAimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
+}
+
+float ATennisStoryCharacter::GetStrikeZoneSize()
+{
+	return StrikeZone->GetScaledBoxExtent().X;
+}
+
+void ATennisStoryCharacter::PositionStrikeZone(FVector NewRelativeLocation)
+{
+	StrikeZone->SetRelativeLocation(NewRelativeLocation);
 }
 
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
