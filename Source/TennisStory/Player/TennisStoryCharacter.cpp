@@ -17,6 +17,8 @@
 
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
+	PrimaryActorTick.bCanEverTick = false;
+
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	bUseControllerRotationPitch = false;
@@ -95,41 +97,6 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 	if (AbilitySystemComp)
 	{
 		AbilitySystemComp->RefreshAbilityActorInfo();
-	}
-}
-
-void ATennisStoryCharacter::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-
-	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-	if (GameState)
-	{
-		AActor* LookAtTarget = TargetActor;
-
-		TWeakObjectPtr<ATennisBall> TennisBall = GameState->GetTennisBall();
-		if (TennisBall.IsValid())
-		{
-			LookAtTarget = TennisBall.Get();
-		}
-
-		if (LookAtTarget)
-		{
-			//Make Character look at target
-			FVector TargetLocation = LookAtTarget->GetActorLocation();
-			FVector CharacterLocation = GetActorLocation();
-			FVector TranslationVector = TargetLocation - CharacterLocation;
-
-			const static bool bApplyRotationOffset = true;
-			if (bApplyRotationOffset)
-			{
-				TranslationVector = TranslationVector.RotateAngleAxis(-30.0f, FVector::UpVector);
-			}
-
-			FQuat OrientationQuat = TranslationVector.GetSafeNormal2D().ToOrientationQuat();
-
-			SetActorRotation(OrientationQuat);
-		}
 	}
 }
 

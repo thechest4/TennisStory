@@ -35,8 +35,6 @@ class ATennisStoryCharacter : public ACharacter, public IAbilitySystemInterface
 public:
 	ATennisStoryCharacter();
 
-	virtual void Tick(float DeltaSeconds) override;
-
 	class UAbilitySystemComponent* GetAbilitySystemComponent() const override
 	{
 		return AbilitySystemComp;
