@@ -76,8 +76,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	UCurveFloat* BounceTrajectoryCurve;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	int FramesOfBounceLag;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Bounce")
 	float DurationOfBounceLag;
 	float CurrentLagTime;
 
@@ -86,4 +89,8 @@ protected:
 	//Cached last path data
 	float LastPathDistance;
 	float LastPathHeight;
+	
+#if WITH_EDITORONLY_DATA
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 };

@@ -21,7 +21,10 @@ UBallMovementComponent::UBallMovementComponent()
 	CurrentMovementState = EBallMovementState::NotMoving;
 	LastPathHeight = 0.f;
 	LastPathDistance = 0.f;
-	DurationOfBounceLag = 5 * 0.01667f; //Default lag value is 5 frames, at 60 fps
+
+	const float TargetFrameDuration = 0.01667f;
+	FramesOfBounceLag = 5;
+	DurationOfBounceLag = FramesOfBounceLag * TargetFrameDuration;
 	CurrentLagTime = 0.f;
 }
 
@@ -232,3 +235,18 @@ void UBallMovementComponent::EnterPhysicalMovementState()
 		BallCollisionComponent->SetSimulatePhysics(true);
 	}
 }
+
+#if WITH_EDITORONLY_DATA
+void UBallMovementComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	FName PropertyName = (PropertyChangedEvent.Property) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UBallMovementComponent, FramesOfBounceLag))
+	{
+		const float TargetFrameDuration = 0.01667f;
+
+		DurationOfBounceLag = FramesOfBounceLag * TargetFrameDuration;
+	}
+	
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+#endif
