@@ -10,6 +10,32 @@
 
 class ATennisBall;
 
+USTRUCT()
+struct FTeamData
+{
+	GENERATED_BODY()
+
+public:
+	FTeamData()
+	{
+		TeamId = -1;
+	}
+
+	FTeamData(int Id)
+	{
+		TeamId = Id;
+	}
+
+	UPROPERTY()
+	int TeamId;
+	
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ATennisStoryPlayerController>> AssignedPlayers;
+	
+	UPROPERTY()
+	TWeakObjectPtr<AHalfCourt> AssignedCourt;
+};
+
 UCLASS()
 class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 {
@@ -37,13 +63,12 @@ public:
 		return nullptr;
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	AHalfCourt* GetCourtForPlayer(ATennisStoryPlayerController* PlayerController) const
-	{
-		return GetCourt(static_cast<ECourtSide>(PlayerController->GetPlayerNumber()));
-	}
+	const FTeamData& GetTeamForPlayer(ATennisStoryPlayerController* Player);
 
 protected:
+	UPROPERTY(Transient, Replicated)
+	TArray<FTeamData> TeamData;
+
 	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;
 

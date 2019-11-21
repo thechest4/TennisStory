@@ -10,19 +10,7 @@ UCLASS()
 class TENNISSTORY_API ATennisStoryPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
-public:
-	UFUNCTION(BlueprintCallable, Category = "Player")
-	int GetPlayerNumber() const { return PlayerNumber; }
-
-	void SetPlayerNumber(int AssignedNumber)
-	{
-		PlayerNumber = AssignedNumber;
-	}
 
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY(Transient, Replicated)
-	int PlayerNumber = -1;
 };

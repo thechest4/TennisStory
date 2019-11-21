@@ -9,4 +9,25 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ATennisStoryGameState, CurrentBallActor);
 	DOREPLIFETIME(ATennisStoryGameState, Courts);
+	DOREPLIFETIME(ATennisStoryGameState, TeamData);
+}
+
+const FTeamData& ATennisStoryGameState::GetTeamForPlayer(ATennisStoryPlayerController* Player)
+{
+	if (!TeamData.Num())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameState::GetTeamForPlayer - No TeamData found!"));
+	}
+
+	FTeamData& PlayerTeam = TeamData[0];
+
+	for (FTeamData& Team : TeamData)
+	{
+		if (Team.AssignedPlayers.Contains(Player))
+		{
+			PlayerTeam = Team;
+		}
+	}
+
+	return PlayerTeam;
 }

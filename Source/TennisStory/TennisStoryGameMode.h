@@ -24,12 +24,16 @@ public:
 
 	virtual void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation) override;
 
-	TWeakObjectPtr<AHalfCourt> FindPlayerCourt(AController* NewPlayer);
-
 	int GetAllowedBounces() const
 	{
 		return AllowedBounces;
 	}
+	
+	UFUNCTION(BlueprintCallable, Category = "Game Management")
+	void TeleportCharacterToCourt(ATennisStoryCharacter* Character);
+
+	UFUNCTION(BlueprintCallable, Category = "Game Management")
+	void TeleportBallToCourt();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
@@ -47,7 +51,7 @@ protected:
 	int AllowedBounces;
 
 private:
-	int NextPlayerNumberToAssign = 0;
+	const int MaxTeamNumber = 2;
 };
 
 

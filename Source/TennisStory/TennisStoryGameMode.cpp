@@ -31,15 +31,22 @@ void ATennisStoryGameMode::InitGameState()
 	TSGameState = Cast<ATennisStoryGameState>(GameState);
 
 	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
-}
 
-void ATennisStoryGameMode::StartPlay()
-{
+	static const int NumTeams = 2;
+	for (int i = 0; i < NumTeams; i++)
+	{
+		FTeamData NewTeamData = FTeamData(i);
+		TSGameState->TeamData.Add(NewTeamData);
+	}
+	
 	if (!TSGameState->Courts.Num())
 	{
 		GetCourtsFromWorld();
 	}
+}
 
+void ATennisStoryGameMode::StartPlay()
+{
 	if (DefaultBallClass)
 	{
 		FTransform BallSpawnTransform = FTransform::Identity;
@@ -78,10 +85,17 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 
 	checkf(TSPC, TEXT("ATennisStoryGameMode::PostLogin - PlayerController was not derived from ATennisStoryPlayerController!"));
 
-	TSPC->SetPlayerNumber(NextPlayerNumberToAssign);
-	NextPlayerNumberToAssign++;
+	TWeakObjectPtr<AHalfCourt> SpawnCourt = nullptr;
+	for (FTeamData& Team : TSGameState->TeamData)
+	{
+		if (!Team.AssignedPlayers.Num())
+		{
+			Team.AssignedPlayers.Add(TSPC);
+			SpawnCourt = Team.AssignedCourt;
+			break;
+		}
+	}
 
-	TWeakObjectPtr<AHalfCourt> SpawnCourt = FindPlayerCourt(NewPlayer);
 	if (SpawnCourt.IsValid())
 	{
 		FTransform SpawnTransform = SpawnCourt->GetPlayerServiceTransform();
@@ -138,26 +152,27 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 	}
 }
 
-TWeakObjectPtr<AHalfCourt> ATennisStoryGameMode::FindPlayerCourt(AController* NewPlayer)
+void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Character)
 {
-	if (!TSGameState->Courts.Num())
-	{
-		GetCourtsFromWorld();
-	}
-
-	ATennisStoryPlayerController* PlayerController = Cast<ATennisStoryPlayerController>(NewPlayer);
+	ATennisStoryPlayerController* PlayerController = Cast<ATennisStoryPlayerController>(Character->GetController());
 	if (PlayerController)
 	{
-		for (TWeakObjectPtr<AHalfCourt> Court : TSGameState->Courts)
+		const FTeamData& PlayerTeam = TSGameState->GetTeamForPlayer(PlayerController);
+		if (PlayerTeam.TeamId >= 0 && PlayerTeam.AssignedCourt.IsValid())
 		{
-			if (Court.IsValid() && static_cast<int>(Court->GetCourtSide()) == PlayerController->GetPlayerNumber())
-			{
-				return Court;
-			}
+			Character->SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform());
 		}
 	}
+}
 
-	return nullptr;
+void ATennisStoryGameMode::TeleportBallToCourt()
+{
+	if (TSGameState->CurrentBallActor.IsValid())
+	{
+		FTransform CourtBallTransform = TSGameState->TeamData[0].AssignedCourt->GetBallServiceTransform();
+		TSGameState->CurrentBallActor->SetActorLocation(CourtBallTransform.GetLocation());
+		TSGameState->CurrentBallActor->SetActorRotation(CourtBallTransform.GetRotation());
+	}
 }
 
 void ATennisStoryGameMode::GetCourtsFromWorld()
@@ -166,6 +181,7 @@ void ATennisStoryGameMode::GetCourtsFromWorld()
 	{
 		AHalfCourt* Court = *It;
 		TSGameState->Courts.Add(Court);
+		TSGameState->TeamData[static_cast<int>(Court->GetCourtSide())].AssignedCourt = Court;
 	}
 }
 
