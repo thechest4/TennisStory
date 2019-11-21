@@ -16,6 +16,8 @@
 #include "Gameplay/HalfCourt.h"
 #include "Net/UnrealNetwork.h"
 
+ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
+
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -69,6 +71,8 @@ void ATennisStoryCharacter::BeginPlay()
 			}
 		}
 	}
+
+	ATennisStoryCharacter::PlayerSpawnedEvent.Broadcast(this);
 }
 
 void ATennisStoryCharacter::PostInitializeComponents()

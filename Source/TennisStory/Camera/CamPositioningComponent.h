@@ -23,6 +23,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void HandlePlayerSpawned(ATennisStoryCharacter* SpawnedPlayer);
+
+	UFUNCTION()
+	void HandleBallSpawned(ATennisBall* SpawnedBall);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
 	//The desired distance from the edge of the screen for each tracked point, as a percentage
 	float MarginFromScreenEdges = 0.05f;
@@ -44,7 +50,6 @@ protected:
 	TWeakObjectPtr<AActor> OwnerPtr;
 	TWeakObjectPtr<class UCameraComponent> OwnerCamComp;
 
-	UPROPERTY(Replicated)
 	TArray<TWeakObjectPtr<AActor>> TrackedActors;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")

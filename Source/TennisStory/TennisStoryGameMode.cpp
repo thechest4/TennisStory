@@ -35,11 +35,6 @@ void ATennisStoryGameMode::InitGameState()
 
 void ATennisStoryGameMode::StartPlay()
 {
-	if (!CameraPositioningComp.IsValid())
-	{
-		GetCamPositioningCompFromWorld();
-	}
-
 	if (!TSGameState->Courts.Num())
 	{
 		GetCourtsFromWorld();
@@ -60,11 +55,6 @@ void ATennisStoryGameMode::StartPlay()
 
 		TSGameState->CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
 		TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
-
-		if (CameraPositioningComp.IsValid())
-		{
-			CameraPositioningComp->AddTrackedActor(Cast<AActor>(TSGameState->CurrentBallActor));
-		}
 	}
 
 	Super::StartPlay();
@@ -112,11 +102,6 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			if (!CameraPositioningComp.IsValid())
 			{
 				GetCamPositioningCompFromWorld();
-			}
-
-			if (CameraPositioningComp.IsValid())
-			{
-				CameraPositioningComp->AddTrackedActor(Cast<AActor>(TennisChar));
 			}
 
 			APlayerController* PlayerController = Cast<APlayerController>(NewPlayer);

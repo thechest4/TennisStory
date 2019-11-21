@@ -5,22 +5,14 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Gameplay/Ball/TennisBall.h"
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
-#include "Net/UnrealNetwork.h"
 
 UCamPositioningComponent::UCamPositioningComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	
-	bReplicates = true;
-}
-
-void UCamPositioningComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UCamPositioningComponent, TrackedActors);
+	bReplicates = false;
 }
 
 void UCamPositioningComponent::BeginPlay()
@@ -29,6 +21,19 @@ void UCamPositioningComponent::BeginPlay()
 
 	OwnerPtr = GetOwner();
 	OwnerCamComp = Cast<UCameraComponent>(OwnerPtr->GetComponentByClass(UCameraComponent::StaticClass()));
+
+	ATennisStoryCharacter::OnPlayerSpawned().AddUObject(this, &UCamPositioningComponent::HandlePlayerSpawned);
+	ATennisBall::OnBallSpawned().AddUObject(this, &UCamPositioningComponent::HandleBallSpawned);
+}
+
+void UCamPositioningComponent::HandlePlayerSpawned(ATennisStoryCharacter* SpawnedPlayer)
+{
+	AddTrackedActor(SpawnedPlayer);
+}
+
+void UCamPositioningComponent::HandleBallSpawned(ATennisBall* SpawnedBall)
+{
+	AddTrackedActor(SpawnedBall);
 }
 
 void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

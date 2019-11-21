@@ -23,6 +23,9 @@ class TENNISSTORY_API ATennisBall : public AActor
 	GENERATED_BODY()
 	
 public:	
+	DECLARE_EVENT_OneParam(ATennisBall, FOnBallSpawnedEvent, ATennisBall*);
+	static FOnBallSpawnedEvent& OnBallSpawned(){ return BallSpawnedEvent; }
+
 	ATennisBall();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -67,4 +70,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	UParticleSystem* BounceParticleEffect;
+
+private:
+	static FOnBallSpawnedEvent BallSpawnedEvent;
 };

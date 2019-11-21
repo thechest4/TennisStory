@@ -35,6 +35,9 @@ class ATennisStoryCharacter : public ACharacter, public IAbilitySystemInterface
 	GENERATED_BODY()
 
 public:
+	DECLARE_EVENT_OneParam(ATennisStoryCharacter, FOnPlayerSpawnedEvent, ATennisStoryCharacter*);
+	static FOnPlayerSpawnedEvent& OnPlayerSpawned(){ return PlayerSpawnedEvent; }
+
 	ATennisStoryCharacter();
 
 	class UAbilitySystemComponent* GetAbilitySystemComponent() const override
@@ -144,6 +147,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Swing Detection")
 	UBoxComponent* StrikeZone;
+
+private:
+	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;
 
 	friend class UBallStrikingComponent;
 };

@@ -10,6 +10,8 @@
 #include "Player/Components/BallStrikingComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+ATennisBall::FOnBallSpawnedEvent ATennisBall::BallSpawnedEvent;
+
 ATennisBall::ATennisBall()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -33,6 +35,8 @@ void ATennisBall::BeginPlay()
 	Super::BeginPlay();
 
 	ApplyBallState();
+
+	ATennisBall::BallSpawnedEvent.Broadcast(this);
 }
 
 bool ATennisBall::IsInServiceState()
