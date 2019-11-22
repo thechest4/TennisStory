@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CamPositioningComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -8,11 +7,19 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
+#include "Net/UnrealNetwork.h"
 
 UCamPositioningComponent::UCamPositioningComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	bReplicates = false;
+	bReplicates = true;
+}
+
+void UCamPositioningComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCamPositioningComponent, TrackedActors);
 }
 
 void UCamPositioningComponent::BeginPlay()
@@ -21,26 +28,13 @@ void UCamPositioningComponent::BeginPlay()
 
 	OwnerPtr = GetOwner();
 	OwnerCamComp = Cast<UCameraComponent>(OwnerPtr->GetComponentByClass(UCameraComponent::StaticClass()));
-
-	ATennisStoryCharacter::OnPlayerSpawned().AddUObject(this, &UCamPositioningComponent::HandlePlayerSpawned);
-	ATennisBall::OnBallSpawned().AddUObject(this, &UCamPositioningComponent::HandleBallSpawned);
-}
-
-void UCamPositioningComponent::HandlePlayerSpawned(ATennisStoryCharacter* SpawnedPlayer)
-{
-	AddTrackedActor(SpawnedPlayer);
-}
-
-void UCamPositioningComponent::HandleBallSpawned(ATennisBall* SpawnedBall)
-{
-	AddTrackedActor(SpawnedBall);
 }
 
 void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!TrackedActors.Num())
+	if (!TrackedActors.Num() || !OwnerPtr.IsValid())
 	{
 		return;
 	}
@@ -56,7 +50,7 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		//Prune the tracked actors list before we do anything
 		for (int i = TrackedActors.Num() - 1; i >= 0; i--)
 		{
-			if (!TrackedActors[i].IsValid())
+			if (!TrackedActors[i].IsValid() && OwnerPtr->HasAuthority())
 			{
 				TrackedActors.RemoveAt(i);
 			}
@@ -249,5 +243,16 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 void UCamPositioningComponent::AddTrackedActor(AActor* ActorToTrack)
 {
-	TrackedActors.Add(ActorToTrack);
+	if (ActorToTrack)
+	{
+		TrackedActors.AddUnique(ActorToTrack);
+	}
+}
+
+void UCamPositioningComponent::StopTrackingActor(AActor* Actor)
+{
+	if (Actor)
+	{
+		TrackedActors.Remove(Actor);
+	}
 }

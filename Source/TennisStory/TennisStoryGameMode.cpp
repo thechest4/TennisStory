@@ -70,9 +70,9 @@ void ATennisStoryGameMode::StartPlay()
 		TSGameState->CurrentBallActor->OnBallHitBounceLimit().AddUObject(this, &ATennisStoryGameMode::HandleBallHitBounceLimit);
 	}
 
-	SetUpNextPoint();
-
 	Super::StartPlay();
+
+	SetUpNextPoint();
 }
 
 void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
@@ -127,6 +127,8 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			{
 				GetCamPositioningCompFromWorld();
 			}
+
+			CameraPositioningComp->AddTrackedActor(TennisChar);
 
 			APlayerController* PlayerController = Cast<APlayerController>(NewPlayer);
 			if (PlayerController && CameraPositioningComp.IsValid())
@@ -190,6 +192,11 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	TeleportBallToCourt();
 
 	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
+	
+	if (CameraPositioningComp.IsValid())
+	{
+		CameraPositioningComp->AddTrackedActor(TSGameState->CurrentBallActor.Get());
+	}
 
 	for (int i = 0; i < AllCharacters.Num(); i++)
 	{
@@ -273,6 +280,11 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 	TSGameState->AwardPoint(TeamId);
 
 	CurrentPlayState = EPlayState::Waiting;
+
+	if (CameraPositioningComp.IsValid())
+	{
+		CameraPositioningComp->StopTrackingActor(TSGameState->CurrentBallActor.Get());
+	}
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 3.0f);
