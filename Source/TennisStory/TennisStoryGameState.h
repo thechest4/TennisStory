@@ -52,7 +52,7 @@ public:
 	UPROPERTY()
 	TArray<int> Scores;
 
-	bool AddPoint(int TeamId);
+	void AddPoint(int TeamId);
 
 	void ResetScore()
 	{
@@ -98,7 +98,7 @@ public:
 
 	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player);
 
-	bool AwardPoint(ATennisStoryPlayerController* LastPlayerToHit, bool bLastPlayerIsWinner);
+	void AwardPoint(int TeamId);
 
 protected:
 	UPROPERTY(Transient, Replicated)

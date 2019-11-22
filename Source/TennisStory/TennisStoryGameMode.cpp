@@ -224,13 +224,28 @@ void ATennisStoryGameMode::HandleBallHitBounceLimit()
 
 void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 {
-	TWeakObjectPtr<ATennisStoryCharacter> WinningCharacter = TSGameState->CurrentBallActor->LastPlayerToHit;
-	ATennisStoryPlayerController* WinningController = (WinningCharacter.IsValid()) ? Cast<ATennisStoryPlayerController>(WinningCharacter->Controller) : nullptr;
+	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit = TSGameState->CurrentBallActor->LastPlayerToHit;
+	ATennisStoryPlayerController* PlayerController = (LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(LastPlayerToHit->Controller) : nullptr;
 
-	bool bResult = TSGameState->AwardPoint(WinningController, bLastPlayerWon);
-
-	if (!bResult)
+	if (!LastPlayerToHit.IsValid())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("ATennisStoryGameMode::ResolvePoint - Failed to award point to player!"), *WinningController->GetName()));
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::ResolvePoint - LastPlayerToHit was null"));
+		return;
 	}
+	
+	int TeamId = TSGameState->GetTeamIdForPlayer(PlayerController);
+
+	if (!bLastPlayerWon)
+	{
+		//NOTE(achester): here's where we make the assumption that there will only be 2 teams, for simplicity's sake
+		TeamId = (TeamId) ? 0 : 1;
+	}
+
+	if (TeamId < 0)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::ResolvePoint - Failed to get valid team id for player"));
+		return;
+	}
+
+	TSGameState->AwardPoint(TeamId);
 }
