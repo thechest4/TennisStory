@@ -148,6 +148,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Swing Detection")
 	UBoxComponent* StrikeZone;
 
+	//Team Color
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamId)
+	int TeamId = -1;
+
+	UFUNCTION()
+	void OnRep_TeamId();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Team Color")
+	TArray<UMaterialInterface*> TeamColorMaterials;
+
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;
 

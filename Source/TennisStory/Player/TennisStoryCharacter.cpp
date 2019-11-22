@@ -53,6 +53,7 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimVector);
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimRightVector);
 	DOREPLIFETIME(ATennisStoryCharacter, bIsCharging);
+	DOREPLIFETIME(ATennisStoryCharacter, TeamId);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -108,6 +109,17 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 	if (AbilitySystemComp)
 	{
 		AbilitySystemComp->RefreshAbilityActorInfo();
+	}
+
+	if (HasAuthority() && NewController != nullptr)
+	{
+		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+		if (GameState && TeamColorMaterials.Num())
+		{
+			const FTeamData& TeamData = GameState->GetTeamForPlayer(Cast<ATennisStoryPlayerController>(NewController));
+			TeamId = TeamData.TeamId;
+			OnRep_TeamId();
+		}
 	}
 }
 
@@ -199,6 +211,14 @@ void ATennisStoryCharacter::OnRep_IsCharging()
 	else
 	{
 		GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
+	}
+}
+
+void ATennisStoryCharacter::OnRep_TeamId()
+{
+	if (TeamId >= 0)
+	{
+		GetMesh()->SetMaterial(0, TeamColorMaterials[TeamId]);
 	}
 }
 
