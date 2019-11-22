@@ -100,5 +100,5 @@ void FGameScore::AddPoint(int TeamId)
 
 	Scores[TeamId]++;
 	
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("FGameScore::AddPoint - Awarded point to team %d, Score is now %d | %d"), TeamId, Scores[0], Scores[1]));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("FGameScore::AddPoint - Awarded point to team %d, Score is now %d | %d"), TeamId, Scores[0], Scores[1]));
 }

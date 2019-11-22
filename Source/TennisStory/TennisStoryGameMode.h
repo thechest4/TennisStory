@@ -8,6 +8,14 @@
 class ATennisStoryGameState;
 class ATennisBall;
 
+UENUM()
+enum class EPlayState : uint8
+{
+	Service,
+	PlayingPoint,
+	Waiting
+};
+
 UCLASS(minimalapi)
 class ATennisStoryGameMode : public AGameModeBase
 {
@@ -35,12 +43,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Management")
 	void TeleportBallToCourt();
 
+	UFUNCTION()
+	void SetUpNextPoint();
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
 
 	UPROPERTY(Transient)
 	ATennisStoryGameState* TSGameState;
+
+	UPROPERTY(Transient)
+	TArray<TWeakObjectPtr<ATennisStoryCharacter>> AllCharacters;
+
+	EPlayState CurrentPlayState;
 
 	void GetCourtsFromWorld();
 

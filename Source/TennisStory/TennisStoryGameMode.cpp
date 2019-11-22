@@ -22,6 +22,7 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	PlayerControllerClass = ATennisStoryPlayerController::StaticClass();
 
 	AllowedBounces = 1;
+	CurrentPlayState = EPlayState::Waiting;
 }
 
 void ATennisStoryGameMode::InitGameState()
@@ -68,6 +69,8 @@ void ATennisStoryGameMode::StartPlay()
 		TSGameState->CurrentBallActor->OnBallOutOfBounds().AddUObject(this, &ATennisStoryGameMode::HandleBallOutOfBounds);
 		TSGameState->CurrentBallActor->OnBallHitBounceLimit().AddUObject(this, &ATennisStoryGameMode::HandleBallHitBounceLimit);
 	}
+
+	SetUpNextPoint();
 
 	Super::StartPlay();
 }
@@ -116,6 +119,8 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 		ATennisStoryCharacter* TennisChar = Cast<ATennisStoryCharacter>(NewPawn);
 		if (TennisChar)
 		{
+			AllCharacters.Add(TennisChar);
+
 			TennisChar->CacheCourtAimVector(SpawnCourt->GetActorForwardVector());
 
 			if (!CameraPositioningComp.IsValid())
@@ -180,6 +185,23 @@ void ATennisStoryGameMode::TeleportBallToCourt()
 	}
 }
 
+void ATennisStoryGameMode::SetUpNextPoint()
+{
+	TeleportBallToCourt();
+
+	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
+
+	for (int i = 0; i < AllCharacters.Num(); i++)
+	{
+		if (AllCharacters[i].IsValid())
+		{
+			TeleportCharacterToCourt(AllCharacters[i].Get());
+		}
+	}
+
+	CurrentPlayState = EPlayState::PlayingPoint;
+}
+
 void ATennisStoryGameMode::GetCourtsFromWorld()
 {
 	for (TActorIterator<AHalfCourt> It(GetWorld()); It; ++It)
@@ -210,20 +232,21 @@ void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
 
 void ATennisStoryGameMode::HandleBallOutOfBounds()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("ATennisStoryGameMode::HandleBallOutOfBounds"));
-
 	ResolvePoint(false);
 }
 
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("ATennisStoryGameMode::HandleBallHitBounceLimit"));
-	
 	ResolvePoint(true);
 }
 
 void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 {
+	if (CurrentPlayState != EPlayState::PlayingPoint)
+	{
+		return;
+	}
+
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit = TSGameState->CurrentBallActor->LastPlayerToHit;
 	ATennisStoryPlayerController* PlayerController = (LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(LastPlayerToHit->Controller) : nullptr;
 
@@ -248,4 +271,9 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 	}
 
 	TSGameState->AwardPoint(TeamId);
+
+	CurrentPlayState = EPlayState::Waiting;
+
+	FTimerHandle NextPointHandle;
+	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 3.0f);
 }
