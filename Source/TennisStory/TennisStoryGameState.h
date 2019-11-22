@@ -61,6 +61,20 @@ public:
 			Scores[i] = 0;
 		}
 	}
+
+	EServiceSide GetNextServiceSide()
+	{
+		int TotalNumPoints = 0;
+
+		for (int i = 0; i < Scores.Num(); i++)
+		{
+			TotalNumPoints += Scores[i];
+		}
+
+		int Side = TotalNumPoints % 2;
+
+		return static_cast<EServiceSide>(Side);
+	}
 };
 
 UCLASS()
@@ -99,6 +113,11 @@ public:
 	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player);
 
 	void AwardPoint(int TeamId);
+
+	EServiceSide GetServiceSideForNextPoint()
+	{
+		return CurrentGameScore.GetNextServiceSide();
+	}
 
 protected:
 	UPROPERTY(Transient, Replicated)

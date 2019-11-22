@@ -16,13 +16,21 @@ AHalfCourt::AHalfCourt()
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene Root"));
 
-	PlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Player Service Location"));
-	PlayerServiceLocation->SetupAttachment(RootComponent);
-	PlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	DeucePlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Deuce Player Service Location"));
+	DeucePlayerServiceLocation->SetupAttachment(RootComponent);
+	DeucePlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	
+	AdPlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ad Player Service Location"));
+	AdPlayerServiceLocation->SetupAttachment(RootComponent);
+	AdPlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, -0.25f * CourtWidth, 0.0f));
 
-	BallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ball Service Location"));
-	BallServiceLocation->SetupAttachment(RootComponent);
-	BallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	DeuceBallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Deuce Ball Service Location"));
+	DeuceBallServiceLocation->SetupAttachment(RootComponent);
+	DeuceBallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	
+	AdBallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ad Ball Service Location"));
+	AdBallServiceLocation->SetupAttachment(RootComponent);
+	AdBallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, -0.25f * CourtWidth, 0.0f));
 
 	MidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Mid Target Snap Point"));
 	MidSnapPoint->SetupAttachment(RootComponent);
@@ -59,33 +67,61 @@ AHalfCourt::AHalfCourt()
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> PlayerServiceSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/throwing-ball"));
 
-	PlayerServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Player Service Icon"));
-	if (PlayerServiceIcon)
+	DeucePlayerServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Deuce Player Service Icon"));
+	if (DeucePlayerServiceIcon)
 	{
-		PlayerServiceIcon->SetupAttachment(PlayerServiceLocation);
-		PlayerServiceIcon->SetHiddenInGame(true);
-		PlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-		PlayerServiceIcon->SetEditorScale(IconEditorScale);
+		DeucePlayerServiceIcon->SetupAttachment(DeucePlayerServiceLocation);
+		DeucePlayerServiceIcon->SetHiddenInGame(true);
+		DeucePlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		DeucePlayerServiceIcon->SetEditorScale(IconEditorScale);
 
 		if (PlayerServiceSprite.Succeeded())
 		{
-			PlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
+			DeucePlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
+		}
+	}
+	
+	AdPlayerServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ad Player Service Icon"));
+	if (AdPlayerServiceIcon)
+	{
+		AdPlayerServiceIcon->SetupAttachment(AdPlayerServiceLocation);
+		AdPlayerServiceIcon->SetHiddenInGame(true);
+		AdPlayerServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		AdPlayerServiceIcon->SetEditorScale(IconEditorScale);
+
+		if (PlayerServiceSprite.Succeeded())
+		{
+			AdPlayerServiceIcon->SetSprite(PlayerServiceSprite.Object);
 		}
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisBallSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-ball"));
 
-	BallServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ball Service Icon"));
-	if (BallServiceIcon)
+	DeuceBallServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Deuce Ball Service Icon"));
+	if (DeuceBallServiceIcon)
 	{
-		BallServiceIcon->SetupAttachment(BallServiceLocation);
-		BallServiceIcon->SetHiddenInGame(true);
-		BallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-		BallServiceIcon->SetEditorScale(IconEditorScale);
+		DeuceBallServiceIcon->SetupAttachment(DeuceBallServiceLocation);
+		DeuceBallServiceIcon->SetHiddenInGame(true);
+		DeuceBallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		DeuceBallServiceIcon->SetEditorScale(IconEditorScale);
 
 		if (TennisBallSprite.Succeeded())
 		{
-			BallServiceIcon->SetSprite(TennisBallSprite.Object);
+			DeuceBallServiceIcon->SetSprite(TennisBallSprite.Object);
+		}
+	}
+	
+	AdBallServiceIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ad Ball Service Icon"));
+	if (AdBallServiceIcon)
+	{
+		AdBallServiceIcon->SetupAttachment(AdBallServiceLocation);
+		AdBallServiceIcon->SetHiddenInGame(true);
+		AdBallServiceIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		AdBallServiceIcon->SetEditorScale(IconEditorScale);
+
+		if (TennisBallSprite.Succeeded())
+		{
+			AdBallServiceIcon->SetSprite(TennisBallSprite.Object);
 		}
 	}
 
@@ -223,11 +259,17 @@ void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	}
 
 	//Reset all court locations to be at ground level, in case the z coordinate was accidentally modified
-	FVector PlayerServiceRelativeLocation = PlayerServiceLocation->GetRelativeTransform().GetLocation();
-	PlayerServiceLocation->SetRelativeLocation(FVector(PlayerServiceRelativeLocation.X, PlayerServiceRelativeLocation.Y, 0.0f));
+	FVector DeucePlayerServiceRelativeLocation = DeucePlayerServiceLocation->GetRelativeTransform().GetLocation();
+	DeucePlayerServiceLocation->SetRelativeLocation(FVector(DeucePlayerServiceRelativeLocation.X, DeucePlayerServiceRelativeLocation.Y, 0.0f));
+	
+	FVector AdPlayerServiceRelativeLocation = AdPlayerServiceLocation->GetRelativeTransform().GetLocation();
+	AdPlayerServiceLocation->SetRelativeLocation(FVector(AdPlayerServiceRelativeLocation.X, AdPlayerServiceRelativeLocation.Y, 0.0f));
 
-	FVector BallServiceRelativeLocation = BallServiceLocation->GetRelativeTransform().GetLocation();
-	BallServiceLocation->SetRelativeLocation(FVector(BallServiceRelativeLocation.X, BallServiceRelativeLocation.Y, 0.0f));
+	FVector DeuceBallServiceRelativeLocation = DeuceBallServiceLocation->GetRelativeTransform().GetLocation();
+	DeuceBallServiceLocation->SetRelativeLocation(FVector(DeuceBallServiceRelativeLocation.X, DeuceBallServiceRelativeLocation.Y, 0.0f));
+	
+	FVector AdBallServiceRelativeLocation = AdBallServiceLocation->GetRelativeTransform().GetLocation();
+	AdBallServiceLocation->SetRelativeLocation(FVector(AdBallServiceRelativeLocation.X, AdBallServiceRelativeLocation.Y, 0.0f));
 
 	FVector MidSnapPointLocation = MidSnapPoint->GetRelativeTransform().GetLocation();
 	MidSnapPoint->SetRelativeLocation(FVector(MidSnapPointLocation.X, MidSnapPointLocation.Y, 0.0f));

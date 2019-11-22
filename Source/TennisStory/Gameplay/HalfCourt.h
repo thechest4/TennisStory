@@ -9,6 +9,13 @@
 class UBillboardComponent;
 
 UENUM(BlueprintType)
+enum class EServiceSide : uint8
+{
+	Deuce,
+	Ad
+};
+
+UENUM(BlueprintType)
 enum class ECourtSide : uint8
 {
 	NearCourt,
@@ -32,18 +39,46 @@ public:
 	AHalfCourt();
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	FTransform GetPlayerServiceTransform() const
+	FTransform GetPlayerServiceTransform(EServiceSide ServiceSide) const
 	{
-		return PlayerServiceLocation->GetComponentTransform();
+		switch (ServiceSide)
+		{
+			case EServiceSide::Ad:
+			{
+				return AdPlayerServiceLocation->GetComponentTransform();
+			}
+			default:
+			case EServiceSide::Deuce:
+			{
+				return DeucePlayerServiceLocation->GetComponentTransform();
+			}
+		}
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	FTransform GetBallServiceTransform() const
+	FTransform GetBallServiceTransform(EServiceSide ServiceSide) const
 	{
 		FTransform BallSpawnOffset = FTransform::Identity;
 		BallSpawnOffset.SetTranslation(FVector(0.0f, 0.0f, 120.0f));
+		
+		FTransform ServiceLocation;
 
-		return BallSpawnOffset * BallServiceLocation->GetComponentTransform();
+		switch (ServiceSide)
+		{
+			case EServiceSide::Ad:
+			{
+				ServiceLocation = AdBallServiceLocation->GetComponentTransform();
+				break;
+			}
+			default:
+			case EServiceSide::Deuce:
+			{
+				ServiceLocation = DeuceBallServiceLocation->GetComponentTransform();
+				break;
+			}
+		}
+
+		return BallSpawnOffset * ServiceLocation;
 	}
 
 	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
@@ -64,10 +99,16 @@ protected:
 	ECourtSide CourtSide;
 
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
-	USceneComponent* PlayerServiceLocation;
+	USceneComponent* DeucePlayerServiceLocation;
 
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
-	USceneComponent* BallServiceLocation;
+	USceneComponent* DeuceBallServiceLocation;
+
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* AdPlayerServiceLocation;
+
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* AdBallServiceLocation;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
 	USceneComponent* MidSnapPoint;
@@ -100,10 +141,16 @@ protected:
 	class UArrowComponent* CourtForwardArrow;
 
 	UPROPERTY()
-	UBillboardComponent* PlayerServiceIcon;
+	UBillboardComponent* DeucePlayerServiceIcon;
 
 	UPROPERTY()
-	UBillboardComponent* BallServiceIcon;
+	UBillboardComponent* DeuceBallServiceIcon;
+
+	UPROPERTY()
+	UBillboardComponent* AdPlayerServiceIcon;
+
+	UPROPERTY()
+	UBillboardComponent* AdBallServiceIcon;
 
 	UPROPERTY()
 	UBillboardComponent* MidSnapPointIcon;
