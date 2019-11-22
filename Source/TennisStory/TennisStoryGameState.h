@@ -63,7 +63,7 @@ public:
 		return nullptr;
 	}
 
-	const FTeamData& GetTeamForPlayer(ATennisStoryPlayerController* Player);
+	const FTeamData GetTeamForPlayer(ATennisStoryPlayerController* Player);
 
 protected:
 	UPROPERTY(Transient, Replicated)
