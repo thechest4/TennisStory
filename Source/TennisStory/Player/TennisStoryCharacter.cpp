@@ -125,9 +125,10 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 
 void ATennisStoryCharacter::EnablePlayerTargeting()
 {
-	if (TargetActor)
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	if (TargetActor && GameState && Controller)
 	{
-		TargetActor->ShowTargetOnCourt(GetCourtToAimAt(), IsLocallyControlled());
+		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForPlayer(Cast<ATennisStoryPlayerController>(Controller)), IsLocallyControlled());
 
 		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
 		//Basically a fallback in case another position isn't committed
@@ -311,51 +312,4 @@ void ATennisStoryCharacter::Multicast_ReceiveBallTrajectory_Implementation(FBall
 	
 	BallStrikingComp->SetTrajectory(TrajectoryData);
 	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
-}
-
-TWeakObjectPtr<class AHalfCourt> ATennisStoryCharacter::GetCourtToAimAt()
-{
-	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-	if (GameState)
-	{
-		TArray<TWeakObjectPtr<AHalfCourt>> AvailableCourts = GameState->GetAllCourts();
-
-		if (AvailableCourts.Num() == 0)
-		{
-			return nullptr;
-		}
-		else if (AvailableCourts.Num() == 1)
-		{
-			return AvailableCourts[0];
-		}
-		else
-		{
-			//The court to aim at will be the one furthest from the character, so just find out whichever one that is
-			//TODO(achester): use court registration once that feature exists
-
-			TWeakObjectPtr<AHalfCourt> CurrentFurthestCourt = nullptr;
-
-			for (TWeakObjectPtr<AHalfCourt> Court : AvailableCourts)
-			{
-				if (!CurrentFurthestCourt.IsValid())
-				{
-					CurrentFurthestCourt = Court;
-				}
-				else
-				{
-					float DistanceToCourt = FVector::Dist(GetActorLocation(), Court->GetActorLocation());
-					float DistanceToFurthestCourt = FVector::Dist(GetActorLocation(), CurrentFurthestCourt->GetActorLocation());
-
-					if (DistanceToCourt > DistanceToFurthestCourt)
-					{
-						CurrentFurthestCourt = Court;
-					}
-				}
-			}
-
-			return CurrentFurthestCourt;
-		}
-	}
-
-	return nullptr;
 }

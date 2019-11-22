@@ -36,6 +36,33 @@ public:
 	TWeakObjectPtr<AHalfCourt> AssignedCourt;
 };
 
+USTRUCT()
+struct FGameScore
+{
+	GENERATED_BODY()
+
+public:
+	FGameScore(){}
+
+	FGameScore(int NumTeams)
+	{
+		Scores.Init(0, NumTeams);
+	}
+
+	UPROPERTY()
+	TArray<int> Scores;
+
+	bool AddPoint(int TeamId);
+
+	void ResetScore()
+	{
+		for (int i = 0; i < Scores.Num(); i++)
+		{
+			Scores[i] = 0;
+		}
+	}
+};
+
 UCLASS()
 class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 {
@@ -63,11 +90,22 @@ public:
 		return nullptr;
 	}
 
+	void InitScores(int NumTeams);
+
 	const FTeamData GetTeamForPlayer(ATennisStoryPlayerController* Player);
+
+	const int GetTeamIdForPlayer(ATennisStoryPlayerController* Player);
+
+	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player);
+
+	bool AwardPoint(ATennisStoryPlayerController* LastPlayerToHit, bool bLastPlayerIsWinner);
 
 protected:
 	UPROPERTY(Transient, Replicated)
 	TArray<FTeamData> TeamData;
+
+	UPROPERTY(Transient, Replicated)
+	FGameScore CurrentGameScore;
 
 	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;

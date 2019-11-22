@@ -50,6 +50,14 @@ protected:
 
 	int AllowedBounces;
 
+	UFUNCTION()
+	void HandleBallOutOfBounds();
+
+	UFUNCTION()
+	void HandleBallHitBounceLimit();
+
+	void ResolvePoint(bool bLastPlayerWon);
+
 private:
 	const int MaxTeamNumber = 2;
 };

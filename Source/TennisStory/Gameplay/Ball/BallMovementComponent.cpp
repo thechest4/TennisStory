@@ -6,8 +6,11 @@
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
 #include "TennisStoryGameMode.h"
+#include "TennisStoryGameState.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Gameplay/Ball/TennisBall.h"
+#include "Player/TennisStoryPlayerController.h"
+#include "Player/TennisStoryCharacter.h"
 
 UBallMovementComponent::UBallMovementComponent()
 {
@@ -32,14 +35,16 @@ void UBallMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner()->HasAuthority())
+	OwnerPtr = Cast<ATennisBall>(GetOwner());
+
+	if (OwnerPtr->HasAuthority())
 	{
-		GetOwner()->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
+		OwnerPtr->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
 	}
 	
-	BallCollisionComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+	BallCollisionComponent = Cast<UPrimitiveComponent>(OwnerPtr->GetRootComponent());
 
-	TrajectorySplineComp = Cast<USplineComponent>(GetOwner()->GetComponentByClass(USplineComponent::StaticClass()));
+	TrajectorySplineComp = Cast<USplineComponent>(OwnerPtr->GetComponentByClass(USplineComponent::StaticClass()));
 }
 
 void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -56,21 +61,34 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	{
 		GenerateAndFollowBouncePath(Hit);
 
-		ATennisBall* TennisBall = Cast<ATennisBall>(SelfActor);
-		if (TennisBall)
+		OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+		
+		ATennisStoryPlayerController* Controller = (OwnerPtr->LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(OwnerPtr->LastPlayerToHit->Controller) : nullptr;
+		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState) ? GameState->GetCourtToAimAtForPlayer(Controller) : nullptr;
+		FVector CurrentLocation = OwnerPtr->GetActorLocation();
+
+		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation))
 		{
-			TennisBall->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+			OwnerPtr->OnBallOutOfBounds().Broadcast();
 		}
 	}
-	else
+	else if (OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
 	{
-		EnterPhysicalMovementState();
-
-		ATennisBall* TennisBall = Cast<ATennisBall>(SelfActor);
-		if (TennisBall)
+		if (NumBounces == GameMode->GetAllowedBounces())
 		{
-			TennisBall->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+			EnterPhysicalMovementState();
+
+			OwnerPtr->OnBallHitBounceLimit().Broadcast();
 		}
+
+		const float MinImpulseForParticles = 500.f;
+		if (NormalImpulse.Size() > MinImpulseForParticles)
+		{
+			OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+		}
+		
+		NumBounces++;
 	}
 }
 
@@ -94,17 +112,13 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 		return;
 	}
 
-	FVector BallLocation = GetOwner()->GetActorLocation();
+	FVector BallLocation = OwnerPtr->GetActorLocation();
 	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.6f;
 	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, LastPathHeight * 0.6f);
 
-	ATennisBall* Owner = Cast<ATennisBall>(GetOwner());
-	if (Owner)
-	{
-		Owner->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false);
-		UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
-	}
-
+	OwnerPtr->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false);
+	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
+	
 	NumBounces++;
 }
 
@@ -129,7 +143,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 	else if (CurrentMovementState == EBallMovementState::FollowingPath && TrajectorySplineComp)
 	{
-		FVector CurrentLocation = GetOwner()->GetActorLocation();
+		FVector CurrentLocation = OwnerPtr->GetActorLocation();
 		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
 		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
 		FVector SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
@@ -137,7 +151,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		CurrentDirection = SplineNewLocation - CurrentLocation;
 		CurrentDirection.Normalize();
 
-		GetOwner()->SetActorLocation(SplineNewLocation, true);
+		OwnerPtr->SetActorLocation(SplineNewLocation, true);
 	}
 }
 
@@ -193,6 +207,8 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float argVelocity, bool bIsFromHit)
 {
+	OwnerPtr->SetBallState(ETennisBallState::PlayState);
+
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 	LastPathDistance = TrajectoryData.TrajectoryDistance;
 	LastPathHeight = TrajectoryData.ApexHeight;

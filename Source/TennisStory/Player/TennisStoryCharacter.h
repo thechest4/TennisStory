@@ -96,8 +96,6 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReceiveBallTrajectory(FBallTrajectoryData TrajectoryData);
 
-	TWeakObjectPtr<class AHalfCourt> GetCourtToAimAt();
-
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface

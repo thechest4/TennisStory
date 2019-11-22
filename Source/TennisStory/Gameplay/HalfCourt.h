@@ -48,6 +48,8 @@ public:
 
 	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
 
+	bool IsLocationInBounds(FVector& Location);
+
 	void ClampLocationToCourtBounds(FVector& Location);
 
 	ECourtSide GetCourtSide()

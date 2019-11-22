@@ -7,6 +7,7 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "BallMovementComponent.generated.h"
 
+class ATennisBall;
 class USplineComponent;
 class USplineMeshComponent;
 class UCurveFloat;
@@ -66,6 +67,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_CurrentMovementState();
+
+	UPROPERTY()
+	ATennisBall* OwnerPtr;
 
 	float Velocity;
 	int NumBounces;

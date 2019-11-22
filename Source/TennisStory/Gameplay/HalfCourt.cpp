@@ -162,6 +162,19 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 	return FVector::ZeroVector;
 }
 
+bool AHalfCourt::IsLocationInBounds(FVector& Location)
+{
+	if (Location.X < LowerCorner.X ||
+		Location.X > UpperCorner.X ||
+		Location.Y < LowerCorner.Y ||
+		Location.Y > UpperCorner.Y)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
 {
 	if (Location.X < LowerCorner.X)

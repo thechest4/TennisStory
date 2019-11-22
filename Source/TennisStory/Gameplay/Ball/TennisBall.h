@@ -10,6 +10,9 @@
 
 class ATennisStoryCharacter;
 
+DECLARE_MULTICAST_DELEGATE(FOnBallOutOfBoundsEvent)
+DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
+
 UENUM(BlueprintType)
 enum class ETennisBallState : uint8
 {
@@ -26,10 +29,15 @@ public:
 	DECLARE_EVENT_OneParam(ATennisBall, FOnBallSpawnedEvent, ATennisBall*);
 	static FOnBallSpawnedEvent& OnBallSpawned(){ return BallSpawnedEvent; }
 
+	FOnBallOutOfBoundsEvent& OnBallOutOfBounds(){ return BallOutOfBoundsEvent; }
+	FOnBallHitBounceLimitEvent& OnBallHitBounceLimit(){ return BallHitBounceLimitEvent; }
+
 	ATennisBall();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UBallMovementComponent* BallMovementComp;
+
+	ETennisBallState GetCurrentBallState(){ return CurrentBallState; }
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	bool IsInServiceState();
@@ -73,4 +81,6 @@ protected:
 
 private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;
+	FOnBallOutOfBoundsEvent BallOutOfBoundsEvent;
+	FOnBallHitBounceLimitEvent BallHitBounceLimitEvent;
 };

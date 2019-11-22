@@ -38,6 +38,8 @@ void ATennisStoryGameMode::InitGameState()
 		FTeamData NewTeamData = FTeamData(i);
 		TSGameState->TeamData.Add(NewTeamData);
 	}
+
+	TSGameState->InitScores(NumTeams);
 	
 	if (!TSGameState->Courts.Num())
 	{
@@ -62,6 +64,9 @@ void ATennisStoryGameMode::StartPlay()
 
 		TSGameState->CurrentBallActor = GetWorld()->SpawnActor<ATennisBall>(DefaultBallClass, BallSpawnTransform, SpawnParams);
 		TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
+
+		TSGameState->CurrentBallActor->OnBallOutOfBounds().AddUObject(this, &ATennisStoryGameMode::HandleBallOutOfBounds);
+		TSGameState->CurrentBallActor->OnBallHitBounceLimit().AddUObject(this, &ATennisStoryGameMode::HandleBallHitBounceLimit);
 	}
 
 	Super::StartPlay();
@@ -201,4 +206,31 @@ void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::GetCamPositioningCompFromWorld - Could not find Camera Positioning Component!"));
+}
+
+void ATennisStoryGameMode::HandleBallOutOfBounds()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("ATennisStoryGameMode::HandleBallOutOfBounds"));
+
+	ResolvePoint(false);
+}
+
+void ATennisStoryGameMode::HandleBallHitBounceLimit()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("ATennisStoryGameMode::HandleBallHitBounceLimit"));
+	
+	ResolvePoint(true);
+}
+
+void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
+{
+	TWeakObjectPtr<ATennisStoryCharacter> WinningCharacter = TSGameState->CurrentBallActor->LastPlayerToHit;
+	ATennisStoryPlayerController* WinningController = (WinningCharacter.IsValid()) ? Cast<ATennisStoryPlayerController>(WinningCharacter->Controller) : nullptr;
+
+	bool bResult = TSGameState->AwardPoint(WinningController, bLastPlayerWon);
+
+	if (!bResult)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("ATennisStoryGameMode::ResolvePoint - Failed to award point to player!"), *WinningController->GetName()));
+	}
 }
