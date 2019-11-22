@@ -16,6 +16,7 @@ AHalfCourt::AHalfCourt()
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene Root"));
 
+	//Service Locations
 	DeucePlayerServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Deuce Player Service Location"));
 	DeucePlayerServiceLocation->SetupAttachment(RootComponent);
 	DeucePlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, 0.25f * CourtWidth, 0.0f));
@@ -31,7 +32,29 @@ AHalfCourt::AHalfCourt()
 	AdBallServiceLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ad Ball Service Location"));
 	AdBallServiceLocation->SetupAttachment(RootComponent);
 	AdBallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	//Service Locations End
+	
+	//Returner Locations
+	DeuceReturnerLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Deuce Returner Location"));
+	DeuceReturnerLocation->SetupAttachment(RootComponent);
+	DeuceReturnerLocation->SetRelativeLocation(FVector(-0.35f * CourtLength, 0.25f * CourtWidth, 0.0f));
 
+	AdReturnerLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ad Returner Location"));
+	AdReturnerLocation->SetupAttachment(RootComponent);
+	AdReturnerLocation->SetRelativeLocation(FVector(-0.35f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	//Returner Locations End
+
+	//Net Player Locations (For Doubles)
+	DeuceNetPlayerLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Deuce Player Net Location"));
+	DeuceNetPlayerLocation->SetupAttachment(RootComponent);
+	DeuceNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+
+	AdNetPlayerLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Ad Player Net Location"));
+	AdNetPlayerLocation->SetupAttachment(RootComponent);
+	AdNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	//Net Player Locations (For Doubles) End
+
+	//Target Snap Points
 	MidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Mid Target Snap Point"));
 	MidSnapPoint->SetupAttachment(RootComponent);
 	MidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
@@ -43,6 +66,7 @@ AHalfCourt::AHalfCourt()
 	LeftSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Left Target Snap Point"));
 	LeftSnapPoint->SetupAttachment(RootComponent);
 	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	//Target Snap Points End
 
 #if WITH_EDITORONLY_DATA
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
@@ -122,6 +146,66 @@ AHalfCourt::AHalfCourt()
 		if (TennisBallSprite.Succeeded())
 		{
 			AdBallServiceIcon->SetSprite(TennisBallSprite.Object);
+		}
+	}
+	
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ReturnerSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
+
+	DeuceReturnerIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Deuce Returner Icon"));
+	if (DeuceReturnerIcon)
+	{
+		DeuceReturnerIcon->SetupAttachment(DeuceReturnerLocation);
+		DeuceReturnerIcon->SetHiddenInGame(true);
+		DeuceReturnerIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		DeuceReturnerIcon->SetEditorScale(IconEditorScale);
+
+		if (ReturnerSprite.Succeeded())
+		{
+			DeuceReturnerIcon->SetSprite(ReturnerSprite.Object);
+		}
+	}
+	
+	AdReturnerIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ad Returner Icon"));
+	if (AdReturnerIcon)
+	{
+		AdReturnerIcon->SetupAttachment(AdReturnerLocation);
+		AdReturnerIcon->SetHiddenInGame(true);
+		AdReturnerIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		AdReturnerIcon->SetEditorScale(IconEditorScale);
+
+		if (ReturnerSprite.Succeeded())
+		{
+			AdReturnerIcon->SetSprite(ReturnerSprite.Object);
+		}
+	}
+	
+	static ConstructorHelpers::FObjectFinder<UTexture2D> NetPlayerSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
+
+	DeuceNetPlayerIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Deuce Net Player Icon"));
+	if (DeuceNetPlayerIcon)
+	{
+		DeuceNetPlayerIcon->SetupAttachment(DeuceNetPlayerLocation);
+		DeuceNetPlayerIcon->SetHiddenInGame(true);
+		DeuceNetPlayerIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		DeuceNetPlayerIcon->SetEditorScale(IconEditorScale);
+
+		if (NetPlayerSprite.Succeeded())
+		{
+			DeuceNetPlayerIcon->SetSprite(NetPlayerSprite.Object);
+		}
+	}
+	
+	AdNetPlayerIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Ad Net Player Icon"));
+	if (AdNetPlayerIcon)
+	{
+		AdNetPlayerIcon->SetupAttachment(AdNetPlayerLocation);
+		AdNetPlayerIcon->SetHiddenInGame(true);
+		AdNetPlayerIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		AdNetPlayerIcon->SetEditorScale(IconEditorScale);
+
+		if (NetPlayerSprite.Succeeded())
+		{
+			AdNetPlayerIcon->SetSprite(NetPlayerSprite.Object);
 		}
 	}
 
@@ -270,6 +354,18 @@ void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	
 	FVector AdBallServiceRelativeLocation = AdBallServiceLocation->GetRelativeTransform().GetLocation();
 	AdBallServiceLocation->SetRelativeLocation(FVector(AdBallServiceRelativeLocation.X, AdBallServiceRelativeLocation.Y, 0.0f));
+	
+	FVector DeuceReturnerRelativeLocation = DeuceReturnerLocation->GetRelativeTransform().GetLocation();
+	DeuceReturnerLocation->SetRelativeLocation(FVector(DeuceReturnerRelativeLocation.X, DeuceReturnerRelativeLocation.Y, 0.0f));
+	
+	FVector AdReturnerRelativeLocation = AdReturnerLocation->GetRelativeTransform().GetLocation();
+	AdReturnerLocation->SetRelativeLocation(FVector(AdReturnerRelativeLocation.X, AdReturnerRelativeLocation.Y, 0.0f));
+	
+	FVector DeuceNetPlayerRelativeLocation = DeuceNetPlayerLocation->GetRelativeTransform().GetLocation();
+	DeuceNetPlayerLocation->SetRelativeLocation(FVector(DeuceNetPlayerRelativeLocation.X, DeuceNetPlayerRelativeLocation.Y, 0.0f));
+	
+	FVector AdNetPlayerRelativeLocation = AdNetPlayerLocation->GetRelativeTransform().GetLocation();
+	AdNetPlayerLocation->SetRelativeLocation(FVector(AdNetPlayerRelativeLocation.X, AdNetPlayerRelativeLocation.Y, 0.0f));
 
 	FVector MidSnapPointLocation = MidSnapPoint->GetRelativeTransform().GetLocation();
 	MidSnapPoint->SetRelativeLocation(FVector(MidSnapPointLocation.X, MidSnapPointLocation.Y, 0.0f));

@@ -109,6 +109,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
 	USceneComponent* AdBallServiceLocation;
+	
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* DeuceReturnerLocation;
+	
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* DeuceNetPlayerLocation;
+
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* AdReturnerLocation;
+	
+	UPROPERTY(EditAnywhere, Category = "StartLocations")
+	USceneComponent* AdNetPlayerLocation;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
 	USceneComponent* MidSnapPoint;
@@ -151,6 +163,18 @@ protected:
 
 	UPROPERTY()
 	UBillboardComponent* AdBallServiceIcon;
+	
+	UPROPERTY()
+	UBillboardComponent* DeuceReturnerIcon;
+	
+	UPROPERTY()
+	UBillboardComponent* DeuceNetPlayerIcon;
+
+	UPROPERTY()
+	UBillboardComponent* AdReturnerIcon;
+	
+	UPROPERTY()
+	UBillboardComponent* AdNetPlayerIcon;
 
 	UPROPERTY()
 	UBillboardComponent* MidSnapPointIcon;
