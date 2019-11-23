@@ -56,6 +56,40 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	FTransform GetReturnerTransform(EServiceSide ServiceSide) const
+	{
+		switch (ServiceSide)
+		{
+			case EServiceSide::Ad:
+			{
+				return AdReturnerLocation->GetComponentTransform();
+			}
+			default:
+			case EServiceSide::Deuce:
+			{
+				return DeuceReturnerLocation->GetComponentTransform();
+			}
+		}
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
+	FTransform GetNetPlayerTransform(EServiceSide ServiceSide) const
+	{
+		switch (ServiceSide)
+		{
+			case EServiceSide::Ad:
+			{
+				return AdNetPlayerLocation->GetComponentTransform();
+			}
+			default:
+			case EServiceSide::Deuce:
+			{
+				return DeuceNetPlayerLocation->GetComponentTransform();
+			}
+		}
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
 	FTransform GetBallServiceTransform(EServiceSide ServiceSide) const
 	{
 		FTransform BallSpawnOffset = FTransform::Identity;

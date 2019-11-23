@@ -172,7 +172,14 @@ void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Chara
 		const FTeamData& PlayerTeam = TSGameState->GetTeamForPlayer(PlayerController);
 		if (PlayerTeam.TeamId >= 0 && PlayerTeam.AssignedCourt.IsValid())
 		{
-			Character->SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()));
+			if (PlayerTeam.TeamId == TSGameState->CurrentServiceTeam)
+			{
+				Character->SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()));
+			}
+			else
+			{
+				Character->SetActorTransform(PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()));
+			}
 		}
 	}
 }
@@ -181,7 +188,7 @@ void ATennisStoryGameMode::TeleportBallToCourt()
 {
 	if (TSGameState->CurrentBallActor.IsValid())
 	{
-		FTransform CourtBallTransform = TSGameState->TeamData[0].AssignedCourt->GetBallServiceTransform(TSGameState->GetServiceSideForNextPoint());
+		FTransform CourtBallTransform = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCourt->GetBallServiceTransform(TSGameState->GetServiceSideForNextPoint());
 		TSGameState->CurrentBallActor->SetActorLocation(CourtBallTransform.GetLocation());
 		TSGameState->CurrentBallActor->SetActorRotation(CourtBallTransform.GetRotation());
 	}
@@ -279,6 +286,26 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 
 	TSGameState->AwardPoint(TeamId);
 
+	int LoserTeamId = (TeamId) ? 0 : 1;
+	int WinnerScore = TSGameState->CurrentGameScore.Scores[TeamId];
+	int LoserScore = TSGameState->CurrentGameScore.Scores[LoserTeamId];
+
+	if (WinnerScore >= PointsToWinGame && WinnerScore - LoserScore >= MarginToWinGame)
+	{
+		TSGameState->AwardGame(TeamId);
+		
+		//Check if set is over
+			//Check if Match is over
+			//Start new set
+		
+		TSGameState->CurrentServiceTeam = (TSGameState->CurrentServiceTeam) ? 0 : 1;
+
+		if (TSGameState->GetTotalGameCountForCurrentSet() % 2)
+		{
+			SwitchSides();
+		}
+	}
+
 	CurrentPlayState = EPlayState::Waiting;
 
 	if (CameraPositioningComp.IsValid())
@@ -288,4 +315,14 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 3.0f);
+}
+
+void ATennisStoryGameMode::SwitchSides()
+{
+	for (int i = 0; i < TSGameState->TeamData.Num(); i++)
+	{
+		FTeamData& CurrentTeam = TSGameState->TeamData[i];
+		int NewCourt = (static_cast<int>(CurrentTeam.AssignedCourt->GetCourtSide())) ? 0 : 1;
+		CurrentTeam.AssignedCourt = TSGameState->GetCourt(static_cast<ECourtSide>(NewCourt));
+	}
 }

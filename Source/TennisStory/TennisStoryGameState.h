@@ -77,6 +77,24 @@ public:
 	}
 };
 
+USTRUCT()
+struct FMatchScore
+{
+	GENERATED_BODY()
+
+public:
+	FMatchScore()
+	{
+		SetScores.Add(0);
+	}
+
+	UPROPERTY()
+	TArray<int> SetScores;
+
+	UPROPERTY()
+	int SetsWon;
+};
+
 UCLASS()
 class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 {
@@ -106,6 +124,10 @@ public:
 
 	void InitScores(int NumTeams);
 
+	void StartNewSet();
+
+	void GetSetScores(int SetNum, TArray<int>& OutScores);
+
 	const FTeamData GetTeamForPlayer(ATennisStoryPlayerController* Player);
 
 	const int GetTeamIdForPlayer(ATennisStoryPlayerController* Player);
@@ -114,6 +136,10 @@ public:
 
 	void AwardPoint(int TeamId);
 
+	void AwardGame(int TeamId);
+
+	int GetTotalGameCountForCurrentSet();
+
 	EServiceSide GetServiceSideForNextPoint()
 	{
 		return CurrentGameScore.GetNextServiceSide();
@@ -121,10 +147,19 @@ public:
 
 protected:
 	UPROPERTY(Transient, Replicated)
+	int CurrentServiceTeam;
+
+	UPROPERTY(Transient, Replicated)
 	TArray<FTeamData> TeamData;
 
 	UPROPERTY(Transient, Replicated)
 	FGameScore CurrentGameScore;
+	
+	UPROPERTY(Transient, Replicated)
+	TArray<FMatchScore> CurrentMatchScores;
+
+	UPROPERTY(Transient, Replicated)
+	int CurrentSet;
 
 	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;

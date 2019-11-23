@@ -74,6 +74,24 @@ protected:
 
 	void ResolvePoint(bool bLastPlayerWon);
 
+	void SwitchSides();
+
+	//Match data params
+	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
+	int NumSets = 3;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
+	int GamesToWinSet = 6;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
+	int MarginToWinSet = 2;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
+	int PointsToWinGame = 4;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
+	int MarginToWinGame = 2;
+
 private:
 	const int MaxTeamNumber = 2;
 };

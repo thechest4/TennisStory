@@ -11,11 +11,39 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryGameState, Courts);
 	DOREPLIFETIME(ATennisStoryGameState, TeamData);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentGameScore);
+	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchScores);
 }
 
 void ATennisStoryGameState::InitScores(int NumTeams)
 {
 	CurrentGameScore = FGameScore(NumTeams);
+	CurrentMatchScores.Init(FMatchScore(), NumTeams);
+	CurrentSet = 0;
+}
+
+void ATennisStoryGameState::StartNewSet()
+{
+	for (int i = 0; i < CurrentMatchScores.Num(); i++)
+	{
+		CurrentMatchScores[i].SetScores.Add(0);
+	}
+}
+
+void ATennisStoryGameState::GetSetScores(int SetNum, TArray<int>& OutScores)
+{
+	OutScores.Init(0, CurrentMatchScores.Num());
+
+	for (int i = 0; i < CurrentMatchScores.Num(); i++)
+	{
+		if (SetNum >= 0 && SetNum < CurrentMatchScores[i].SetScores.Num())
+		{
+			OutScores[i] = CurrentMatchScores[i].SetScores[SetNum];
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameState::GetSetScores - Invalid Set Number"));
+		}
+	}
 }
 
 const FTeamData ATennisStoryGameState::GetTeamForPlayer(ATennisStoryPlayerController* Player)
@@ -82,6 +110,27 @@ const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtToAimAtForPlayer
 void ATennisStoryGameState::AwardPoint(int TeamId)
 {
 	CurrentGameScore.AddPoint(TeamId);
+}
+
+void ATennisStoryGameState::AwardGame(int TeamId)
+{
+	CurrentMatchScores[TeamId].SetScores[CurrentSet]++;
+
+	CurrentGameScore.ResetScore();
+	
+	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("ATennisStoryGameState::AwardGame - Awarded game to team %d, Set Score is now %d | %d"), TeamId, CurrentMatchScores[0].SetScores[CurrentSet], CurrentMatchScores[1].SetScores[CurrentSet]));
+}
+
+int ATennisStoryGameState::GetTotalGameCountForCurrentSet()
+{
+	int TotalGameCount = 0;
+
+	for (int i = 0; i < CurrentMatchScores.Num(); i++)
+	{
+		TotalGameCount += CurrentMatchScores[i].SetScores[CurrentSet];
+	}
+
+	return TotalGameCount;
 }
 
 void FGameScore::AddPoint(int TeamId)
