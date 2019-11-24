@@ -33,14 +33,13 @@ void ATennisStoryGameMode::InitGameState()
 
 	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
 
-	static const int NumTeams = 2;
-	for (int i = 0; i < NumTeams; i++)
+	for (int i = 0; i < MaxTeamNumber; i++)
 	{
 		FTeamData NewTeamData = FTeamData(i);
 		TSGameState->TeamData.Add(NewTeamData);
 	}
 
-	TSGameState->InitScores(NumTeams);
+	TSGameState->InitScores(MaxTeamNumber);
 	
 	if (!TSGameState->Courts.Num())
 	{
@@ -270,33 +269,58 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 		return;
 	}
 	
-	int TeamId = TSGameState->GetTeamIdForPlayer(PlayerController);
+	int WinnerTeamId = TSGameState->GetTeamIdForPlayer(PlayerController);
 
 	if (!bLastPlayerWon)
 	{
 		//NOTE(achester): here's where we make the assumption that there will only be 2 teams, for simplicity's sake
-		TeamId = (TeamId) ? 0 : 1;
+		WinnerTeamId = (WinnerTeamId) ? 0 : 1;
 	}
 
-	if (TeamId < 0)
+	if (WinnerTeamId < 0)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::ResolvePoint - Failed to get valid team id for player"));
 		return;
 	}
 
-	TSGameState->AwardPoint(TeamId);
+	TSGameState->AwardPoint(WinnerTeamId);
 
-	int LoserTeamId = (TeamId) ? 0 : 1;
-	int WinnerScore = TSGameState->CurrentGameScore.Scores[TeamId];
-	int LoserScore = TSGameState->CurrentGameScore.Scores[LoserTeamId];
+	int LoserTeamId = (WinnerTeamId) ? 0 : 1;
+	int WinnerGameScore = TSGameState->CurrentGameScore.Scores[WinnerTeamId];
+	int LoserGameScore = TSGameState->CurrentGameScore.Scores[LoserTeamId];
 
-	if (WinnerScore >= PointsToWinGame && WinnerScore - LoserScore >= MarginToWinGame)
+	if (WinnerGameScore >= PointsToWinGame && WinnerGameScore - LoserGameScore >= MarginToWinGame)
 	{
-		TSGameState->AwardGame(TeamId);
+		TSGameState->AwardGame(WinnerTeamId);
 		
-		//Check if set is over
-			//Check if Match is over
-			//Start new set
+		int WinnerSetScore = TSGameState->CurrentMatchScores[WinnerTeamId].SetScores[TSGameState->CurrentSet];
+		int LoserSetScore = TSGameState->CurrentMatchScores[LoserTeamId].SetScores[TSGameState->CurrentSet];
+
+		if (WinnerSetScore >= GamesToWinSet && WinnerSetScore - LoserSetScore >= MarginToWinSet)
+		{
+			TSGameState->CurrentMatchScores[WinnerTeamId].SetsWon++;
+			
+			int WinnerSets = TSGameState->CurrentMatchScores[WinnerTeamId].SetsWon;
+			int LoserSets = TSGameState->CurrentMatchScores[LoserTeamId].SetsWon;
+
+			float TotalSets = NumSets;
+			int SetsToWinMatch = FMath::CeilToInt(TotalSets / 2.f);
+
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Match score is now %d to %d"), WinnerSets, LoserSets));
+
+			if (WinnerSets >= SetsToWinMatch)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Team %d has won the match!"), WinnerTeamId));
+
+				TSGameState->InitScores(MaxTeamNumber);
+			}
+			else
+			{
+				TSGameState->CurrentSet++;
+				TSGameState->StartNewSet();
+				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Starting set %d"), TSGameState->CurrentSet));
+			}
+		}
 		
 		TSGameState->CurrentServiceTeam = (TSGameState->CurrentServiceTeam) ? 0 : 1;
 
@@ -314,7 +338,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 	}
 
 	FTimerHandle NextPointHandle;
-	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 3.0f);
+	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
 }
 
 void ATennisStoryGameMode::SwitchSides()

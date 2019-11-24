@@ -86,6 +86,7 @@ public:
 	FMatchScore()
 	{
 		SetScores.Add(0);
+		SetsWon = 0;
 	}
 
 	UPROPERTY()
