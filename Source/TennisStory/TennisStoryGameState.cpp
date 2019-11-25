@@ -115,8 +115,6 @@ void ATennisStoryGameState::AwardGame(int TeamId)
 	CurrentMatchScores[TeamId].SetScores[CurrentSet]++;
 
 	CurrentGameScore.ResetScore();
-	
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("ATennisStoryGameState::AwardGame - Awarded game to team %d, Set Score is now %d | %d"), TeamId, CurrentMatchScores[0].SetScores[CurrentSet], CurrentMatchScores[1].SetScores[CurrentSet]));
 }
 
 int ATennisStoryGameState::GetTotalGameCountForCurrentSet()
@@ -146,6 +144,4 @@ void FGameScore::AddPoint(int TeamId)
 	}
 
 	Scores[TeamId]++;
-	
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("FGameScore::AddPoint - Awarded point to team %d, Score is now %d | %d"), TeamId, Scores[0], Scores[1]));
 }
