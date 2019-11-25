@@ -325,10 +325,7 @@ FVector AHalfCourt::GetBackCornerWorldLocation(int YAxisSign)
 		Sign = 1;
 	}
 
-	FVector CornerLocation = GetActorLocation();
-	CornerLocation += FMath::Sign(GetActorForwardVector().X) * FVector(-0.5f * CourtLength, Sign * 0.5f * CourtWidth, 0.0f);
-
-	return CornerLocation;
+	return GetActorTransform().TransformPosition(FVector(-0.5f * CourtLength, Sign * 0.5f * CourtWidth, 0.0f));
 }
 
 void AHalfCourt::BeginPlay()
