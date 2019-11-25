@@ -359,5 +359,11 @@ void ATennisStoryGameMode::SwitchSides()
 		FTeamData& CurrentTeam = TSGameState->TeamData[i];
 		int NewCourt = (static_cast<int>(CurrentTeam.AssignedCourt->GetCourtSide())) ? 0 : 1;
 		CurrentTeam.AssignedCourt = TSGameState->GetCourt(static_cast<ECourtSide>(NewCourt));
+
+		for (int j = 0; j < CurrentTeam.AssignedPlayers.Num(); j++)
+		{
+			ATennisStoryCharacter* Character = Cast<ATennisStoryCharacter>(CurrentTeam.AssignedPlayers[j]->GetPawn());
+			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
+		}
 	}
 }
