@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "HalfCourt.h"
 
 #if WITH_EDITORONLY_DATA
@@ -314,6 +313,22 @@ void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
 	{
 		Location.Y = UpperCorner.Y;
 	}
+}
+
+FVector AHalfCourt::GetBackCornerWorldLocation(int YAxisSign)
+{
+	int Sign = FMath::Sign(YAxisSign);
+
+	//If we get passed 0 somehow, just default to 1
+	if (!Sign)
+	{
+		Sign = 1;
+	}
+
+	FVector CornerLocation = GetActorLocation();
+	CornerLocation += FVector(-0.5f * CourtLength, Sign * 0.5f * CourtWidth, 0.0f);
+
+	return CornerLocation;
 }
 
 void AHalfCourt::BeginPlay()

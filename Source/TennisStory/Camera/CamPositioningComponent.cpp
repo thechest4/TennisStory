@@ -4,7 +4,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Player/TennisStoryCharacter.h"
-#include "Gameplay/Ball/TennisBall.h"
+#include "Gameplay/HalfCourt.h"
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
@@ -69,7 +69,14 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 					LocationsToTrack.Add(CapsuleTop);
 					LocationsToTrack.Add(CapsuleBottom);
 				}
-				else
+				else if (Actor->IsA<AHalfCourt>())
+				{
+					AHalfCourt* TrackedCourt = Cast<AHalfCourt>(Actor);
+
+					LocationsToTrack.Add(TrackedCourt->GetBackCornerWorldLocation(-1));
+					LocationsToTrack.Add(TrackedCourt->GetBackCornerWorldLocation(1));
+				}
+				else 
 				{
 					LocationsToTrack.Add(Actor->GetActorLocation());
 				}

@@ -126,6 +126,9 @@ public:
 		return CourtSide;
 	}
 
+	//The YAxisSign arg controls which corner will be returned, only checked for positive or negative
+	FVector GetBackCornerWorldLocation(int YAxisSign);
+
 protected:
 	virtual void BeginPlay() override;
 

@@ -48,6 +48,16 @@ void ATennisStoryGameMode::InitGameState()
 	{
 		GetCourtsFromWorld();
 	}
+
+	if (!CameraPositioningComp.IsValid())
+	{
+		GetCamPositioningCompFromWorld();
+	}
+
+	for (int i = 0; i < TSGameState->Courts.Num(); i++)
+	{
+		CameraPositioningComp->AddTrackedActor(TSGameState->Courts[i].Get());
+	}
 }
 
 void ATennisStoryGameMode::StartPlay()
@@ -208,7 +218,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	
 	if (CameraPositioningComp.IsValid())
 	{
-		CameraPositioningComp->AddTrackedActor(TSGameState->CurrentBallActor.Get());
+		//CameraPositioningComp->AddTrackedActor(TSGameState->CurrentBallActor.Get());
 	}
 
 	for (int i = 0; i < AllCharacters.Num(); i++)
@@ -335,7 +345,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 
 	if (CameraPositioningComp.IsValid())
 	{
-		CameraPositioningComp->StopTrackingActor(TSGameState->CurrentBallActor.Get());
+		//CameraPositioningComp->StopTrackingActor(TSGameState->CurrentBallActor.Get());
 	}
 
 	FTimerHandle NextPointHandle;
