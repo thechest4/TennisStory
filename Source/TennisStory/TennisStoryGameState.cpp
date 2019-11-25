@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TennisStoryGameState.h"
+#include "UI/Score/ScoreboardWidget.h"
 #include "Net/UnrealNetwork.h"
 
 void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -12,6 +13,7 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryGameState, TeamData);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentGameScore);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchScores);
+	DOREPLIFETIME(ATennisStoryGameState, NumSets);
 }
 
 void ATennisStoryGameState::InitScores(int NumTeams, int argNumSets)
@@ -127,6 +129,26 @@ int ATennisStoryGameState::GetTotalGameCountForCurrentSet()
 	}
 
 	return TotalGameCount;
+}
+
+void ATennisStoryGameState::AddScoreWidgetToViewport()
+{
+	if (!ScoreboardWidgetClass)
+	{
+		return;
+	}
+
+	if (!ScoreboardWidgetObject)
+	{
+		ScoreboardWidgetObject = CreateWidget<UScoreboardWidget>(GetWorld(), ScoreboardWidgetClass);
+		ScoreboardWidgetObject->AddSetScoreWidgets();
+		ScoreboardWidgetObject->AddToViewport();
+	}
+}
+
+void ATennisStoryGameState::OnRep_NumSets()
+{
+	AddScoreWidgetToViewport();
 }
 
 void FGameScore::AddPoint(int TeamId)

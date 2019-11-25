@@ -9,6 +9,7 @@
 #include "TennisStoryGameState.generated.h"
 
 class ATennisBall;
+class UScoreboardWidget;
 
 USTRUCT()
 struct FTeamData
@@ -161,6 +162,11 @@ public:
 	{
 		return NumSets;
 	}
+	
+	void AddScoreWidgetToViewport();
+
+	UPROPERTY()
+	UScoreboardWidget* ScoreboardWidgetObject;
 
 protected:
 	UPROPERTY(Transient, Replicated)
@@ -184,7 +190,14 @@ protected:
 	UPROPERTY(Transient, Replicated)
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_NumSets)
 	int NumSets;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
+	TSubclassOf<UScoreboardWidget> ScoreboardWidgetClass;
+
+	UFUNCTION()
+	void OnRep_NumSets();
 
 	friend class ATennisStoryGameMode;
 };

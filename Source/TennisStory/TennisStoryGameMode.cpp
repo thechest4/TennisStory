@@ -40,6 +40,9 @@ void ATennisStoryGameMode::InitGameState()
 	}
 
 	TSGameState->InitScores(MaxTeamNumber, NumSets);
+
+	//This only will show the scoreboard on the host, other clients will show it when the NumSets value replicates
+	TSGameState->AddScoreWidgetToViewport();
 	
 	if (!TSGameState->Courts.Num())
 	{
