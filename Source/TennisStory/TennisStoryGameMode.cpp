@@ -121,6 +121,8 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 		ATennisStoryCharacter* TennisChar = Cast<ATennisStoryCharacter>(NewPawn);
 		if (TennisChar)
 		{
+			TennisChar->ServerDesiredRotation = SpawnTransform.GetRotation();
+
 			AllCharacters.Add(TennisChar);
 
 			TennisChar->CacheCourtAimVector(SpawnCourt->GetActorForwardVector());
@@ -176,11 +178,13 @@ void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Chara
 		{
 			if (PlayerTeam.TeamId == TSGameState->CurrentServiceTeam)
 			{
-				Character->SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()));
+				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()));
+				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()).GetRotation();
 			}
 			else
 			{
-				Character->SetActorTransform(PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()));
+				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()));
+				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()).GetRotation();
 			}
 		}
 	}

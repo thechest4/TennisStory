@@ -75,8 +75,17 @@ public:
 
 	void PositionStrikeZone(FVector NewRelativeLocation);
 
+	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
+	UPROPERTY(Transient, Replicated)
+	FQuat ServerDesiredRotation;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetActorTransform(FTransform NewTransform);
+
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void PostInitializeComponents() override;
 

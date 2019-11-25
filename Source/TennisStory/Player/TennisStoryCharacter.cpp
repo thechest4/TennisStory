@@ -20,7 +20,7 @@ ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawne
 
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -54,6 +54,7 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimRightVector);
 	DOREPLIFETIME(ATennisStoryCharacter, bIsCharging);
 	DOREPLIFETIME(ATennisStoryCharacter, TeamId);
+	DOREPLIFETIME(ATennisStoryCharacter, ServerDesiredRotation);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -74,6 +75,21 @@ void ATennisStoryCharacter::BeginPlay()
 	}
 
 	ATennisStoryCharacter::PlayerSpawnedEvent.Broadcast(this);
+
+	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
+	if (HasAuthority())
+	{
+		ServerDesiredRotation = GetActorRotation().Quaternion();
+	}
+}
+
+void ATennisStoryCharacter::Tick(float DeltaSeconds)
+{
+	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
+	if (Role == ROLE_AutonomousProxy && !GetActorRotation().Quaternion().Equals(ServerDesiredRotation))
+	{
+		SetActorRotation(ServerDesiredRotation);
+	}
 }
 
 void ATennisStoryCharacter::PostInitializeComponents()
@@ -188,6 +204,11 @@ float ATennisStoryCharacter::GetStrikeZoneSize()
 void ATennisStoryCharacter::PositionStrikeZone(FVector NewRelativeLocation)
 {
 	StrikeZone->SetRelativeLocation(NewRelativeLocation);
+}
+
+void ATennisStoryCharacter::Multicast_SetActorTransform_Implementation(FTransform NewTransform)
+{
+	SetActorTransform(NewTransform);
 }
 
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
