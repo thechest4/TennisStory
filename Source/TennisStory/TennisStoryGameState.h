@@ -48,10 +48,14 @@ public:
 	FGameScore(int NumTeams)
 	{
 		Scores.Init(0, NumTeams);
+		bHasBeenDeuce = false;
 	}
 
 	UPROPERTY()
 	TArray<int> Scores;
+
+	UPROPERTY()
+	bool bHasBeenDeuce;
 
 	void AddPoint(int TeamId);
 
@@ -61,6 +65,8 @@ public:
 		{
 			Scores[i] = 0;
 		}
+
+		bHasBeenDeuce = true;
 	}
 
 	EServiceSide GetNextServiceSide()
@@ -76,6 +82,8 @@ public:
 
 		return static_cast<EServiceSide>(Side);
 	}
+
+	FString GetDisplayStringForScore(int TeamId) const;
 };
 
 USTRUCT()
@@ -161,6 +169,12 @@ public:
 	int GetNumSets() const
 	{
 		return NumSets;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	FString GetScoreDisplayString(int TeamId) const
+	{
+		return CurrentGameScore.GetDisplayStringForScore(TeamId);
 	}
 	
 	void AddScoreWidgetToViewport();

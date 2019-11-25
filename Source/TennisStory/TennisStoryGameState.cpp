@@ -166,4 +166,40 @@ void FGameScore::AddPoint(int TeamId)
 	}
 
 	Scores[TeamId]++;
+
+	if (!bHasBeenDeuce)
+	{
+		int Team0Score = Scores[0];
+		int Team1Score = Scores[1];
+
+		if (Team0Score >= 3 && Team0Score == Team1Score)
+		{
+			bHasBeenDeuce = true;
+		}
+	}
+}
+
+FString FGameScore::GetDisplayStringForScore(int TeamId) const
+{
+	static const FString ScoreDisplayValues[] = { TEXT("0"), TEXT("15"), TEXT("30"), TEXT("40") };
+	static const FString DeuceString = TEXT("40");
+	static const FString AdString = TEXT("Ad");
+	static const FString DisAdString = TEXT("-"); //This is what your score will say if your opponent has the ad
+
+	int OtherTeamId = (TeamId) ? 0 : 1;
+
+	int MyScore = Scores[TeamId];
+	int OtherTeamScore = Scores[OtherTeamId];
+	
+	if (MyScore >= 3 && MyScore == OtherTeamScore)
+	{
+		return DeuceString;
+	}
+
+	if (bHasBeenDeuce && FMath::Abs(MyScore - OtherTeamScore) == 1 && (MyScore >= 3 || OtherTeamScore >= 3))
+	{
+		return (MyScore > OtherTeamScore) ? AdString : DisAdString;
+	}
+
+	return ScoreDisplayValues[MyScore];
 }
