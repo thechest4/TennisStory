@@ -182,6 +182,8 @@ protected:
 	FVector2D LowerCorner;
 	FVector2D UpperCorner;
 
+	void RecalculateCourtLocations();
+
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(VisibleDefaultsOnly)
 	class UBoxComponent* EditorCourtBounds;

@@ -345,6 +345,25 @@ void AHalfCourt::CalculateCourtCorners()
 	UpperCorner = FVector2D(ActorLocation.X + XOffset, ActorLocation.Y + YOffset);
 }
 
+void AHalfCourt::RecalculateCourtLocations()
+{
+	DeucePlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	AdPlayerServiceLocation->SetRelativeLocation(FVector(-0.6f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	
+	DeuceBallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	AdBallServiceLocation->SetRelativeLocation(FVector(-0.5f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	
+	DeuceReturnerLocation->SetRelativeLocation(FVector(-0.35f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	AdReturnerLocation->SetRelativeLocation(FVector(-0.35f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	
+	DeuceNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	AdNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+
+	MidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
+	RightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+}
+
 #if WITH_EDITORONLY_DATA
 void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -352,6 +371,7 @@ void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(AHalfCourt, CourtLength) || PropertyName == GET_MEMBER_NAME_CHECKED(AHalfCourt, CourtWidth))
 	{
 		EditorCourtBounds->SetBoxExtent(FVector(CourtLength / 2.0f, CourtWidth / 2.0f, 10.0f));
+		RecalculateCourtLocations();
 	}
 
 	//Reset all court locations to be at ground level, in case the z coordinate was accidentally modified
