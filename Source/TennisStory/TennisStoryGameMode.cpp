@@ -39,7 +39,7 @@ void ATennisStoryGameMode::InitGameState()
 		TSGameState->TeamData.Add(NewTeamData);
 	}
 
-	TSGameState->InitScores(MaxTeamNumber);
+	TSGameState->InitScores(MaxTeamNumber, NumSets);
 	
 	if (!TSGameState->Courts.Num())
 	{
@@ -306,19 +306,13 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 			float TotalSets = NumSets;
 			int SetsToWinMatch = FMath::CeilToInt(TotalSets / 2.f);
 
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Match score is now %d to %d"), WinnerSets, LoserSets));
-
 			if (WinnerSets >= SetsToWinMatch)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Team %d has won the match!"), WinnerTeamId));
-
-				TSGameState->InitScores(MaxTeamNumber);
+				TSGameState->InitScores(MaxTeamNumber, NumSets);
 			}
 			else
 			{
 				TSGameState->CurrentSet++;
-				TSGameState->StartNewSet();
-				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Starting set %d"), TSGameState->CurrentSet));
 			}
 		}
 		

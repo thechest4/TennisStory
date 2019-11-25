@@ -14,18 +14,16 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchScores);
 }
 
-void ATennisStoryGameState::InitScores(int NumTeams)
+void ATennisStoryGameState::InitScores(int NumTeams, int argNumSets)
 {
+	NumSets = argNumSets;
+	CurrentSet = 0;
 	CurrentGameScore = FGameScore(NumTeams);
 	CurrentMatchScores.Init(FMatchScore(), NumTeams);
-	CurrentSet = 0;
-}
-
-void ATennisStoryGameState::StartNewSet()
-{
-	for (int i = 0; i < CurrentMatchScores.Num(); i++)
+	
+	for (int i = 0; i < NumTeams; i++)
 	{
-		CurrentMatchScores[i].SetScores.Add(0);
+		CurrentMatchScores[i].SetScores.Init(0, NumSets);
 	}
 }
 

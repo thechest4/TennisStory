@@ -123,9 +123,7 @@ public:
 		return nullptr;
 	}
 
-	void InitScores(int NumTeams);
-
-	void StartNewSet();
+	void InitScores(int NumTeams, int NumSets);
 
 	void GetSetScores(int SetNum, TArray<int>& OutScores);
 
@@ -144,6 +142,24 @@ public:
 	EServiceSide GetServiceSideForNextPoint()
 	{
 		return CurrentGameScore.GetNextServiceSide();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	int GetGameScore(int TeamId) const
+	{
+		return CurrentGameScore.Scores[TeamId];
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	int GetSetScore(int TeamId, int SetNum) const
+	{
+		return CurrentMatchScores[TeamId].SetScores[SetNum];
+	}
+	
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	int GetNumSets() const
+	{
+		return NumSets;
 	}
 
 protected:
@@ -167,6 +183,8 @@ protected:
 
 	UPROPERTY(Transient, Replicated)
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
+
+	int NumSets;
 
 	friend class ATennisStoryGameMode;
 };
