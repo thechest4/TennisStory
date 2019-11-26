@@ -315,22 +315,4 @@ void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector W
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryCharacter::Server_CommitTargetPosition_Implementation - ATennisStoryGameState::GetTennisBall returned null!"));
 		return;
 	}
-
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BallStrikingComp->GetTrajectoryCurve(), TennisBall->GetActorLocation(), TargetActor->GetActorLocation(), 200.f, 500.f);
-	BallStrikingComp->SetTrajectory(TrajectoryData);
-	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
-
-	Multicast_ReceiveBallTrajectory(TrajectoryData);
-}
-
-void ATennisStoryCharacter::Multicast_ReceiveBallTrajectory_Implementation(FBallTrajectoryData TrajectoryData)
-{
-	//Only clients need to receive Trajectory
-	if (HasAuthority())
-	{
-		return;
-	}
-	
-	BallStrikingComp->SetTrajectory(TrajectoryData);
-	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(BallAimingSplineComp);
 }

@@ -102,9 +102,6 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_CommitTargetPosition(FVector WorldLocation);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ReceiveBallTrajectory(FBallTrajectoryData TrajectoryData);
-
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
