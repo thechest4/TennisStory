@@ -71,6 +71,11 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	OwnerChar->EnablePlayerTargeting();
+
+	if (OwnerChar->IsLocallyControlled())
+	{
+		OwnerChar->StartDistanceVisualizationToBall();
+	}
 }
 
 void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -87,6 +92,11 @@ void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();
+
+		if (OwnerChar->IsLocallyControlled())
+		{
+			OwnerChar->StopDistanceVisualization();
+		}
 	}
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);

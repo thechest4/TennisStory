@@ -9,6 +9,7 @@
 #include "TennisStoryGameState.h"
 #include "Player/PlayerTargetActor.h"
 #include "Player/Components/BallStrikingComponent.h"
+#include "Player/Components/DistanceIndicatorComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
@@ -44,6 +45,13 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	StrikeZone->SetBoxExtent(FVector(100.f, 100.f, 100.f));
 	StrikeZone->SetCollisionProfileName(TEXT("TennisRacquet"));
 	StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	DistanceIndicatorRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DistanceIndicatorRingMesh"));
+	DistanceIndicatorRing->SetupAttachment(RootComponent);
+	DistanceIndicatorRing->SetCollisionProfileName(TEXT("NoCollision"));
+	DistanceIndicatorRing->SetHiddenInGame(true);
+
+	DistanceIndicatorComp = CreateDefaultSubobject<UDistanceIndicatorComponent>(TEXT("DistanceIndicatorComp"));
 }
 
 void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -81,6 +89,8 @@ void ATennisStoryCharacter::BeginPlay()
 	{
 		ServerDesiredRotation = GetActorRotation().Quaternion();
 	}
+
+	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
 }
 
 void ATennisStoryCharacter::Tick(float DeltaSeconds)
@@ -204,6 +214,21 @@ float ATennisStoryCharacter::GetStrikeZoneSize()
 void ATennisStoryCharacter::PositionStrikeZone(FVector NewRelativeLocation)
 {
 	StrikeZone->SetRelativeLocation(NewRelativeLocation);
+}
+
+void ATennisStoryCharacter::StartDistanceVisualizationToBall()
+{
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	TWeakObjectPtr<ATennisBall> TennisBall = (GameState) ? GameState->GetTennisBall() : nullptr;
+	if (TennisBall.IsValid())
+	{
+		DistanceIndicatorComp->StartVisualizingDistance(TennisBall);
+	}
+}
+
+void ATennisStoryCharacter::StopDistanceVisualization()
+{
+		DistanceIndicatorComp->StopVisualizingDistance();
 }
 
 void ATennisStoryCharacter::Multicast_SetActorTransform_Implementation(FTransform NewTransform)

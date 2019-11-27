@@ -10,6 +10,7 @@
 #include "TennisStoryCharacter.generated.h"
 
 class UBoxComponent;
+class UDistanceIndicatorComponent;
 
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
@@ -81,6 +82,10 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetActorTransform(FTransform NewTransform);
+
+	void StartDistanceVisualizationToBall();
+
+	void StopDistanceVisualization();
 
 protected:
 	virtual void BeginPlay() override;
@@ -161,6 +166,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Team Color")
 	TArray<UMaterialInterface*> TeamColorMaterials;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	UStaticMeshComponent* DistanceIndicatorRing;
+
+	UPROPERTY(VisibleAnywhere)
+	UDistanceIndicatorComponent* DistanceIndicatorComp;
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;
