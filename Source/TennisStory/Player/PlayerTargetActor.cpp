@@ -10,7 +10,6 @@ APlayerTargetActor::APlayerTargetActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = TargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TargetMesh"));
-	TargetMesh->SetVisibility(false);
 	TargetMesh->SetGenerateOverlapEvents(false);
 	TargetMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
@@ -49,7 +48,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 				FVector AimVector = GetOwnerControlRotationVector();
 
 				LastSnapPoint = SnapPointToAimAt;
-				SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, SnapPointToAimAt));
+				SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, SnapPointToAimAt) + GetDesiredLocationOffset());
 			}
 		}
 		else
@@ -60,7 +59,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			{
 				FVector NewLocation = GetActorLocation() + MovementVector;
 				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation);
-				SetActorLocation(NewLocation);
+				SetActorLocation(NewLocation + GetDesiredLocationOffset());
 			}
 		}
 	}
@@ -75,7 +74,7 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 		FVector AimVector = GetOwnerControlRotationVector();
 
 		LastSnapPoint = ESnapPoint::Mid;
-		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, ESnapPoint::Mid));
+		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, ESnapPoint::Mid) + GetDesiredLocationOffset());
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
@@ -95,6 +94,13 @@ void APlayerTargetActor::DisableTargetMovement()
 void APlayerTargetActor::HideTarget()
 {
 	bCurrentlyVisible = false;
+
+	TargetMesh->SetVisibility(false);
+}
+
+void APlayerTargetActor::BeginPlay()
+{
+	Super::BeginPlay();
 
 	TargetMesh->SetVisibility(false);
 }

@@ -123,7 +123,7 @@ void ATennisStoryCharacter::PostInitializeComponents()
 		FVector ActorLocationOnGround = GetActorLocation();
 		ActorLocationOnGround.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f, GetActorRotation(), SpawnParams);
+		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f + TargetActor->GetDesiredLocationOffset(), GetActorRotation(), SpawnParams);
 		TargetActor->SetOwner(this);
 	}
 }

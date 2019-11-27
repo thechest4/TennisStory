@@ -27,7 +27,14 @@ public:
 
 	void HideTarget();
 
+	FVector GetDesiredLocationOffset() const
+	{
+		return FVector(0.f, 0.f, 0.1f);
+	}
+
 protected:
+	virtual void BeginPlay() override;
+
 	bool bCurrentlyVisible;
 	bool bCurrentlyMovable;
 	float TargetingStartedTime;
