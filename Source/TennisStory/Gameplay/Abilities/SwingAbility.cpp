@@ -91,8 +91,6 @@ void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
-		OwnerChar->DisablePlayerTargeting();
-
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->StopDistanceVisualization();
@@ -118,7 +116,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
-		OwnerChar->FreezePlayerTarget();
+		OwnerChar->DisablePlayerTargeting();
 
 		if (OwnerChar->HasAuthority())
 		{
