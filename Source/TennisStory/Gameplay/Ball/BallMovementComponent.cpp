@@ -68,7 +68,7 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState) ? GameState->GetCourtToAimAtForPlayer(Controller) : nullptr;
 		FVector CurrentLocation = OwnerPtr->GetActorLocation();
 
-		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation))
+		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius()))
 		{
 			OwnerPtr->OnBallOutOfBounds().Broadcast();
 		}

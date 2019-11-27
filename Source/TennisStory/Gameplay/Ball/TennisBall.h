@@ -66,6 +66,8 @@ public:
 		return BallMovementComp->GetCurrentDirection();
 	}
 
+	float GetBallRadius() const;
+
 protected:
 	virtual void BeginPlay() override;
 

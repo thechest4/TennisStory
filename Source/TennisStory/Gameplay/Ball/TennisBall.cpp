@@ -53,6 +53,17 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	}
 }
 
+float ATennisBall::GetBallRadius() const
+{
+	//Hardcoded base radius is half of 1m
+	static const float BaseRadius = 50.f;
+		
+	//Assuming uniform scale
+	float ActualBallRadius = BaseRadius * GetActorScale().X;
+
+	return ActualBallRadius;
+}
+
 void ATennisBall::Multicast_SpawnBounceLocationParticleEffect_Implementation(FVector Location)
 {
 	if (BounceLocationParticleEffect)
