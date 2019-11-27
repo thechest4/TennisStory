@@ -45,6 +45,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFlo
 	TrajectoryData.ApexHeight = MidPoint.Z;
 	TrajectoryData.AddTrajectoryPoint(MidPoint, DirectionVec * TangentLength);
 	TrajectoryData.AddTrajectoryPoint(EndLocation, EndTangent * TangentLength);
+	
+	TrajectoryData.TrajectoryEndLocation = EndLocation;
 
 	return TrajectoryData;
 }

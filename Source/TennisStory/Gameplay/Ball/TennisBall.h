@@ -52,6 +52,9 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnBounceParticleEffect(FVector Location);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SpawnBounceLocationParticleEffect(FVector Location);
 
 	FVector GetCurrentDirection() const
 	{
@@ -78,6 +81,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	UParticleSystem* BounceParticleEffect;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	UParticleSystem* BounceLocationParticleEffect;
 
 private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;

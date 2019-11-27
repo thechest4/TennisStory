@@ -48,6 +48,9 @@ public:
 	UPROPERTY()
 	float TrajectoryDistance;
 
+	UPROPERTY()
+	FVector TrajectoryEndLocation;
+
 	void AddTrajectoryPoint(FVector PointLocation, FVector PointTangent);
 };
 

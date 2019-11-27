@@ -53,6 +53,14 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 	}
 }
 
+void ATennisBall::Multicast_SpawnBounceLocationParticleEffect_Implementation(FVector Location)
+{
+	if (BounceLocationParticleEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BounceLocationParticleEffect, Location);
+	}
+}
+
 void ATennisBall::Multicast_SpawnBounceParticleEffect_Implementation(FVector Location)
 {
 	if (BounceParticleEffect)
@@ -64,6 +72,11 @@ void ATennisBall::Multicast_SpawnBounceParticleEffect_Implementation(FVector Loc
 void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit)
 {
 	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity, bFromHit);
+
+	if (HasAuthority() && bFromHit)
+	{
+		Multicast_SpawnBounceLocationParticleEffect(TrajectoryData.TrajectoryEndLocation);
+	}
 }
 
 void ATennisBall::ApplyBallState()
