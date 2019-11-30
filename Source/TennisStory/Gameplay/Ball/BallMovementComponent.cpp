@@ -147,11 +147,26 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
 		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
 		FVector SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+		
+		FVector SplineEndLocation = TrajectorySplineComp->GetWorldLocationAtTime(TrajectorySplineComp->Duration);
+		
+		if (SplineNewLocation.Equals(SplineEndLocation))
+		{
+			CurrentMovementState = EBallMovementState::ContinueUntilHit;
+		}
+		else
+		{
+			CurrentDirection = SplineNewLocation - CurrentLocation;
+			CurrentDirection.Normalize();
 
-		CurrentDirection = SplineNewLocation - CurrentLocation;
-		CurrentDirection.Normalize();
+			OwnerPtr->SetActorLocation(SplineNewLocation, true);
+		}
+	}
 
-		OwnerPtr->SetActorLocation(SplineNewLocation, true);
+	if (CurrentMovementState == EBallMovementState::ContinueUntilHit)
+	{
+		FVector NewLocation = OwnerPtr->GetActorLocation() + CurrentDirection * Velocity * DeltaTime;
+		OwnerPtr->SetActorLocation(NewLocation, true);
 	}
 }
 

@@ -16,6 +16,7 @@ UENUM(BlueprintType)
 enum class EBallMovementState : uint8
 {
 	FollowingPath,
+	ContinueUntilHit,
 	Physical,
 	NotMoving,
 	BounceLag
