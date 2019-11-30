@@ -32,7 +32,8 @@ void UBallStrikingComponent::BeginPlay()
 
 void UBallStrikingComponent::AllowBallStriking()
 {
-	if (OwnerChar->HasAuthority())
+	//OwnerChar CAN be null when joining a session, as the animations (and notifies) can be replicated before BeginPlay has been called
+	if (OwnerChar && OwnerChar->HasAuthority())
 	{
 		UBoxComponent* StrikeZone = OwnerChar->GetStrikeZone();
 		if (StrikeZone)
@@ -45,7 +46,7 @@ void UBallStrikingComponent::AllowBallStriking()
 
 void UBallStrikingComponent::StopBallStriking()
 {
-	if (OwnerChar->HasAuthority())
+	if (OwnerChar && OwnerChar->HasAuthority())
 	{
 		UBoxComponent* StrikeZone = OwnerChar->GetStrikeZone();
 		if (StrikeZone)
