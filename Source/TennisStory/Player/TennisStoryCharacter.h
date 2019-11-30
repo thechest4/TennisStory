@@ -13,6 +13,13 @@ class UBoxComponent;
 class UDistanceIndicatorComponent;
 
 UENUM(BlueprintType)
+enum class EStrokeType :uint8
+{
+	Forehand,
+	Backhand
+};
+
+UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
 	Swing UMETA(DisplayName = "Swing"),
@@ -72,9 +79,9 @@ public:
 		return StrikeZone;
 	}
 
-	float GetStrikeZoneSize();
+	void PositionStrikeZone(EStrokeType StrokeType);
 
-	void PositionStrikeZone(FVector NewRelativeLocation);
+	FVector GetStrikeZoneLocationForStroke(EStrokeType StrokeType) const;
 
 	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
 	UPROPERTY(Transient, Replicated)
@@ -156,6 +163,20 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Swing Detection")
 	UBoxComponent* StrikeZone;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Forehand;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Backhand;
+	
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Forehand;
+
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Backhand;
+#endif
 
 	//Team Color
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamId)

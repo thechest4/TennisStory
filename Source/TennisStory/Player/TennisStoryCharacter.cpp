@@ -17,6 +17,11 @@
 #include "Gameplay/HalfCourt.h"
 #include "Net/UnrealNetwork.h"
 
+#if WITH_EDITORONLY_DATA
+#include "Components/BillboardComponent.h"
+#include "Engine/Texture2D.h"
+#endif
+
 ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
 
 ATennisStoryCharacter::ATennisStoryCharacter()
@@ -46,12 +51,52 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	StrikeZone->SetCollisionProfileName(TEXT("TennisRacquet"));
 	StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	StrikeZoneLocation_Forehand = CreateDefaultSubobject<USceneComponent>(TEXT("Forehand Strike Zone Location"));
+	StrikeZoneLocation_Forehand->SetupAttachment(RootComponent);
+	
+	StrikeZoneLocation_Backhand = CreateDefaultSubobject<USceneComponent>(TEXT("Backhand Strike Zone Location"));
+	StrikeZoneLocation_Backhand->SetupAttachment(RootComponent);
+
 	DistanceIndicatorRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DistanceIndicatorRingMesh"));
 	DistanceIndicatorRing->SetupAttachment(RootComponent);
 	DistanceIndicatorRing->SetCollisionProfileName(TEXT("NoCollision"));
 	DistanceIndicatorRing->SetHiddenInGame(true);
 
 	DistanceIndicatorComp = CreateDefaultSubobject<UDistanceIndicatorComponent>(TEXT("DistanceIndicatorComp"));
+	
+#if WITH_EDITORONLY_DATA
+	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisRacquetSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
+	
+	static const float IconEditorScale = 0.5f;
+
+	StrikeZoneIcon_Forehand = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Strike Zone Icon Forehand"));
+	if (StrikeZoneIcon_Forehand)
+	{
+		StrikeZoneIcon_Forehand->SetupAttachment(StrikeZoneLocation_Forehand);
+		StrikeZoneIcon_Forehand->SetHiddenInGame(true);
+		StrikeZoneIcon_Forehand->SetRelativeLocation(FVector::ZeroVector);
+		StrikeZoneIcon_Forehand->SetEditorScale(IconEditorScale);
+
+		if (TennisRacquetSprite.Succeeded())
+		{
+			StrikeZoneIcon_Forehand->SetSprite(TennisRacquetSprite.Object);
+		}
+	}
+	
+	StrikeZoneIcon_Backhand = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Strike Zone Icon Backhand"));
+	if (StrikeZoneIcon_Backhand)
+	{
+		StrikeZoneIcon_Backhand->SetupAttachment(StrikeZoneLocation_Backhand);
+		StrikeZoneIcon_Backhand->SetHiddenInGame(true);
+		StrikeZoneIcon_Backhand->SetRelativeLocation(FVector::ZeroVector);
+		StrikeZoneIcon_Backhand->SetEditorScale(IconEditorScale);
+
+		if (TennisRacquetSprite.Succeeded())
+		{
+			StrikeZoneIcon_Backhand->SetSprite(TennisRacquetSprite.Object);
+		}
+	}
+#endif
 }
 
 void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -206,14 +251,27 @@ void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
 	CachedAimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
 }
 
-float ATennisStoryCharacter::GetStrikeZoneSize()
+void ATennisStoryCharacter::PositionStrikeZone(EStrokeType StrokeType)
 {
-	return StrikeZone->GetScaledBoxExtent().X;
+	FVector RelativeLocation = GetStrikeZoneLocationForStroke(StrokeType);
+
+	StrikeZone->SetRelativeLocation(RelativeLocation);
 }
 
-void ATennisStoryCharacter::PositionStrikeZone(FVector NewRelativeLocation)
+FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrokeType StrokeType) const
 {
-	StrikeZone->SetRelativeLocation(NewRelativeLocation);
+	switch (StrokeType)
+	{
+		case EStrokeType::Backhand:
+		{
+			return StrikeZoneLocation_Backhand->GetRelativeTransform().GetLocation();
+		}
+		default:
+		case EStrokeType::Forehand:
+		{
+			return StrikeZoneLocation_Forehand->GetRelativeTransform().GetLocation();
+		}
+	}
 }
 
 void ATennisStoryCharacter::StartDistanceVisualizationToBall()

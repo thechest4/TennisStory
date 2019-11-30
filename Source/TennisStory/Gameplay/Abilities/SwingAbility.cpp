@@ -48,17 +48,15 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
-	float StrikeZoneSize = OwnerChar->GetStrikeZoneSize();
-
 	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
 	if (!bIsForehand)
 	{
 		MontageToPlay = BackhandMontage;
-		OwnerChar->PositionStrikeZone(FVector(StrikeZoneSize * 0.5f, -1 * StrikeZoneSize, 0.f));
+		OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
 	}
 	else
 	{
-		OwnerChar->PositionStrikeZone(FVector(StrikeZoneSize * 0.5f, OwnerChar->GetStrikeZoneSize(), 0.f));
+		OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
 	}
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
