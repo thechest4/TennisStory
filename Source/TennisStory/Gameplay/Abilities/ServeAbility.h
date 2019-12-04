@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "SwingAbility.generated.h"
+#include "ServeAbility.generated.h"
 
 class ATennisBall;
 class ATennisStoryCharacter;
 
 UCLASS()
-class TENNISSTORY_API USwingAbility : public UGameplayAbility
+class TENNISSTORY_API UServeAbility : public UGameplayAbility
 {
 	GENERATED_UCLASS_BODY()
 	
@@ -22,21 +22,16 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	UFUNCTION()
-	void HandleSwingMontageBlendOut();
+	void HandleServeMontageBlendOut();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAnimMontage* ForehandMontage;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAnimMontage* BackhandMontage;
+	UAnimMontage* ServeMontage;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
 
-	bool bSwingReleased;
+	bool bServeReleased;
 
-	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-
-	bool ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 };

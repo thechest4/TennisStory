@@ -94,6 +94,13 @@ public:
 
 	void StopDistanceVisualization();
 
+	void EnterServiceState();
+	
+	void ExitServiceState();
+
+	UPROPERTY(EditAnywhere, Category = "DEBUG STUFF")
+	bool bStartInServiceState = true;
+
 protected:
 	virtual void BeginPlay() override;
 

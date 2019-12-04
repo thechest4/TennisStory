@@ -81,7 +81,7 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void USwingAbility::HandleSwingMontageBlendOut(/*UAnimMontage* AnimMontage, bool bInterrupted*/)
+void USwingAbility::HandleSwingMontageBlendOut()
 {
 	CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask = nullptr;
