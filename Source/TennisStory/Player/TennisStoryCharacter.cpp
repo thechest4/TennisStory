@@ -237,6 +237,11 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	{
 		TargetActor->HideTarget();
 	}
+		
+	if (IsLocallyControlled())
+	{
+		Server_CommitTargetPosition(TargetActor->GetActorLocation());
+	}
 
 	if (HasAuthority())
 	{
