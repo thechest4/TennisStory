@@ -74,6 +74,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;
 
+	UPROPERTY(VisibleAnywhere)
+	class UDecalComponent* DropShadowDecal;
+
 	UPROPERTY()
 	USplineComponent* BallTrajectorySplineComp;
 

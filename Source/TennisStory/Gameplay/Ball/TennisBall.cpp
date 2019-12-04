@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "Components/SplineComponent.h"
+#include "Components/DecalComponent.h"
 #include "Player/Components/BallStrikingComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -24,6 +25,10 @@ ATennisBall::ATennisBall()
 	RootComponent = BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
 	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
 	BallMesh->SetEnableGravity(true);
+
+	DropShadowDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("Drop Shadow Decal"));
+	DropShadowDecal->SetupAttachment(RootComponent);
+	DropShadowDecal->SetAbsolute(false, true, true);
 
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 
