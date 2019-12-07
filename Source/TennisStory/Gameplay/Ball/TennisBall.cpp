@@ -33,6 +33,11 @@ ATennisBall::ATennisBall()
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 
 	BallTrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+	
+	TossStartLocation = FVector::ZeroVector;
+	TossEndLocation = FVector::ZeroVector;
+	CurrentTossAlpha = 0.f;
+	TotalTossDuration = 0.f;
 }
 
 void ATennisBall::BeginPlay()

@@ -24,6 +24,8 @@
 
 ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
 
+const FName ATennisStoryCharacter::BallAttachBone = TEXT("hand_l");
+
 ATennisStoryCharacter::ATennisStoryCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;

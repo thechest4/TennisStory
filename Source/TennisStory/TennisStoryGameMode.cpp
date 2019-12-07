@@ -225,7 +225,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	
 	if (TSGameState->CurrentServingCharacter.IsValid())
 	{
-		TSGameState->CurrentBallActor->AttachToComponent(TSGameState->CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_l"));
+		TSGameState->CurrentBallActor->AttachToComponent(TSGameState->CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
 	}
 	else
 	{

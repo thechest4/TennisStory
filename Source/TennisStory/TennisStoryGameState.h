@@ -113,6 +113,8 @@ class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 	
 public:
 	TWeakObjectPtr<ATennisBall> GetTennisBall() const { return CurrentBallActor; }
+	
+	TWeakObjectPtr<ATennisStoryCharacter> GetServingCharacter() const { return CurrentServingCharacter; }
 
 	TArray<TWeakObjectPtr<AHalfCourt>> GetAllCourts() const
 	{

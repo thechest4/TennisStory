@@ -100,6 +100,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "DEBUG STUFF")
 	bool bStartInServiceState = true;
+	
+	const static FName BallAttachBone;
 
 protected:
 	virtual void BeginPlay() override;
