@@ -83,6 +83,9 @@ void ATennisStoryGameMode::StartPlay()
 	}
 
 	Super::StartPlay();
+	
+	//NOTE(achester): I believe this only works because the host player happens to spawn and be set up before StartPlay (and we only ever have the host serve first)
+	TSGameState->CurrentServingCharacter = Cast<ATennisStoryCharacter>(TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedPlayers[0]->GetPawn());
 
 	SetUpNextPoint();
 }
@@ -212,15 +215,6 @@ void ATennisStoryGameMode::TeleportBallToCourt()
 
 void ATennisStoryGameMode::SetUpNextPoint()
 {
-	TeleportBallToCourt();
-
-	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
-	
-	if (CameraPositioningComp.IsValid())
-	{
-		//CameraPositioningComp->AddTrackedActor(TSGameState->CurrentBallActor.Get());
-	}
-
 	for (int i = 0; i < AllCharacters.Num(); i++)
 	{
 		if (AllCharacters[i].IsValid())
@@ -228,6 +222,17 @@ void ATennisStoryGameMode::SetUpNextPoint()
 			TeleportCharacterToCourt(AllCharacters[i].Get());
 		}
 	}
+	
+	if (TSGameState->CurrentServingCharacter.IsValid())
+	{
+		TSGameState->CurrentBallActor->AttachToComponent(TSGameState->CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_l"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("ATennisStoryGameMode::SetUpNextPoint - CurrentServingCharacter was not valid!"));
+	}
+
+	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
 
 	CurrentPlayState = EPlayState::PlayingPoint;
 }
@@ -334,6 +339,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 		}
 		
 		TSGameState->CurrentServiceTeam = (TSGameState->CurrentServiceTeam) ? 0 : 1;
+		TSGameState->CurrentServingCharacter = Cast<ATennisStoryCharacter>(TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedPlayers[0]->GetPawn());
 
 		if (TSGameState->GetTotalGameCountForCurrentSet() % 2)
 		{
@@ -342,11 +348,6 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 	}
 
 	CurrentPlayState = EPlayState::Waiting;
-
-	if (CameraPositioningComp.IsValid())
-	{
-		//CameraPositioningComp->StopTrackingActor(TSGameState->CurrentBallActor.Get());
-	}
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);

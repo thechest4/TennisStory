@@ -9,6 +9,7 @@
 #include "TennisStoryGameState.generated.h"
 
 class ATennisBall;
+class ATennisStoryCharacter;
 class UScoreboardWidget;
 
 USTRUCT()
@@ -185,6 +186,9 @@ public:
 protected:
 	UPROPERTY(Transient, Replicated)
 	int CurrentServiceTeam;
+
+	UPROPERTY(Transient, Replicated)
+	TWeakObjectPtr<ATennisStoryCharacter> CurrentServingCharacter;
 
 	UPROPERTY(Transient, Replicated)
 	TArray<FTeamData> TeamData;
