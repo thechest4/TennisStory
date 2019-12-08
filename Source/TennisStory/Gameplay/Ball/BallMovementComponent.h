@@ -19,7 +19,8 @@ enum class EBallMovementState : uint8
 	ContinueUntilHit,
 	Physical,
 	NotMoving,
-	BounceLag
+	BounceLag,
+	ServiceToss
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -47,6 +48,10 @@ public:
 	{
 		return CurrentDirection;
 	}
+
+	void StartServiceToss(float TossHeight, float TotalTossDuration);
+
+	void FinishServiceToss(bool bWasInterrupted = false);
 
 protected:
 	virtual void BeginPlay() override;
@@ -94,6 +99,12 @@ protected:
 	//Cached last path data
 	float LastPathDistance;
 	float LastPathHeight;
+
+	//Current ball toss state info
+	FVector TossStartLocation;
+	FVector TossEndLocation;
+	float CurrentTossAlpha;
+	float TotalTossDuration;
 	
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

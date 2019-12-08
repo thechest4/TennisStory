@@ -29,6 +29,11 @@ UBallMovementComponent::UBallMovementComponent()
 	FramesOfBounceLag = 5;
 	DurationOfBounceLag = FramesOfBounceLag * TargetFrameDuration;
 	CurrentLagTime = 0.f;
+	
+	TossStartLocation = FVector::ZeroVector;
+	TossEndLocation = FVector::ZeroVector;
+	CurrentTossAlpha = 0.f;
+	TotalTossDuration = 0.f;
 }
 
 void UBallMovementComponent::BeginPlay()
@@ -168,6 +173,30 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FVector NewLocation = OwnerPtr->GetActorLocation() + CurrentDirection * Velocity * DeltaTime;
 		OwnerPtr->SetActorLocation(NewLocation, true);
 	}
+
+	if (CurrentMovementState == EBallMovementState::ServiceToss)
+	{
+		FVector NewBallLocation = FVector::ZeroVector;
+
+		if (CurrentTossAlpha <= 1.f) //Toss goes up
+		{
+			NewBallLocation = FMath::InterpCircularOut(TossStartLocation, TossEndLocation, CurrentTossAlpha);
+		}
+		else  //Toss goes down
+		{
+			NewBallLocation = FMath::InterpCircularIn(TossEndLocation, TossStartLocation, CurrentTossAlpha - 1.f);
+		}
+
+		OwnerPtr->SetActorLocation(NewBallLocation, true);
+
+		CurrentTossAlpha += DeltaTime / (TotalTossDuration * 0.5f);
+
+		//The toss alpha goes from 0-1 on the way up, then 1-2 on the way down.  An alpha of 2 means we've completed the toss without interruption
+		if (CurrentTossAlpha >= 2.f)
+		{
+			FinishServiceToss(false);
+		}
+	}
 }
 
 //NOTE(achester): The spline mesh parts of this function should be moved to another player component related to aiming
@@ -255,6 +284,36 @@ void UBallMovementComponent::StopMoving()
 	if (BallCollisionComponent)
 	{
 		BallCollisionComponent->SetSimulatePhysics(false);
+	}
+}
+
+void UBallMovementComponent::StartServiceToss(float TossHeight, float argTotalTossDuration)
+{
+	TossStartLocation = OwnerPtr->GetActorLocation();
+	TossEndLocation = OwnerPtr->GetActorLocation() + FVector(0.f ,0.f, TossHeight);
+	CurrentTossAlpha = 0.f;
+	TotalTossDuration = argTotalTossDuration;
+		
+	//Assume we're currently attached to the service character
+	OwnerPtr->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	CurrentMovementState = EBallMovementState::ServiceToss;
+}
+
+void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
+{
+	TossStartLocation = FVector::ZeroVector;
+	TossEndLocation = FVector::ZeroVector;
+	CurrentTossAlpha = 0.f;
+	TotalTossDuration = 0.f;
+
+	CurrentMovementState = EBallMovementState::NotMoving;
+
+	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(GetWorld()->GetGameState());
+	ATennisStoryCharacter* CurrentServingCharacter = (TSGameState) ? TSGameState->GetServingCharacter().Get() : nullptr;
+	if (!bWasInterrupted && CurrentServingCharacter)
+	{
+		OwnerPtr->AttachToComponent(CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
 	}
 }
 

@@ -33,11 +33,6 @@ ATennisBall::ATennisBall()
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 
 	BallTrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
-	
-	TossStartLocation = FVector::ZeroVector;
-	TossEndLocation = FVector::ZeroVector;
-	CurrentTossAlpha = 0.f;
-	TotalTossDuration = 0.f;
 }
 
 void ATennisBall::BeginPlay()
@@ -72,6 +67,16 @@ float ATennisBall::GetBallRadius() const
 	float ActualBallRadius = BaseRadius * GetActorScale().X;
 
 	return ActualBallRadius;
+}
+
+void ATennisBall::StartServiceToss(float TossHeight, float TossDuration)
+{
+	BallMovementComp->StartServiceToss(TossHeight, TossDuration);
+}
+
+void ATennisBall::InterruptServiceToss()
+{
+	BallMovementComp->FinishServiceToss(true);
 }
 
 void ATennisBall::Multicast_SpawnBounceLocationParticleEffect_Implementation(FVector Location)

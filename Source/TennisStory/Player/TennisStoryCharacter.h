@@ -7,6 +7,7 @@
 #include "GameplayTags.h"
 #include "Components/SplineComponent.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
+#include "Player/PlayerTargetActor.h"
 #include "TennisStoryCharacter.generated.h"
 
 class UBoxComponent;
@@ -65,6 +66,8 @@ public:
 	void FreezePlayerTarget();
 
 	void DisablePlayerTargeting();
+
+	FVector GetCurrentTargetLocation(){ return TargetActor->GetActorLocation(); }
 
 	void CacheCourtAimVector(FVector AimVector);
 
@@ -141,7 +144,7 @@ protected:
 	ATennisRacquet* RacquetActor;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class APlayerTargetActor> TargetActorClass;
+	TSubclassOf<APlayerTargetActor> TargetActorClass;
 
 	UPROPERTY()
 	APlayerTargetActor* TargetActor;

@@ -29,6 +29,9 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAnimMontage* ServeMontage;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* ServeTrajectoryCurve;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;

@@ -68,11 +68,9 @@ public:
 
 	float GetBallRadius() const;
 
-	//Current ball toss state info
-	FVector TossStartLocation;
-	FVector TossEndLocation;
-	float CurrentTossAlpha;
-	float TotalTossDuration;
+	void StartServiceToss(float TossHeight, float TossDuration);
+
+	void InterruptServiceToss();
 
 protected:
 	virtual void BeginPlay() override;

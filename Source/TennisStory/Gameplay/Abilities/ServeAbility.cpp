@@ -58,6 +58,12 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+	checkf(OwnerChar, TEXT("UServeAbility::EndAbility - Somehow OwnerChar is null!"))
+
+	OwnerChar->OnPlayerHitServe().Remove(OnPlayerHitServeDelegateHandle);
+	OnPlayerHitServeDelegateHandle.Reset();
 }
 
 void UServeAbility::HandleServeMontageBlendOut()
@@ -70,10 +76,21 @@ void UServeAbility::HandleServeMontageBlendOut()
 
 void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("UServeAbility::OnPlayerHitServe"));
-	
-	Player->OnPlayerHitServe().Remove(OnPlayerHitServeDelegateHandle);
-	OnPlayerHitServeDelegateHandle.Reset();
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
+	if (TennisBall)
+	{
+		TennisBall->InterruptServiceToss();
+
+		if (Player->HasAuthority() && ServeTrajectoryCurve)
+		{
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
+
+			TennisBall->Multicast_FollowPath(TrajectoryData, 1500.f, true);
+
+			TennisBall->LastPlayerToHit = Player;
+		}
+	}
 }
 
 void UServeAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
