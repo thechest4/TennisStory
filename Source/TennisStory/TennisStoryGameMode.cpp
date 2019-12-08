@@ -223,6 +223,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 		}
 	}
 	
+	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
 	if (TSGameState->CurrentServingCharacter.IsValid())
 	{
 		TSGameState->CurrentBallActor->AttachToComponent(TSGameState->CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
@@ -231,8 +232,6 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("ATennisStoryGameMode::SetUpNextPoint - CurrentServingCharacter was not valid!"));
 	}
-
-	TSGameState->CurrentBallActor->SetBallState(ETennisBallState::ServiceState);
 
 	CurrentPlayState = EPlayState::PlayingPoint;
 }
