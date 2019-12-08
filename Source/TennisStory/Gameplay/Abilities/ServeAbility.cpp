@@ -4,6 +4,7 @@
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "TennisStoryGameState.h"
 #include "Gameplay/Ball/TennisBall.h"
+#include "Gameplay/Ball/BallMovementComponent.h"
 #include "Player/TennisStoryCharacter.h"
 
 UServeAbility::UServeAbility(const FObjectInitializer& ObjectInitializer)
@@ -80,17 +81,48 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
 	if (TennisBall)
 	{
+		float ServeSpeed = EvaluateServeSpeed(TennisBall->BallMovementComp);
+
+		//This call changes the BallMovementComponent CurrentMovementState so it should be done before the FollowPath call
 		TennisBall->InterruptServiceToss();
 
 		if (Player->HasAuthority() && ServeTrajectoryCurve)
 		{
 			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
 
-			TennisBall->Multicast_FollowPath(TrajectoryData, 1500.f, true);
+			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, true);
 
 			TennisBall->LastPlayerToHit = Player;
 		}
 	}
+}
+
+float UServeAbility::EvaluateServeSpeed(UBallMovementComponent* BallMovementComp)
+{
+	//NOTE(achester): Formula for getting the duration of the window for any serve evaluation:
+	//		   TotalAlphaMargin = 2 * Margin
+	//		      AlphaPerFrame	= DeltaTime / (TossDuration * 0.5)
+	// WindowLength (in frames) = TotalAlphaMargin / AlphaPerFrame 
+
+	const float TossAlpha = BallMovementComp->GetCurrentTossAlpha();
+	
+	//This value is how we judge the quality of the serve.  The Alpha values range from 0-2, with the perfect serve being at 1
+	//This means a perfect serve will have an EvaluationValue close to 0.f (1 - 1), and a bad serve will have an EvaluationValue close to 1.f (0-1 or 2-1)
+	float EvaluationValue = FMath::Abs(TossAlpha - 1.f);
+
+	if (EvaluationValue <= 0.f + PerfectServeMargin)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Perfect Serve!"));
+		return PerfectServeSpeed;
+	}
+	else if (EvaluationValue >= 1.f - BadServeMargin)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Bad Serve!"));
+		return BadServeSpeed;
+	}
+	
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("Normal Serve!"));
+	return NormalServeSpeed;
 }
 
 void UServeAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

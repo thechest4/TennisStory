@@ -53,6 +53,11 @@ public:
 
 	void FinishServiceToss(bool bWasInterrupted = false);
 
+	float GetCurrentTossAlpha() const
+	{
+		return CurrentTossAlpha;
+	}
+
 protected:
 	virtual void BeginPlay() override;
 

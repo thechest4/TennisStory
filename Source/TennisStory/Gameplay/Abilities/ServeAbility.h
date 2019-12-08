@@ -8,6 +8,7 @@
 
 class ATennisBall;
 class ATennisStoryCharacter;
+class UBallMovementComponent;
 
 UCLASS()
 class TENNISSTORY_API UServeAbility : public UGameplayAbility
@@ -27,11 +28,28 @@ public:
 	void HandlePlayerHitServe(ATennisStoryCharacter* Player);
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Serve Properties")
 	UAnimMontage* ServeMontage;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	UCurveFloat* ServeTrajectoryCurve;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
+	float NormalServeSpeed = 2000.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
+	float PerfectServeSpeed = 2500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
+	float BadServeSpeed = 1500.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
+	float PerfectServeMargin = 0.15f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
+	float BadServeMargin = 0.3f;
+
+	float EvaluateServeSpeed(UBallMovementComponent* BallMovementComp);
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
