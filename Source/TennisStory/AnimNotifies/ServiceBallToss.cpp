@@ -7,6 +7,8 @@
 
 void UServiceBallToss::NotifyBegin(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation, float TotalDuration)
 {
+	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
+
 	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(MeshComp->GetWorld()->GetGameState());
 	ATennisBall* TennisBall = (TSGameState) ? TSGameState->GetTennisBall().Get() : nullptr;
 	if (TennisBall)
@@ -22,6 +24,8 @@ void UServiceBallToss::NotifyBegin(USkeletalMeshComponent * MeshComp, UAnimSeque
 
 void UServiceBallToss::NotifyTick(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation, float FrameDeltaTime)
 {
+	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime);
+
 	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(MeshComp->GetWorld()->GetGameState());
 	ATennisBall* TennisBall = (TSGameState) ? TSGameState->GetTennisBall().Get() : nullptr;
 	if (TennisBall)
@@ -45,6 +49,8 @@ void UServiceBallToss::NotifyTick(USkeletalMeshComponent * MeshComp, UAnimSequen
 
 void UServiceBallToss::NotifyEnd(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation)
 {
+	Super::NotifyEnd(MeshComp, Animation);
+
 	//Handle interruption
 	
 	ATennisStoryGameState* TSGameState = Cast<ATennisStoryGameState>(MeshComp->GetWorld()->GetGameState());

@@ -23,6 +23,8 @@ public:
 
 	UFUNCTION()
 	void HandleServeMontageBlendOut();
+	
+	void HandlePlayerHitServe(ATennisStoryCharacter* Player);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -34,4 +36,6 @@ protected:
 	bool bServeReleased;
 
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+	FDelegateHandle OnPlayerHitServeDelegateHandle;
 };

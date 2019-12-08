@@ -31,6 +31,8 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
+	OnPlayerHitServeDelegateHandle = OwnerChar->OnPlayerHitServe().AddUObject(this, &UServeAbility::HandlePlayerHitServe);
+
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
 	if (!TennisBall)
@@ -64,6 +66,14 @@ void UServeAbility::HandleServeMontageBlendOut()
 	CurrentMontageTask = nullptr;
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("UServeAbility::OnPlayerHitServe"));
+	
+	Player->OnPlayerHitServe().Remove(OnPlayerHitServeDelegateHandle);
+	OnPlayerHitServeDelegateHandle.Reset();
 }
 
 void UServeAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

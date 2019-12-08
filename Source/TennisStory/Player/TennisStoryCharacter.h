@@ -12,6 +12,8 @@
 class UBoxComponent;
 class UDistanceIndicatorComponent;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
+
 UENUM(BlueprintType)
 enum class EStrokeType :uint8
 {
@@ -45,6 +47,8 @@ class ATennisStoryCharacter : public ACharacter, public IAbilitySystemInterface
 public:
 	DECLARE_EVENT_OneParam(ATennisStoryCharacter, FOnPlayerSpawnedEvent, ATennisStoryCharacter*);
 	static FOnPlayerSpawnedEvent& OnPlayerSpawned(){ return PlayerSpawnedEvent; }
+
+	FOnPlayerHitServeEvent& OnPlayerHitServe(){ return PlayerHitServeEvent; }
 
 	ATennisStoryCharacter();
 
@@ -205,6 +209,7 @@ protected:
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;
+	FOnPlayerHitServeEvent PlayerHitServeEvent;
 
 	friend class UBallStrikingComponent;
 };
