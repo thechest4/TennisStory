@@ -66,12 +66,6 @@ void ATennisStoryGameMode::StartPlay()
 	{
 		FTransform BallSpawnTransform = FTransform::Identity;
 
-		AHalfCourt* NearCourt = TSGameState->GetCourt(ECourtSide::NearCourt);
-		if (NearCourt)
-		{
-			BallSpawnTransform = NearCourt->GetBallServiceTransform(TSGameState->GetServiceSideForNextPoint());
-		}
-
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
@@ -200,16 +194,6 @@ void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Chara
 				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()).GetRotation();
 			}
 		}
-	}
-}
-
-void ATennisStoryGameMode::TeleportBallToCourt()
-{
-	if (TSGameState->CurrentBallActor.IsValid())
-	{
-		FTransform CourtBallTransform = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCourt->GetBallServiceTransform(TSGameState->GetServiceSideForNextPoint());
-		TSGameState->CurrentBallActor->SetActorLocation(CourtBallTransform.GetLocation());
-		TSGameState->CurrentBallActor->SetActorRotation(CourtBallTransform.GetRotation());
 	}
 }
 

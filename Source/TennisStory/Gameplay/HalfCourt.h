@@ -89,32 +89,6 @@ public:
 		}
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Tennis Court")
-	FTransform GetBallServiceTransform(EServiceSide ServiceSide) const
-	{
-		FTransform BallSpawnOffset = FTransform::Identity;
-		BallSpawnOffset.SetTranslation(FVector(0.0f, 0.0f, 120.0f));
-		
-		FTransform ServiceLocation;
-
-		switch (ServiceSide)
-		{
-			case EServiceSide::Ad:
-			{
-				ServiceLocation = AdBallServiceLocation->GetComponentTransform();
-				break;
-			}
-			default:
-			case EServiceSide::Deuce:
-			{
-				ServiceLocation = DeuceBallServiceLocation->GetComponentTransform();
-				break;
-			}
-		}
-
-		return BallSpawnOffset * ServiceLocation;
-	}
-
 	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
 
 	bool IsLocationInBounds(FVector& Location, float BallRadius = 0.f);
@@ -139,13 +113,7 @@ protected:
 	USceneComponent* DeucePlayerServiceLocation;
 
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
-	USceneComponent* DeuceBallServiceLocation;
-
-	UPROPERTY(EditAnywhere, Category = "StartLocations")
 	USceneComponent* AdPlayerServiceLocation;
-
-	UPROPERTY(EditAnywhere, Category = "StartLocations")
-	USceneComponent* AdBallServiceLocation;
 	
 	UPROPERTY(EditAnywhere, Category = "StartLocations")
 	USceneComponent* DeuceReturnerLocation;
@@ -195,13 +163,7 @@ protected:
 	UBillboardComponent* DeucePlayerServiceIcon;
 
 	UPROPERTY()
-	UBillboardComponent* DeuceBallServiceIcon;
-
-	UPROPERTY()
 	UBillboardComponent* AdPlayerServiceIcon;
-
-	UPROPERTY()
-	UBillboardComponent* AdBallServiceIcon;
 	
 	UPROPERTY()
 	UBillboardComponent* DeuceReturnerIcon;

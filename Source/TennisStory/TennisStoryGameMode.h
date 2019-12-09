@@ -40,9 +40,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game Management")
 	void TeleportCharacterToCourt(ATennisStoryCharacter* Character);
 
-	UFUNCTION(BlueprintCallable, Category = "Game Management")
-	void TeleportBallToCourt();
-
 	UFUNCTION()
 	void SetUpNextPoint();
 
