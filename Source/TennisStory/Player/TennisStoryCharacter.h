@@ -100,14 +100,13 @@ public:
 	void StartDistanceVisualizationToBall();
 
 	void StopDistanceVisualization();
-
-	void EnterServiceState();
 	
-	void ExitServiceState();
-
-	UPROPERTY(EditAnywhere, Category = "DEBUG STUFF")
-	bool bStartInServiceState = true;
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_EnterServiceState();
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ExitServiceState();
+
 	const static FName BallAttachBone;
 
 protected:

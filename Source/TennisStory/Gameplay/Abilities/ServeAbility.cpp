@@ -66,6 +66,13 @@ void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 	OwnerChar->OnPlayerHitServe().Remove(OnPlayerHitServeDelegateHandle);
 	OnPlayerHitServeDelegateHandle.Reset();
+
+	if (bServeReleased)
+	{
+		OwnerChar->Multicast_ExitServiceState();
+	}
+
+	OwnerChar->DisablePlayerTargeting();
 }
 
 void UServeAbility::HandleServeMontageBlendOut()

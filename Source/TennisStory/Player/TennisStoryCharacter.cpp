@@ -138,11 +138,6 @@ void ATennisStoryCharacter::BeginPlay()
 	}
 
 	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
-
-	if (bStartInServiceState)
-	{	
-		EnterServiceState();
-	}
 }
 
 void ATennisStoryCharacter::Tick(float DeltaSeconds)
@@ -301,12 +296,12 @@ void ATennisStoryCharacter::StopDistanceVisualization()
 	DistanceIndicatorComp->StopVisualizingDistance();
 }
 
-void ATennisStoryCharacter::EnterServiceState()
+void ATennisStoryCharacter::Multicast_EnterServiceState_Implementation()
 {
 	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.Service")));
 }
 
-void ATennisStoryCharacter::ExitServiceState()
+void ATennisStoryCharacter::Multicast_ExitServiceState_Implementation()
 {
 	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.Service")));
 }
