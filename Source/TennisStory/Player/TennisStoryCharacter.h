@@ -10,6 +10,7 @@
 #include "Player/PlayerTargetActor.h"
 #include "TennisStoryCharacter.generated.h"
 
+class ATennisBall;
 class UBoxComponent;
 class UDistanceIndicatorComponent;
 
@@ -106,6 +107,15 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ExitServiceState();
+
+	bool HasBallAttached() const
+	{
+		return bHasBallAttached;
+	}
+
+	void AttachBallToPlayer(ATennisBall* TennisBall);
+
+	void DetachBallFromPlayer(ATennisBall* TennisBall);
 
 	const static FName BallAttachBone;
 
@@ -208,6 +218,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UDistanceIndicatorComponent* DistanceIndicatorComp;
+
+	UPROPERTY(Replicated)
+	bool bHasBallAttached;
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

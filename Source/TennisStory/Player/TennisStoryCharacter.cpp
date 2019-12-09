@@ -41,6 +41,8 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
+	bHasBallAttached = false;
+
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
 	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
@@ -110,6 +112,7 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryCharacter, bIsCharging);
 	DOREPLIFETIME(ATennisStoryCharacter, TeamId);
 	DOREPLIFETIME(ATennisStoryCharacter, ServerDesiredRotation);
+	DOREPLIFETIME(ATennisStoryCharacter, bHasBallAttached);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -309,6 +312,20 @@ void ATennisStoryCharacter::Multicast_ExitServiceState_Implementation()
 void ATennisStoryCharacter::Multicast_SetActorTransform_Implementation(FTransform NewTransform)
 {
 	SetActorTransform(NewTransform);
+}
+
+void ATennisStoryCharacter::AttachBallToPlayer(ATennisBall* TennisBall)
+{
+	TennisBall->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
+
+	bHasBallAttached = true;
+}
+
+void ATennisStoryCharacter::DetachBallFromPlayer(ATennisBall* TennisBall)
+{
+	TennisBall->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	bHasBallAttached = false;
 }
 
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)

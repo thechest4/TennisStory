@@ -294,8 +294,16 @@ void UBallMovementComponent::StartServiceToss(float TossHeight, float argTotalTo
 	CurrentTossAlpha = 0.f;
 	TotalTossDuration = argTotalTossDuration;
 		
-	//Assume we're currently attached to the service character
-	OwnerPtr->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisStoryCharacter* ServingChar = (TSGameState) ? TSGameState->GetServingCharacter().Get() : nullptr;
+	if (ServingChar)
+	{
+		ServingChar->DetachBallFromPlayer(OwnerPtr);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UBallMovementComponent::StartServiceToss - Failed to get ServingChar reference"));
+	}
 
 	CurrentMovementState = EBallMovementState::ServiceToss;
 }
@@ -313,7 +321,7 @@ void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
 	ATennisStoryCharacter* CurrentServingCharacter = (TSGameState) ? TSGameState->GetServingCharacter().Get() : nullptr;
 	if (!bWasInterrupted && CurrentServingCharacter)
 	{
-		OwnerPtr->AttachToComponent(CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
+		CurrentServingCharacter->AttachBallToPlayer(OwnerPtr);
 	}
 }
 

@@ -19,8 +19,19 @@ UServeAbility::UServeAbility(const FObjectInitializer& ObjectInitializer)
 bool UServeAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
 {
 	bool bSuperResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+	
+	bool bHasBallAttached = false;
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+	if (OwnerChar)
+	{
+		bHasBallAttached = OwnerChar->HasBallAttached();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UServeAbility::CanActivateAbility - Failed to get OwnerChar ref"));
+	}
 
-	return !CurrentMontageTask && bSuperResult;
+	return !CurrentMontageTask && bHasBallAttached && bSuperResult;
 }
 
 void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

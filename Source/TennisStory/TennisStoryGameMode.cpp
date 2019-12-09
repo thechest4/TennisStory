@@ -227,7 +227,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	if (TSGameState->CurrentServingCharacter.IsValid())
 	{
 		TSGameState->CurrentServingCharacter->Multicast_EnterServiceState();		
-		TSGameState->CurrentBallActor->AttachToComponent(TSGameState->CurrentServingCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ATennisStoryCharacter::BallAttachBone);
+		TSGameState->CurrentServingCharacter->AttachBallToPlayer(TSGameState->CurrentBallActor.Get());
 	}
 	else
 	{
