@@ -55,6 +55,9 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnBounceLocationParticleEffect(FVector Location);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SpawnHitParticleEffect(UParticleSystem* HitFX, FVector Location);
 
 	FVector GetCurrentDirection() const
 	{

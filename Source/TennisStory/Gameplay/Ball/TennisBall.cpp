@@ -95,6 +95,14 @@ void ATennisBall::Multicast_SpawnBounceParticleEffect_Implementation(FVector Loc
 	}
 }
 
+void ATennisBall::Multicast_SpawnHitParticleEffect_Implementation(UParticleSystem* HitFX, FVector Location)
+{
+	if (HitFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitFX, Location);
+	}
+}
+
 void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit)
 {
 	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity, bFromHit);

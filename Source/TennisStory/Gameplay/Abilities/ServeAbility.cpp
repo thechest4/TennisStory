@@ -6,6 +6,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 UServeAbility::UServeAbility(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -81,7 +82,10 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
 	if (TennisBall)
 	{
-		float ServeSpeed = EvaluateServeSpeed(TennisBall->BallMovementComp);
+		int ServeQualityIndex = EvaluateServeQuality(TennisBall->BallMovementComp);
+		
+		checkf(OrderedServeSpeeds.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - ServeSpeeds array doesn't have the right number of items!"))
+		checkf(OrderedServeHitFX.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - HitFX array doesn't have the right number of items!"))
 
 		//This call changes the BallMovementComponent CurrentMovementState so it should be done before the FollowPath call
 		TennisBall->InterruptServiceToss();
@@ -89,15 +93,23 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 		if (Player->HasAuthority() && ServeTrajectoryCurve)
 		{
 			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
+			
+			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 
 			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, true);
 
 			TennisBall->LastPlayerToHit = Player;
+			
+			UParticleSystem* HitFX = OrderedServeHitFX[ServeQualityIndex];
+			if (HitFX)
+			{
+				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
+			}
 		}
 	}
 }
 
-float UServeAbility::EvaluateServeSpeed(UBallMovementComponent* BallMovementComp)
+int UServeAbility::EvaluateServeQuality(UBallMovementComponent* BallMovementComp)
 {
 	//NOTE(achester): Formula for getting the duration of the window for any serve evaluation:
 	//		   TotalAlphaMargin = 2 * Margin
@@ -112,17 +124,14 @@ float UServeAbility::EvaluateServeSpeed(UBallMovementComponent* BallMovementComp
 
 	if (EvaluationValue <= 0.f + PerfectServeMargin)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Perfect Serve!"));
-		return PerfectServeSpeed;
+		return static_cast<int>(EServeQuality::Perfect);
 	}
 	else if (EvaluationValue >= 1.f - BadServeMargin)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Bad Serve!"));
-		return BadServeSpeed;
+		return static_cast<int>(EServeQuality::Bad);
 	}
 	
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("Normal Serve!"));
-	return NormalServeSpeed;
+	return static_cast<int>(EServeQuality::Normal);
 }
 
 void UServeAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

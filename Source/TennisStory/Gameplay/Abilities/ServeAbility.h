@@ -10,6 +10,15 @@ class ATennisBall;
 class ATennisStoryCharacter;
 class UBallMovementComponent;
 
+UENUM()
+enum class EServeQuality : uint8
+{
+	Bad,
+	Normal,
+	Perfect,
+	MAX	UMETA(Hidden)
+};
+
 UCLASS()
 class TENNISSTORY_API UServeAbility : public UGameplayAbility
 {
@@ -35,21 +44,19 @@ protected:
 	UCurveFloat* ServeTrajectoryCurve;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
-	float NormalServeSpeed = 2000.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
-	float PerfectServeSpeed = 2500.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
-	float BadServeSpeed = 1500.f;
+	TArray<float> OrderedServeSpeeds;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	float PerfectServeMargin = 0.15f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	float BadServeMargin = 0.3f;
-
-	float EvaluateServeSpeed(UBallMovementComponent* BallMovementComp);
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
+	TArray<UParticleSystem*> OrderedServeHitFX;
+	
+	//Returns an index that is used to retrieve a serve speed and hit FX from the Ordered TArrays
+	int EvaluateServeQuality(UBallMovementComponent* BallMovementComp);
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
