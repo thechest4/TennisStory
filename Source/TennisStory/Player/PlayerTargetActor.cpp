@@ -4,6 +4,7 @@
 #include "PlayerTargetActor.h"
 #include "Gameplay/HalfCourt.h"
 #include "Components/StaticMeshComponent.h"
+#include "TennisStoryGameState.h"
 
 APlayerTargetActor::APlayerTargetActor()
 {
@@ -65,7 +66,29 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 	}
 }
 
-void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt, bool bShowTarget)
+ESnapPoint APlayerTargetActor::GetStartingSnapPointForTargetingContext(ETargetingContext Context)
+{
+	switch (Context)
+	{
+		case ETargetingContext::Service:
+		{
+			ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+
+			checkf(TSGameState, TEXT("APlayerTargetActor::GetStartingSnapPointForTargetingContext - TSGameState was null"))
+
+			EServiceSide ServiceSide = TSGameState->GetServiceSide();
+
+			return (ServiceSide == EServiceSide::Deuce) ? ESnapPoint::ServiceDeuce : ESnapPoint::ServiceAd;
+		}
+		default:
+		case ETargetingContext::GroundStroke:
+		{
+			return ESnapPoint::Mid;
+		}
+	}
+}
+
+void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt, bool bShowTarget, ETargetingContext TargetingContext)
 {
 	if (CourtToAimAt.IsValid())
 	{
@@ -73,8 +96,8 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 
 		FVector AimVector = GetOwnerControlRotationVector();
 
-		LastSnapPoint = ESnapPoint::Mid;
-		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, ESnapPoint::Mid) + GetDesiredLocationOffset());
+		LastSnapPoint = GetStartingSnapPointForTargetingContext(TargetingContext);
+		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, LastSnapPoint) + GetDesiredLocationOffset());
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;

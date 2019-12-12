@@ -25,6 +25,8 @@ enum class ECourtSide : uint8
 UENUM(BlueprintType)
 enum class ESnapPoint : uint8
 {
+	ServiceDeuce,
+	ServiceAd,
 	Mid,
 	Left,
 	Right

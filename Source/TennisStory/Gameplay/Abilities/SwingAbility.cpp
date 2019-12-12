@@ -68,7 +68,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OwnerChar->BallStrikingComp->SetChargeStartTime();
 	}
 
-	OwnerChar->EnablePlayerTargeting();
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
 	OwnerChar->StartMovingSlow();
 
 	if (OwnerChar->IsLocallyControlled())

@@ -199,12 +199,12 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 	}
 }
 
-void ATennisStoryCharacter::EnablePlayerTargeting()
+void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext)
 {
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (TargetActor && GameState && Controller)
 	{
-		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForPlayer(Cast<ATennisStoryPlayerController>(Controller)), IsLocallyControlled());
+		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForPlayer(Cast<ATennisStoryPlayerController>(Controller)), IsLocallyControlled(), TargetingContext);
 
 		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
 		//Basically a fallback in case another position isn't committed

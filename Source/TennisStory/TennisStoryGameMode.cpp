@@ -185,13 +185,13 @@ void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Chara
 		{
 			if (PlayerTeam.TeamId == TSGameState->CurrentServiceTeam)
 			{
-				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()));
-				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSideForNextPoint()).GetRotation();
+				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSide()));
+				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetPlayerServiceTransform(TSGameState->GetServiceSide()).GetRotation();
 			}
 			else
 			{
-				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()));
-				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSideForNextPoint()).GetRotation();
+				Character->Multicast_SetActorTransform(PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSide()));
+				Character->ServerDesiredRotation = PlayerTeam.AssignedCourt->GetReturnerTransform(TSGameState->GetServiceSide()).GetRotation();
 			}
 		}
 	}

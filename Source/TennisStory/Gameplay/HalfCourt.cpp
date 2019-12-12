@@ -218,7 +218,17 @@ AHalfCourt::AHalfCourt()
 
 FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint)
 {
-	if (SnapPoint == ESnapPoint::Mid)
+	if (SnapPoint == ESnapPoint::ServiceDeuce || SnapPoint == ESnapPoint::ServiceAd)
+	{
+		float XCoord = 0.2f * CourtLength;
+		float YCoord = 0.25f * CourtWidth;
+		YCoord = (SnapPoint == ESnapPoint::ServiceDeuce) ? YCoord : -1.f * YCoord;
+
+		FVector ServiceBoxSnapPoint = GetActorTransform().TransformPosition(FVector(XCoord, YCoord, 0.f));
+		
+		return ServiceBoxSnapPoint;
+	}
+	else if (SnapPoint == ESnapPoint::Mid)
 	{
 		return MidSnapPoint->GetComponentLocation();
 	}

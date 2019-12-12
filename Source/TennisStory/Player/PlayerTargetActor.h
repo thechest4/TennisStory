@@ -7,6 +7,14 @@
 #include "Gameplay/HalfCourt.h"
 #include "PlayerTargetActor.generated.h"
 
+UENUM()
+enum class ETargetingContext : uint8
+{
+	Service,
+	GroundStroke,
+	Volley
+};
+
 UCLASS()
 class TENNISSTORY_API APlayerTargetActor : public AActor
 {
@@ -21,7 +29,9 @@ public:
 
 	void Tick(float DeltaSeconds) override;
 
-	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt, bool bShowTarget);
+	ESnapPoint GetStartingSnapPointForTargetingContext(ETargetingContext Context);
+
+	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt, bool bShowTarget, ETargetingContext TargetingContext);
 
 	void DisableTargetMovement();
 

@@ -65,7 +65,7 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->ReadyForActivation();
 	
 	//TODO(achester): Lock player targeting to the service box
-	OwnerChar->EnablePlayerTargeting();
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service);
 }
 
 void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

@@ -62,7 +62,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UBallStrikingComponent* BallStrikingComp;
 
-	void EnablePlayerTargeting();
+	void EnablePlayerTargeting(ETargetingContext TargetingContext);
 
 	void FreezePlayerTarget();
 

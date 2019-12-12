@@ -70,7 +70,7 @@ public:
 		bHasBeenDeuce = true;
 	}
 
-	EServiceSide GetNextServiceSide()
+	EServiceSide GetServiceSide()
 	{
 		int TotalNumPoints = 0;
 
@@ -151,9 +151,9 @@ public:
 
 	int GetTotalGameCountForCurrentSet();
 
-	EServiceSide GetServiceSideForNextPoint()
+	EServiceSide GetServiceSide()
 	{
-		return CurrentGameScore.GetNextServiceSide();
+		return CurrentGameScore.GetServiceSide();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Score")
