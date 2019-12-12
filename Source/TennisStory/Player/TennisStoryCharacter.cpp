@@ -109,7 +109,7 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimVector);
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimRightVector);
-	DOREPLIFETIME(ATennisStoryCharacter, bIsCharging);
+	DOREPLIFETIME(ATennisStoryCharacter, bIsMovingSlow);
 	DOREPLIFETIME(ATennisStoryCharacter, TeamId);
 	DOREPLIFETIME(ATennisStoryCharacter, ServerDesiredRotation);
 	DOREPLIFETIME(ATennisStoryCharacter, bHasBallAttached);
@@ -213,14 +213,6 @@ void ATennisStoryCharacter::EnablePlayerTargeting()
 			Server_CommitTargetPosition(TargetActor->GetActorLocation());
 		}
 	}
-
-	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
-	//also put some thought into how to best store stats like move speed while swinging and such.
-	if (HasAuthority())
-	{
-		bIsCharging = true;
-		OnRep_IsCharging();
-	}
 }
 
 void ATennisStoryCharacter::FreezePlayerTarget()
@@ -247,11 +239,25 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	{
 		Server_CommitTargetPosition(TargetActor->GetActorLocation());
 	}
+}
 
+void ATennisStoryCharacter::StartMovingSlow()
+{
+	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
+	//also put some thought into how to best store stats like move speed while swinging and such.
 	if (HasAuthority())
 	{
-		bIsCharging = false;
-		OnRep_IsCharging();
+		bIsMovingSlow = true;
+		OnRep_IsMovingSlow();
+	}
+}
+
+void ATennisStoryCharacter::StopMovingSlow()
+{
+	if (HasAuthority())
+	{
+		bIsMovingSlow = false;
+		OnRep_IsMovingSlow();
 	}
 }
 
@@ -340,9 +346,9 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
 }
 
-void ATennisStoryCharacter::OnRep_IsCharging()
+void ATennisStoryCharacter::OnRep_IsMovingSlow()
 {
-	if (bIsCharging)
+	if (bIsMovingSlow)
 	{
 		CachedMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 		GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;

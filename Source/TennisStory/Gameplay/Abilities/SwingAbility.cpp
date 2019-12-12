@@ -69,6 +69,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	OwnerChar->EnablePlayerTargeting();
+	OwnerChar->StartMovingSlow();
 
 	if (OwnerChar->IsLocallyControlled())
 	{
@@ -115,6 +116,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();
+		OwnerChar->StopMovingSlow();
 
 		if (OwnerChar->HasAuthority())
 		{

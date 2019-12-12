@@ -68,6 +68,10 @@ public:
 
 	void DisablePlayerTargeting();
 
+	void StartMovingSlow();
+
+	void StopMovingSlow();
+
 	FVector GetCurrentTargetLocation(){ return TargetActor->GetActorLocation(); }
 
 	void CacheCourtAimVector(FVector AimVector);
@@ -170,11 +174,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MoveSpeedWhileSwinging = 150.0f;
 
-	UPROPERTY(Transient, ReplicatedUsing = OnRep_IsCharging)
-	bool bIsCharging;
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_IsMovingSlow)
+	bool bIsMovingSlow;
 
 	UFUNCTION()
-	virtual void OnRep_IsCharging();
+	virtual void OnRep_IsMovingSlow();
 
 	float CachedMaxWalkSpeed;
 
