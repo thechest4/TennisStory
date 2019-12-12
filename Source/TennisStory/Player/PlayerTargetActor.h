@@ -10,6 +10,7 @@
 UENUM()
 enum class ETargetingContext : uint8
 {
+	None,
 	Service,
 	GroundStroke,
 	Volley
@@ -31,6 +32,8 @@ public:
 
 	ESnapPoint GetStartingSnapPointForTargetingContext(ETargetingContext Context);
 
+	EBoundsContext GetCourtBoundsContextForTargetingContext(ETargetingContext TargetingContext);
+
 	void ShowTargetOnCourt(TWeakObjectPtr<class AHalfCourt> CourtToAimAt, bool bShowTarget, ETargetingContext TargetingContext);
 
 	void DisableTargetMovement();
@@ -44,6 +47,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	ETargetingContext CurrentTargetingContext;
 
 	bool bCurrentlyVisible;
 	bool bCurrentlyMovable;

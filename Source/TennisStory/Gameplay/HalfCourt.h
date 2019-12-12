@@ -9,6 +9,14 @@
 class UBillboardComponent;
 
 UENUM(BlueprintType)
+enum class EBoundsContext : uint8
+{
+	FullCourt,
+	ServiceDeuce,
+	ServiceAd
+};
+
+UENUM(BlueprintType)
 enum class EServiceSide : uint8
 {
 	Deuce,
@@ -95,7 +103,7 @@ public:
 
 	bool IsLocationInBounds(FVector& Location, float BallRadius = 0.f);
 
-	void ClampLocationToCourtBounds(FVector& Location);
+	void ClampLocationToCourtBounds(FVector& Location, EBoundsContext BoundsContext);
 
 	ECourtSide GetCourtSide()
 	{
@@ -151,6 +159,12 @@ protected:
 
 	FVector2D LowerCorner;
 	FVector2D UpperCorner;
+	
+	FVector2D LowerCornerServiceDeuce;
+	FVector2D UpperCornerServiceDeuce;
+	
+	FVector2D LowerCornerServiceAd;
+	FVector2D UpperCornerServiceAd;
 
 	void RecalculateCourtLocations();
 

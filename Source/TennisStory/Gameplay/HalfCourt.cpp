@@ -266,24 +266,50 @@ bool AHalfCourt::IsLocationInBounds(FVector& Location, float BallRadius)
 	return true;
 }
 
-void AHalfCourt::ClampLocationToCourtBounds(FVector& Location)
+void AHalfCourt::ClampLocationToCourtBounds(FVector& Location, EBoundsContext BoundsContext)
 {
-	if (Location.X < LowerCorner.X)
+	FVector2D LowerCornerToUse;
+	FVector2D UpperCornerToUse;
+
+	switch (BoundsContext)
 	{
-		Location.X = LowerCorner.X;
-	}
-	else if (Location.X > UpperCorner.X)
-	{
-		Location.X = UpperCorner.X;
+		case EBoundsContext::ServiceDeuce:
+		{
+			LowerCornerToUse = LowerCornerServiceDeuce;
+			UpperCornerToUse = UpperCornerServiceDeuce;
+			break;
+		}
+		case EBoundsContext::ServiceAd:
+		{
+			LowerCornerToUse = LowerCornerServiceAd;
+			UpperCornerToUse = UpperCornerServiceAd;
+			break;
+		}
+		default:
+		case EBoundsContext::FullCourt:
+		{
+			LowerCornerToUse = LowerCorner;
+			UpperCornerToUse = UpperCorner;
+			break;
+		}
 	}
 
-	if (Location.Y < LowerCorner.Y)
+	if (Location.X < LowerCornerToUse.X)
 	{
-		Location.Y = LowerCorner.Y;
+		Location.X = LowerCornerToUse.X;
 	}
-	else if (Location.Y > UpperCorner.Y)
+	else if (Location.X > UpperCornerToUse.X)
 	{
-		Location.Y = UpperCorner.Y;
+		Location.X = UpperCornerToUse.X;
+	}
+
+	if (Location.Y < LowerCornerToUse.Y)
+	{
+		Location.Y = LowerCornerToUse.Y;
+	}
+	else if (Location.Y > UpperCornerToUse.Y)
+	{
+		Location.Y = UpperCornerToUse.Y;
 	}
 }
 
@@ -309,12 +335,20 @@ void AHalfCourt::BeginPlay()
 
 void AHalfCourt::CalculateCourtCorners()
 {
-	float XOffset = CourtLength / 2.0f;
-	float YOffset = CourtWidth / 2.0f;
+	float XOffset = CourtLength / 2.f;
+	float YOffset = CourtWidth / 2.f;
 
 	FVector ActorLocation = GetActorLocation();
 	LowerCorner = FVector2D(ActorLocation.X - XOffset, ActorLocation.Y - YOffset);
 	UpperCorner = FVector2D(ActorLocation.X + XOffset, ActorLocation.Y + YOffset);
+
+	FVector ServiceDeuceCenter = GetActorTransform().TransformPosition(FVector(0.25f * CourtLength, 0.25f * CourtWidth, 0.f));
+	LowerCornerServiceDeuce = FVector2D(ServiceDeuceCenter.X, ServiceDeuceCenter.Y) + FVector2D(-0.25f * CourtLength, -0.25f * CourtWidth);
+	UpperCornerServiceDeuce = FVector2D(ServiceDeuceCenter.X, ServiceDeuceCenter.Y) + FVector2D(0.25f * CourtLength, 0.25f * CourtWidth);
+	
+	FVector ServiceAdCenter = GetActorTransform().TransformPosition(FVector(0.25f * CourtLength, -0.25f * CourtWidth, 0.f));
+	LowerCornerServiceAd = FVector2D(ServiceAdCenter.X, ServiceAdCenter.Y) + FVector2D(-0.25f * CourtLength, -0.25f * CourtWidth);
+	UpperCornerServiceAd = FVector2D(ServiceAdCenter.X, ServiceAdCenter.Y) + FVector2D(0.25f * CourtLength, 0.25f * CourtWidth);
 }
 
 void AHalfCourt::RecalculateCourtLocations()

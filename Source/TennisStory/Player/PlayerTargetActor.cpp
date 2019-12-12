@@ -26,12 +26,12 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bCurrentlyVisible && bCurrentlyMovable)
+	if (bCurrentlyVisible && bCurrentlyMovable && CurrentTargetingContext != ETargetingContext::None)
 	{
 		FVector MovementVector = ConsumeCurrentInputVector();
 		MovementVector.Normalize();
 
-		if (GetWorld()->GetTimeSeconds() - TargetingStartedTime < LockedTargetingDuration)
+		if (CurrentTargetingContext != ETargetingContext::Service && GetWorld()->GetTimeSeconds() - TargetingStartedTime < LockedTargetingDuration)
 		{
 			ESnapPoint SnapPointToAimAt = ESnapPoint::Mid;
 
@@ -59,8 +59,8 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			if (MovementVector != FVector::ZeroVector)
 			{
 				FVector NewLocation = GetActorLocation() + MovementVector;
-				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation);
-				SetActorLocation(NewLocation + GetDesiredLocationOffset());
+				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation, GetCourtBoundsContextForTargetingContext(CurrentTargetingContext));
+				SetActorLocation(NewLocation);
 			}
 		}
 	}
@@ -88,6 +88,27 @@ ESnapPoint APlayerTargetActor::GetStartingSnapPointForTargetingContext(ETargetin
 	}
 }
 
+EBoundsContext APlayerTargetActor::GetCourtBoundsContextForTargetingContext(ETargetingContext TargetingContext)
+{
+	switch (TargetingContext)
+	{
+		case ETargetingContext::Service:
+		{
+			ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+
+			checkf(TSGameState, TEXT("APlayerTargetActor::GetStartingSnapPointForTargetingContext - TSGameState was null"))
+
+			EServiceSide ServiceSide = TSGameState->GetServiceSide();
+
+			return (ServiceSide == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
+		}
+		default:
+		{
+			return EBoundsContext::FullCourt;
+		}
+	}
+}
+
 void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAimAt, bool bShowTarget, ETargetingContext TargetingContext)
 {
 	if (CourtToAimAt.IsValid())
@@ -105,6 +126,7 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 
 		TargetMesh->SetVisibility(bShowTarget);
 
+		CurrentTargetingContext = TargetingContext;
 		CurrentInputVector = FVector::ZeroVector;
 	}
 }
@@ -116,6 +138,7 @@ void APlayerTargetActor::DisableTargetMovement()
 
 void APlayerTargetActor::HideTarget()
 {
+	CurrentTargetingContext = ETargetingContext::None;
 	bCurrentlyVisible = false;
 
 	TargetMesh->SetVisibility(false);
