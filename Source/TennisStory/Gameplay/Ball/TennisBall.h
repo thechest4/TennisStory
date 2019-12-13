@@ -6,11 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "Player/Components/BallStrikingComponent.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
+#include "Gameplay/HalfCourt.h"
 #include "TennisBall.generated.h"
 
 class ATennisStoryCharacter;
 
-DECLARE_MULTICAST_DELEGATE(FOnBallOutOfBoundsEvent)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBallOutOfBoundsEvent, EBoundsContext)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
 
 UENUM(BlueprintType)
@@ -48,7 +49,7 @@ public:
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit);
+	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnBounceParticleEffect(FVector Location);

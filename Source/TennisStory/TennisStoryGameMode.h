@@ -63,7 +63,9 @@ protected:
 
 	int AllowedBounces;
 
-	void HandleBallOutOfBounds();
+	int AllowedFaults;
+
+	void HandleBallOutOfBounds(EBoundsContext BoundsContext);
 
 	void HandleBallHitBounceLimit();
 

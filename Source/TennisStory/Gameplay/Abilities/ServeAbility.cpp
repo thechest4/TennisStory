@@ -64,7 +64,6 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UServeAbility::HandleServeMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 	
-	//TODO(achester): Lock player targeting to the service box
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service);
 }
 
@@ -114,7 +113,9 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 
-			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, true);
+			EBoundsContext BoundsContextForServe = (GameState->GetServiceSide() == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
+
+			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, true, BoundsContextForServe);
 
 			TennisBall->LastPlayerToHit = Player;
 			

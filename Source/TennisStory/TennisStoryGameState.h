@@ -188,6 +188,9 @@ public:
 protected:
 	UPROPERTY(Transient, Replicated)
 	int CurrentServiceTeam;
+	
+	UPROPERTY(Transient, Replicated)
+	int CurrentFaultCount;
 
 	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisStoryCharacter> CurrentServingCharacter;

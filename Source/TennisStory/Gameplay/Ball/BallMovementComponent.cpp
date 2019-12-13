@@ -29,6 +29,7 @@ UBallMovementComponent::UBallMovementComponent()
 	FramesOfBounceLag = 5;
 	DurationOfBounceLag = FramesOfBounceLag * TargetFrameDuration;
 	CurrentLagTime = 0.f;
+	BoundsContextForFirstBounce = EBoundsContext::FullCourt;
 	
 	TossStartLocation = FVector::ZeroVector;
 	TossEndLocation = FVector::ZeroVector;
@@ -64,19 +65,19 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
 	if (NumBounces < GameMode->GetAllowedBounces())
 	{
-		GenerateAndFollowBouncePath(Hit);
-
-		OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
-		
 		ATennisStoryPlayerController* Controller = (OwnerPtr->LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(OwnerPtr->LastPlayerToHit->Controller) : nullptr;
 		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState) ? GameState->GetCourtToAimAtForPlayer(Controller) : nullptr;
 		FVector CurrentLocation = OwnerPtr->GetActorLocation();
 
-		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius()))
+		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius(), BoundsContextForFirstBounce))
 		{
-			OwnerPtr->OnBallOutOfBounds().Broadcast();
+			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce);
 		}
+		
+		GenerateAndFollowBouncePath(Hit);
+
+		OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
 	}
 	else if (OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
 	{
@@ -121,7 +122,7 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.6f;
 	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, LastPathHeight * 0.6f);
 
-	OwnerPtr->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false);
+	OwnerPtr->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false, EBoundsContext::FullCourt);
 	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
 	
 	NumBounces++;

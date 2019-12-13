@@ -81,7 +81,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(GetTrajectoryCurve(), TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), 200.f, 500.f);
 
-		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true);
+		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt);
 
 		TennisBall->LastPlayerToHit = OwnerChar;
 	}

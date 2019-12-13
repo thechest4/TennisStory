@@ -103,9 +103,10 @@ void ATennisBall::Multicast_SpawnHitParticleEffect_Implementation(UParticleSyste
 	}
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext)
 {
 	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity, bFromHit);
+	BallMovementComp->ProvideBoundsContext(BoundsContext);
 
 	if (HasAuthority() && bFromHit)
 	{

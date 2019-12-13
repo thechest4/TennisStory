@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
+#include "Gameplay/HalfCourt.h"
 #include "BallMovementComponent.generated.h"
 
 class ATennisBall;
@@ -58,6 +59,11 @@ public:
 		return CurrentTossAlpha;
 	}
 
+	void ProvideBoundsContext(EBoundsContext BoundsContext)
+	{
+		BoundsContextForFirstBounce = BoundsContext;
+	}
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -100,6 +106,8 @@ protected:
 	float CurrentLagTime;
 
 	void DoBounceLag();
+
+	EBoundsContext BoundsContextForFirstBounce;
 
 	//Cached last path data
 	float LastPathDistance;

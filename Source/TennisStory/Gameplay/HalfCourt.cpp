@@ -253,12 +253,38 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 	return FVector::ZeroVector;
 }
 
-bool AHalfCourt::IsLocationInBounds(FVector& Location, float BallRadius)
+bool AHalfCourt::IsLocationInBounds(FVector& Location, float BallRadius, EBoundsContext BoundsContext)
 {
-	if (Location.X < LowerCorner.X - BallRadius ||
-		Location.X > UpperCorner.X + BallRadius ||
-		Location.Y < LowerCorner.Y - BallRadius ||
-		Location.Y > UpperCorner.Y + BallRadius)
+	FVector2D LowerCornerToUse;
+	FVector2D UpperCornerToUse;
+
+	switch (BoundsContext)
+	{
+		case EBoundsContext::ServiceDeuce:
+		{
+			LowerCornerToUse = LowerCornerServiceDeuce;
+			UpperCornerToUse = UpperCornerServiceDeuce;
+			break;
+		}
+		case EBoundsContext::ServiceAd:
+		{
+			LowerCornerToUse = LowerCornerServiceAd;
+			UpperCornerToUse = UpperCornerServiceAd;
+			break;
+		}
+		default:
+		case EBoundsContext::FullCourt:
+		{
+			LowerCornerToUse = LowerCorner;
+			UpperCornerToUse = UpperCorner;
+			break;
+		}
+	}
+
+	if (Location.X < LowerCornerToUse.X - BallRadius ||
+		Location.X > UpperCornerToUse.X + BallRadius ||
+		Location.Y < LowerCornerToUse.Y - BallRadius ||
+		Location.Y > UpperCornerToUse.Y + BallRadius)
 	{
 		return false;
 	}

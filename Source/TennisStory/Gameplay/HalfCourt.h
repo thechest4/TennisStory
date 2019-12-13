@@ -101,7 +101,7 @@ public:
 
 	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
 
-	bool IsLocationInBounds(FVector& Location, float BallRadius = 0.f);
+	bool IsLocationInBounds(FVector& Location, float BallRadius, EBoundsContext BoundsContext);
 
 	void ClampLocationToCourtBounds(FVector& Location, EBoundsContext BoundsContext);
 

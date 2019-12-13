@@ -22,6 +22,7 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	PlayerControllerClass = ATennisStoryPlayerController::StaticClass();
 
 	AllowedBounces = 1;
+	AllowedFaults = 1;
 	CurrentPlayState = EPlayState::Waiting;
 }
 
@@ -249,9 +250,36 @@ void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
 	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::GetCamPositioningCompFromWorld - Could not find Camera Positioning Component!"));
 }
 
-void ATennisStoryGameMode::HandleBallOutOfBounds()
+void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext)
 {
-	ResolvePoint(false);
+	if (BoundsContext == EBoundsContext::ServiceAd || BoundsContext == EBoundsContext::ServiceDeuce)
+	{
+		if (TSGameState->CurrentFaultCount < AllowedFaults)
+		{
+			if (CurrentPlayState != EPlayState::PlayingPoint)
+			{
+				return;
+			}
+
+			TSGameState->CurrentFaultCount++;
+			
+			CurrentPlayState = EPlayState::Waiting;
+			
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Fault!"));
+
+			FTimerHandle NextPointHandle;
+			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 0.75f);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Double Fault!"));
+			ResolvePoint(false);
+		}
+	}
+	else
+	{
+		ResolvePoint(false);
+	}
 }
 
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
@@ -288,7 +316,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::ResolvePoint - Failed to get valid team id for player"));
 		return;
 	}
-
+	
+	TSGameState->CurrentFaultCount = 0;
 	TSGameState->AwardPoint(WinnerTeamId);
 
 	int LoserTeamId = (WinnerTeamId) ? 0 : 1;
