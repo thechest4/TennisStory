@@ -3,6 +3,7 @@
 #include "ServeAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "TennisStoryGameState.h"
+#include "TennisStoryGameMode.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "Player/TennisStoryCharacter.h"
@@ -120,6 +121,12 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 		if (Player->HasAuthority() && ServeTrajectoryCurve)
 		{
+			ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+
+			checkf(GameMode, TEXT("UServeAbility::HandlePlayerHitServe - GameMode was null"))
+
+			GameMode->DetermineHitLegality(Player);
+
 			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
@@ -129,6 +136,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, true, BoundsContextForServe);
 
 			TennisBall->LastPlayerToHit = Player;
+			TennisBall->bWasLastHitAServe = true;
 			
 			UParticleSystem* HitFX = OrderedServeHitFX[ServeQualityIndex];
 			if (HitFX)

@@ -46,6 +46,10 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Tennis Ball")
 	void SetBallState(ETennisBallState NewState);
 
+	UPROPERTY(Replicated)
+	bool bWasLastHitAServe;
+	
+	UPROPERTY(Replicated)
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -75,6 +79,11 @@ public:
 	void StartServiceToss(float TossHeight, float TossDuration);
 
 	void InterruptServiceToss();
+
+	FORCEINLINE_DEBUGGABLE int GetCurrentNumBounces() const
+	{
+		return BallMovementComp->NumBounces;
+	}
 
 protected:
 	virtual void BeginPlay() override;

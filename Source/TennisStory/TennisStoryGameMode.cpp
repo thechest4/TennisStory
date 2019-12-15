@@ -230,6 +230,22 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	CurrentPlayState = EPlayState::PlayingPoint;
 }
 
+void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character)
+{
+	if (TSGameState->CurrentBallActor->bWasLastHitAServe)
+	{
+		if (TSGameState->CurrentBallActor->GetCurrentNumBounces() == 0)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("ATennisStoryGameMode::DetermineHitLegality - Can't hit serve before first bounce"));
+			ResolvePoint(true);
+		}
+		else if (false)
+		{
+			//Handle last player not being the correct returner
+		}
+	}
+}
+
 void ATennisStoryGameMode::GetCourtsFromWorld()
 {
 	for (TActorIterator<AHalfCourt> It(GetWorld()); It; ++It)

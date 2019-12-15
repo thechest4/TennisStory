@@ -43,6 +43,8 @@ public:
 	UFUNCTION()
 	void SetUpNextPoint();
 
+	void DetermineHitLegality(ATennisStoryCharacter* Character);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;

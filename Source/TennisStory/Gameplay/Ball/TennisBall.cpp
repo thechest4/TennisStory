@@ -22,6 +22,9 @@ ATennisBall::ATennisBall()
 
 	CurrentBallState = ETennisBallState::ServiceState;
 
+	bWasLastHitAServe = false;
+	LastPlayerToHit = nullptr;
+
 	RootComponent = BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
 	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
 	BallMesh->SetEnableGravity(true);
@@ -33,6 +36,14 @@ ATennisBall::ATennisBall()
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 
 	BallTrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+}
+
+void ATennisBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATennisBall, bWasLastHitAServe);
+	DOREPLIFETIME(ATennisBall, LastPlayerToHit);
 }
 
 void ATennisBall::BeginPlay()

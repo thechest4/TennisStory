@@ -9,6 +9,7 @@
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
+#include "TennisStoryGameMode.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
@@ -24,10 +25,7 @@ void UBallStrikingComponent::BeginPlay()
 	OwnerTarget = (OwnerChar) ? OwnerChar->TargetActor : nullptr;
 	OwnerSplineComp = (OwnerChar) ? OwnerChar->BallAimingSplineComp : nullptr;
 	
-	if (!OwnerRacquet || !OwnerTarget || !OwnerSplineComp)
-	{	
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallStrikingComponent::BeginPlay - Some required owner pointer not valid!"));
-	}
+	checkf((OwnerRacquet || !OwnerTarget || !OwnerSplineComp), TEXT("UBallStrikingComponent::BeginPlay - Some required owner pointer not valid!"))
 }
 
 void UBallStrikingComponent::AllowBallStriking()
@@ -77,13 +75,26 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			return;
 		}
 
+		if (OwnerChar->HasAuthority())
+		{
+			ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+
+			checkf(GameMode, TEXT("UBallStrikingComponent::HandleRacquetOverlapBegin - GameMode was null"))
+
+			GameMode->DetermineHitLegality(OwnerChar);
+		}
+
 		float BallSpeed = CalculateChargedBallSpeed();
 
 		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(GetTrajectoryCurve(), TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), 200.f, 500.f);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt);
 
-		TennisBall->LastPlayerToHit = OwnerChar;
+		if (OwnerChar->HasAuthority())
+		{
+			TennisBall->LastPlayerToHit = OwnerChar;
+			TennisBall->bWasLastHitAServe = false;
+		}
 	}
 }
 
