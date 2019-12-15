@@ -145,6 +145,8 @@ public:
 
 	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player);
 
+	const TWeakObjectPtr<AHalfCourt> GetCourtForPlayer(ATennisStoryPlayerController* Player);
+
 	void AwardPoint(int TeamId);
 
 	void AwardGame(int TeamId);

@@ -213,6 +213,14 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	{
 		TSGameState->CurrentServingCharacter->Multicast_EnterServiceState();		
 		TSGameState->CurrentServingCharacter->AttachBallToPlayer(TSGameState->CurrentBallActor.Get());
+	
+		TWeakObjectPtr<AHalfCourt> Court = TSGameState->GetCourtForPlayer(Cast<ATennisStoryPlayerController>(TSGameState->CurrentServingCharacter->Controller));
+
+		checkf(Court.IsValid(), TEXT("ATennisStoryGameMode::SetUpNextPoint - Court was null"))
+
+		FVector MinLocationClamp, MaxLocationClamp;
+		Court->GetServiceClampLocations(TSGameState->GetServiceSide(), MinLocationClamp, MaxLocationClamp);
+		TSGameState->CurrentServingCharacter->ClampLocation(MinLocationClamp, MaxLocationClamp);
 	}
 	else
 	{

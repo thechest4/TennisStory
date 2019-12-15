@@ -42,6 +42,10 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	bHasBallAttached = false;
+	DefaultBaseMovementSpeed = 0.f;
+	bIsLocationClamped = false;
+	MinLocationClamp = FVector(-1.f, -1.f, -1.f);
+	MaxLocationClamp = FVector(-1.f, -1.f, -1.f);
 
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
@@ -109,15 +113,19 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimVector);
 	DOREPLIFETIME(ATennisStoryCharacter, CachedAimRightVector);
-	DOREPLIFETIME(ATennisStoryCharacter, bIsMovingSlow);
 	DOREPLIFETIME(ATennisStoryCharacter, TeamId);
 	DOREPLIFETIME(ATennisStoryCharacter, ServerDesiredRotation);
 	DOREPLIFETIME(ATennisStoryCharacter, bHasBallAttached);
+	DOREPLIFETIME(ATennisStoryCharacter, bIsLocationClamped);
+	DOREPLIFETIME(ATennisStoryCharacter, MinLocationClamp);
+	DOREPLIFETIME(ATennisStoryCharacter, MaxLocationClamp);
 }
 
 void ATennisStoryCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultBaseMovementSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
 	if (AbilitySystemComp)
 	{
@@ -141,6 +149,8 @@ void ATennisStoryCharacter::BeginPlay()
 	}
 
 	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
+
+	OnCharacterMovementUpdated.AddDynamic(this, &ATennisStoryCharacter::HandleCharacterMovementUpdated);
 }
 
 void ATennisStoryCharacter::Tick(float DeltaSeconds)
@@ -241,26 +251,6 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	}
 }
 
-void ATennisStoryCharacter::StartMovingSlow()
-{
-	//TODO(achester): set up a list of character movement modifications so that multiple can be applied/removed safely
-	//also put some thought into how to best store stats like move speed while swinging and such.
-	if (HasAuthority())
-	{
-		bIsMovingSlow = true;
-		OnRep_IsMovingSlow();
-	}
-}
-
-void ATennisStoryCharacter::StopMovingSlow()
-{
-	if (HasAuthority())
-	{
-		bIsMovingSlow = false;
-		OnRep_IsMovingSlow();
-	}
-}
-
 void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
 {
 	CachedAimVector = AimVector;
@@ -334,6 +324,40 @@ void ATennisStoryCharacter::DetachBallFromPlayer(ATennisBall* TennisBall)
 	bHasBallAttached = false;
 }
 
+void ATennisStoryCharacter::Multicast_LockMovement_Implementation()
+{
+	GetCharacterMovement()->DisableMovement();
+}
+
+void ATennisStoryCharacter::Multicast_UnlockMovement_Implementation()
+{
+	GetCharacterMovement()->SetDefaultMovementMode();
+}
+
+void ATennisStoryCharacter::ClampLocation(FVector MinLocation, FVector MaxLocation)
+{
+	bIsLocationClamped = true;
+	MinLocationClamp = MinLocation;
+	MaxLocationClamp = MaxLocation;
+}
+
+void ATennisStoryCharacter::UnclampLocation()
+{
+	bIsLocationClamped = false;
+}
+
+void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = ModifiedBaseSpeed;
+	CurrentBaseMovementSpeed = ModifiedBaseSpeed;
+}
+
+void ATennisStoryCharacter::Multicast_RestoreBaseSpeed_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = DefaultBaseMovementSpeed;
+	CurrentBaseMovementSpeed = DefaultBaseMovementSpeed;
+}
+
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
@@ -344,19 +368,6 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("MoveTargetRight", this, &ATennisStoryCharacter::MoveTargetRight);
 
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
-}
-
-void ATennisStoryCharacter::OnRep_IsMovingSlow()
-{
-	if (bIsMovingSlow)
-	{
-		CachedMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-		GetCharacterMovement()->MaxWalkSpeed = MoveSpeedWhileSwinging;
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = CachedMaxWalkSpeed;
-	}
 }
 
 void ATennisStoryCharacter::OnRep_TeamId()
@@ -416,6 +427,24 @@ void ATennisStoryCharacter::MoveTargetRight(float Value)
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		TargetActor->AddInputVector(Direction, Value);
+	}
+}
+
+void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity)
+{
+	if (bIsLocationClamped)
+	{
+		FVector CurrentLocation = GetActorLocation();
+		
+		float ClampedXCoord = FMath::Clamp(CurrentLocation.X, MinLocationClamp.X, MaxLocationClamp.X);
+		float ClampedYCoord = FMath::Clamp(CurrentLocation.Y, MinLocationClamp.Y, MaxLocationClamp.Y);
+
+		FVector ClampedLocation = FVector(ClampedXCoord, ClampedYCoord, CurrentLocation.Z);
+
+		if (ClampedLocation != CurrentLocation)
+		{
+			SetActorLocation(ClampedLocation);
+		}
 	}
 }
 

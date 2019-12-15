@@ -113,6 +113,8 @@ public:
 	//The YAxisSign arg controls which corner will be returned, only checked for positive or negative
 	FVector GetBackCornerWorldLocation(int YAxisSign);
 
+	void GetServiceClampLocations(EServiceSide ServiceSide, FVector& MinClamp, FVector& MaxClamp);
+
 protected:
 	virtual void BeginPlay() override;
 

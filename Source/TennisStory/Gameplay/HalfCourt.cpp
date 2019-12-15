@@ -352,6 +352,17 @@ FVector AHalfCourt::GetBackCornerWorldLocation(int YAxisSign)
 	return GetActorTransform().TransformPosition(FVector(-0.5f * CourtLength, Sign * 0.5f * CourtWidth, 0.0f));
 }
 
+void AHalfCourt::GetServiceClampLocations(EServiceSide ServiceSide, FVector& MinClamp, FVector& MaxClamp)
+{
+	FVector MidCourtPosition = GetActorLocation() - GetActorForwardVector() * CourtLength * 0.535f;
+	FVector SideCourtPosition = GetActorRightVector() * CourtWidth * 0.5f;
+
+	SideCourtPosition = (ServiceSide == EServiceSide::Deuce) ? MidCourtPosition + SideCourtPosition : MidCourtPosition - SideCourtPosition;
+	
+	MinClamp = (ServiceSide == EServiceSide::Deuce) ? MidCourtPosition : SideCourtPosition;
+	MaxClamp = (ServiceSide == EServiceSide::Deuce) ? SideCourtPosition : MidCourtPosition;
+}
+
 void AHalfCourt::BeginPlay()
 {
 	Super::BeginPlay();

@@ -111,6 +111,25 @@ const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtToAimAtForPlayer
 	return CourtToAimAt;
 }
 
+const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtForPlayer(ATennisStoryPlayerController* Player)
+{
+	TWeakObjectPtr<AHalfCourt> Court = nullptr;
+
+	if (Player)
+	{
+		for (FTeamData& Team : TeamData)
+		{
+			if (Team.AssignedPlayers.Contains(Player))
+			{
+				Court = Team.AssignedCourt;
+				break;
+			}
+		}
+	}
+
+	return Court;
+}
+
 void ATennisStoryGameState::AwardPoint(int TeamId)
 {
 	CurrentGameScore.AddPoint(TeamId);

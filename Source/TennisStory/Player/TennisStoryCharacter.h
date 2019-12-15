@@ -68,10 +68,6 @@ public:
 
 	void DisablePlayerTargeting();
 
-	void StartMovingSlow();
-
-	void StopMovingSlow();
-
 	FVector GetCurrentTargetLocation(){ return TargetActor->GetActorLocation(); }
 
 	void CacheCourtAimVector(FVector AimVector);
@@ -123,6 +119,23 @@ public:
 
 	const static FName BallAttachBone;
 
+	//Movement Settings RPCs
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_LockMovement();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UnlockMovement();
+
+	void ClampLocation(FVector MinLocation, FVector MaxLocation);
+
+	void UnclampLocation();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ModifyBaseSpeed(float ModifiedBaseSpeed);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_RestoreBaseSpeed();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -139,6 +152,9 @@ protected:
 	void MoveTargetForward(float Value);
 
 	void MoveTargetRight(float Value);
+
+	UFUNCTION()
+	void HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_CommitTargetPosition(FVector WorldLocation);
@@ -170,17 +186,6 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	USplineComponent* BallAimingSplineComp;
-	
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float MoveSpeedWhileSwinging = 150.0f;
-
-	UPROPERTY(Transient, ReplicatedUsing = OnRep_IsMovingSlow)
-	bool bIsMovingSlow;
-
-	UFUNCTION()
-	virtual void OnRep_IsMovingSlow();
-
-	float CachedMaxWalkSpeed;
 
 	//These vectors are used to orient the character relative to the court it's aiming at
 	//Set whenever a character is assigned to a court
@@ -225,6 +230,19 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bHasBallAttached;
+
+	//Movement Settings
+	float CurrentBaseMovementSpeed;
+	float DefaultBaseMovementSpeed;
+
+	UPROPERTY(Replicated)
+	bool bIsLocationClamped;
+	
+	UPROPERTY(Replicated)
+	FVector MinLocationClamp;
+	
+	UPROPERTY(Replicated)
+	FVector MaxLocationClamp;
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

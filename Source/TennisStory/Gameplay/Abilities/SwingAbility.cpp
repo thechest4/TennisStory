@@ -66,10 +66,10 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	if (OwnerChar->HasAuthority())
 	{
 		OwnerChar->BallStrikingComp->SetChargeStartTime();
+		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
-	OwnerChar->StartMovingSlow();
 
 	if (OwnerChar->IsLocallyControlled())
 	{
@@ -94,6 +94,11 @@ void USwingAbility::HandleSwingMontageBlendOut()
 		{
 			OwnerChar->StopDistanceVisualization();
 		}
+
+		if (OwnerChar->HasAuthority())
+		{
+			OwnerChar->Multicast_RestoreBaseSpeed();
+		}
 	}
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
@@ -116,7 +121,6 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();
-		OwnerChar->StopMovingSlow();
 
 		if (OwnerChar->HasAuthority())
 		{

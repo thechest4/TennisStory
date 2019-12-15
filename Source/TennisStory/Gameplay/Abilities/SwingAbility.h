@@ -30,6 +30,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAnimMontage* BackhandMontage;
+	
+	UPROPERTY(EditAnywhere)
+	float BaseSpeedDuringAbility = 150.0f;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;

@@ -65,6 +65,11 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->ReadyForActivation();
 	
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service);
+
+	if (OwnerChar->HasAuthority())
+	{
+		OwnerChar->Multicast_LockMovement();
+	}
 }
 
 void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -80,9 +85,15 @@ void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	if (bServeReleased)
 	{
 		OwnerChar->Multicast_ExitServiceState();
+		OwnerChar->UnclampLocation();
 	}
 
 	OwnerChar->DisablePlayerTargeting();
+	
+	if (OwnerChar->HasAuthority())
+	{
+		OwnerChar->Multicast_UnlockMovement();
+	}
 }
 
 void UServeAbility::HandleServeMontageBlendOut()
