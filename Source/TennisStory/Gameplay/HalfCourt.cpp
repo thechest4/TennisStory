@@ -359,8 +359,19 @@ void AHalfCourt::GetServiceClampLocations(EServiceSide ServiceSide, FVector& Min
 
 	SideCourtPosition = (ServiceSide == EServiceSide::Deuce) ? MidCourtPosition + SideCourtPosition : MidCourtPosition - SideCourtPosition;
 	
-	MinClamp = (ServiceSide == EServiceSide::Deuce) ? MidCourtPosition : SideCourtPosition;
-	MaxClamp = (ServiceSide == EServiceSide::Deuce) ? SideCourtPosition : MidCourtPosition;
+	//TODO(achester): this is kind of dumb and relies on the CourtSide property to be up to date and managed.  Will need to revisit if we want to give each player the near court on their screen
+	if ((ServiceSide == EServiceSide::Deuce && CourtSide == ECourtSide::NearCourt) ||
+	    (ServiceSide == EServiceSide::Ad && CourtSide == ECourtSide::FarCourt))
+	{
+		MinClamp = MidCourtPosition;
+		MaxClamp = SideCourtPosition;
+	}
+	else if ((ServiceSide == EServiceSide::Ad && CourtSide == ECourtSide::NearCourt) ||
+			 (ServiceSide == EServiceSide::Deuce && CourtSide == ECourtSide::FarCourt))
+	{
+		MinClamp = SideCourtPosition;
+		MaxClamp = MidCourtPosition;
+	}
 }
 
 void AHalfCourt::BeginPlay()
