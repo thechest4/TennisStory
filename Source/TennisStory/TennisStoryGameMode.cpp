@@ -218,9 +218,9 @@ void ATennisStoryGameMode::SetUpNextPoint()
 
 		checkf(Court.IsValid(), TEXT("ATennisStoryGameMode::SetUpNextPoint - Court was null"))
 
-		FVector MinLocationClamp, MaxLocationClamp;
-		Court->GetServiceClampLocations(TSGameState->GetServiceSide(), MinLocationClamp, MaxLocationClamp);
-		TSGameState->CurrentServingCharacter->ClampLocation(MinLocationClamp, MaxLocationClamp);
+		FVector ClampLocation1, ClampLocation2;
+		Court->GetServiceClampLocations(TSGameState->GetServiceSide(), ClampLocation1, ClampLocation2);
+		TSGameState->CurrentServingCharacter->ClampLocation(ClampLocation1, ClampLocation2);
 	}
 	else
 	{

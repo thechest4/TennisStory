@@ -239,10 +239,10 @@ protected:
 	bool bIsLocationClamped;
 	
 	UPROPERTY(Replicated)
-	FVector MinLocationClamp;
+	FVector ClampLocation1;
 	
 	UPROPERTY(Replicated)
-	FVector MaxLocationClamp;
+	FVector ClampLocation2;
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

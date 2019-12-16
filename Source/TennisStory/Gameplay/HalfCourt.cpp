@@ -352,26 +352,12 @@ FVector AHalfCourt::GetBackCornerWorldLocation(int YAxisSign)
 	return GetActorTransform().TransformPosition(FVector(-0.5f * CourtLength, Sign * 0.5f * CourtWidth, 0.0f));
 }
 
-void AHalfCourt::GetServiceClampLocations(EServiceSide ServiceSide, FVector& MinClamp, FVector& MaxClamp)
+void AHalfCourt::GetServiceClampLocations(EServiceSide ServiceSide, FVector& MidCourtLocation, FVector& SideCourtLocation)
 {
-	FVector MidCourtPosition = GetActorLocation() - GetActorForwardVector() * CourtLength * 0.535f;
-	FVector SideCourtPosition = GetActorRightVector() * CourtWidth * 0.5f;
+	MidCourtLocation = GetActorLocation() - GetActorForwardVector() * CourtLength * 0.535f;
+	SideCourtLocation = GetActorRightVector() * CourtWidth * 0.5f;
 
-	SideCourtPosition = (ServiceSide == EServiceSide::Deuce) ? MidCourtPosition + SideCourtPosition : MidCourtPosition - SideCourtPosition;
-	
-	//TODO(achester): this is kind of dumb and relies on the CourtSide property to be up to date and managed.  Will need to revisit if we want to give each player the near court on their screen
-	if ((ServiceSide == EServiceSide::Deuce && CourtSide == ECourtSide::NearCourt) ||
-	    (ServiceSide == EServiceSide::Ad && CourtSide == ECourtSide::FarCourt))
-	{
-		MinClamp = MidCourtPosition;
-		MaxClamp = SideCourtPosition;
-	}
-	else if ((ServiceSide == EServiceSide::Ad && CourtSide == ECourtSide::NearCourt) ||
-			 (ServiceSide == EServiceSide::Deuce && CourtSide == ECourtSide::FarCourt))
-	{
-		MinClamp = SideCourtPosition;
-		MaxClamp = MidCourtPosition;
-	}
+	SideCourtLocation = (ServiceSide == EServiceSide::Deuce) ? MidCourtLocation + SideCourtLocation : MidCourtLocation - SideCourtLocation;
 }
 
 void AHalfCourt::BeginPlay()

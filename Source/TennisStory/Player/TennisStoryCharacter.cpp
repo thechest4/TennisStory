@@ -44,8 +44,8 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	bHasBallAttached = false;
 	DefaultBaseMovementSpeed = 0.f;
 	bIsLocationClamped = false;
-	MinLocationClamp = FVector(-1.f, -1.f, -1.f);
-	MaxLocationClamp = FVector(-1.f, -1.f, -1.f);
+	ClampLocation1 = FVector(-1.f, -1.f, -1.f);
+	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
 
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
@@ -117,8 +117,8 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryCharacter, ServerDesiredRotation);
 	DOREPLIFETIME(ATennisStoryCharacter, bHasBallAttached);
 	DOREPLIFETIME(ATennisStoryCharacter, bIsLocationClamped);
-	DOREPLIFETIME(ATennisStoryCharacter, MinLocationClamp);
-	DOREPLIFETIME(ATennisStoryCharacter, MaxLocationClamp);
+	DOREPLIFETIME(ATennisStoryCharacter, ClampLocation1);
+	DOREPLIFETIME(ATennisStoryCharacter, ClampLocation2);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -337,8 +337,8 @@ void ATennisStoryCharacter::Multicast_UnlockMovement_Implementation()
 void ATennisStoryCharacter::ClampLocation(FVector MinLocation, FVector MaxLocation)
 {
 	bIsLocationClamped = true;
-	MinLocationClamp = MinLocation;
-	MaxLocationClamp = MaxLocation;
+	ClampLocation1 = MinLocation;
+	ClampLocation2 = MaxLocation;
 }
 
 void ATennisStoryCharacter::UnclampLocation()
@@ -436,8 +436,10 @@ void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, F
 	{
 		FVector CurrentLocation = GetActorLocation();
 		
-		float ClampedXCoord = FMath::Clamp(CurrentLocation.X, MinLocationClamp.X, MaxLocationClamp.X);
-		float ClampedYCoord = FMath::Clamp(CurrentLocation.Y, MinLocationClamp.Y, MaxLocationClamp.Y);
+		float ClampedXCoord = (ClampLocation1.X <= ClampLocation2.X) ? FMath::Clamp(CurrentLocation.X, ClampLocation1.X, ClampLocation2.X) : 
+																		   FMath::Clamp(CurrentLocation.X, ClampLocation2.X, ClampLocation1.X);
+		float ClampedYCoord = (ClampLocation1.Y <= ClampLocation2.Y) ? FMath::Clamp(CurrentLocation.Y, ClampLocation1.Y, ClampLocation2.Y) : 
+																		   FMath::Clamp(CurrentLocation.Y, ClampLocation2.Y, ClampLocation1.Y);
 
 		FVector ClampedLocation = FVector(ClampedXCoord, ClampedYCoord, CurrentLocation.Z);
 
