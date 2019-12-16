@@ -8,6 +8,7 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ATennisStoryGameState, CurrentPlayState);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentServiceTeam);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentFaultCount);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentServingCharacter);

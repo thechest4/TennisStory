@@ -137,6 +137,8 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			TennisBall->LastPlayerToHit = Player;
 			TennisBall->bWasLastHitAServe = true;
+
+			GameMode->ReportServeHit();
 			
 			UParticleSystem* HitFX = OrderedServeHitFX[ServeQualityIndex];
 			if (HitFX)

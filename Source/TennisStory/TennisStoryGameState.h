@@ -12,6 +12,14 @@ class ATennisBall;
 class ATennisStoryCharacter;
 class UScoreboardWidget;
 
+UENUM()
+enum class EPlayState : uint8
+{
+	Service,
+	PlayingPoint,
+	Waiting
+};
+
 USTRUCT()
 struct FTeamData
 {
@@ -187,7 +195,16 @@ public:
 	UPROPERTY()
 	UScoreboardWidget* ScoreboardWidgetObject;
 
+	EPlayState GetCurrentPlayState() const
+	{
+		return CurrentPlayState;
+	}
+
 protected:
+
+	UPROPERTY(Transient, Replicated)
+	EPlayState CurrentPlayState;
+
 	UPROPERTY(Transient, Replicated)
 	int CurrentServiceTeam;
 	

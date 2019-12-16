@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
+#include "TennisStoryGameState.h"
 
 UCamPositioningComponent::UCamPositioningComponent()
 {
@@ -73,8 +74,17 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 				{
 					AHalfCourt* TrackedCourt = Cast<AHalfCourt>(Actor);
 
-					LocationsToTrack.Add(TrackedCourt->GetBackCornerWorldLocation(-1));
-					LocationsToTrack.Add(TrackedCourt->GetBackCornerWorldLocation(1));
+					FVector BackCornerLocation1 = TrackedCourt->GetBackCornerWorldLocation(-1);
+					FVector BackCornerLocation2 = TrackedCourt->GetBackCornerWorldLocation(1);
+
+					if (TrackedCourt->GetCourtSide() == ECourtSide::FarCourt)
+					{
+						BackCornerLocation1 += FVector(0.f, 0.f, FarCourtHeightMargin);
+						BackCornerLocation2 += FVector(0.f, 0.f, FarCourtHeightMargin);
+					}
+
+					LocationsToTrack.Add(BackCornerLocation1);
+					LocationsToTrack.Add(BackCornerLocation2);
 				}
 				else 
 				{

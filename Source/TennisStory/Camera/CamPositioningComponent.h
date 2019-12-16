@@ -41,6 +41,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
 	UCurveFloat* ApproachSpeedCurve;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Positioning")
+	float FarCourtHeightMargin = 300.f;
+
 	const float FallbackPositioningSpeed = 500.f;
 
 	TWeakObjectPtr<AActor> OwnerPtr;

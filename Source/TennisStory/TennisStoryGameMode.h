@@ -8,14 +8,6 @@
 class ATennisStoryGameState;
 class ATennisBall;
 
-UENUM()
-enum class EPlayState : uint8
-{
-	Service,
-	PlayingPoint,
-	Waiting
-};
-
 UCLASS(minimalapi)
 class ATennisStoryGameMode : public AGameModeBase
 {
@@ -43,6 +35,8 @@ public:
 	UFUNCTION()
 	void SetUpNextPoint();
 
+	void ReportServeHit();
+
 	void DetermineHitLegality(ATennisStoryCharacter* Character);
 
 protected:
@@ -54,8 +48,6 @@ protected:
 
 	UPROPERTY(Transient)
 	TArray<TWeakObjectPtr<ATennisStoryCharacter>> AllCharacters;
-
-	EPlayState CurrentPlayState;
 
 	void GetCourtsFromWorld();
 

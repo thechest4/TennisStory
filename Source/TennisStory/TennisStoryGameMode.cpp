@@ -23,7 +23,6 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 
 	AllowedBounces = 1;
 	AllowedFaults = 1;
-	CurrentPlayState = EPlayState::Waiting;
 }
 
 void ATennisStoryGameMode::InitGameState()
@@ -33,6 +32,8 @@ void ATennisStoryGameMode::InitGameState()
 	TSGameState = Cast<ATennisStoryGameState>(GameState);
 
 	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
+	
+	TSGameState->CurrentPlayState = EPlayState::Waiting;
 
 	for (int i = 0; i < MaxTeamNumber; i++)
 	{
@@ -227,7 +228,12 @@ void ATennisStoryGameMode::SetUpNextPoint()
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("ATennisStoryGameMode::SetUpNextPoint - CurrentServingCharacter was not valid!"));
 	}
 
-	CurrentPlayState = EPlayState::PlayingPoint;
+	TSGameState->CurrentPlayState = EPlayState::Service;
+}
+
+void ATennisStoryGameMode::ReportServeHit()
+{
+	TSGameState->CurrentPlayState = EPlayState::PlayingPoint;
 }
 
 void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character)
@@ -280,14 +286,14 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext)
 	{
 		if (TSGameState->CurrentFaultCount < AllowedFaults)
 		{
-			if (CurrentPlayState != EPlayState::PlayingPoint)
+			if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 			{
 				return;
 			}
 
 			TSGameState->CurrentFaultCount++;
 			
-			CurrentPlayState = EPlayState::Waiting;
+			TSGameState->CurrentPlayState = EPlayState::Waiting;
 			
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Fault!"));
 
@@ -313,7 +319,7 @@ void ATennisStoryGameMode::HandleBallHitBounceLimit()
 
 void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 {
-	if (CurrentPlayState != EPlayState::PlayingPoint)
+	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 	{
 		return;
 	}
@@ -384,7 +390,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 		}
 	}
 
-	CurrentPlayState = EPlayState::Waiting;
+	TSGameState->CurrentPlayState = EPlayState::Waiting;
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
