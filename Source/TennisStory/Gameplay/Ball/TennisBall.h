@@ -80,6 +80,9 @@ public:
 
 	void InterruptServiceToss();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_InterruptServiceToss();
+
 	FORCEINLINE_DEBUGGABLE int GetCurrentNumBounces() const
 	{
 		return BallMovementComp->NumBounces;

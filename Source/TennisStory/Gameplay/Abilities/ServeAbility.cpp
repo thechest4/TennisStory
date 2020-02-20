@@ -123,7 +123,13 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 		TennisBall->InterruptServiceToss();
 
 		if (Player->HasAuthority() && ServeTrajectoryCurve)
-		{
+		{	
+			//Tell the simulated proxy that the serve was hit, only if is currently the authority serving
+			if (Player->IsLocallyControlled())
+			{
+				TennisBall->Multicast_InterruptServiceToss();
+			}
+
 			ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
 
 			checkf(GameMode, TEXT("UServeAbility::HandlePlayerHitServe - GameMode was null"))
