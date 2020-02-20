@@ -95,7 +95,6 @@ void ATennisBall::Multicast_InterruptServiceToss_Implementation()
 	//Handles service hits for the simulated proxy
 	if (Role == ROLE_SimulatedProxy)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Purple, TEXT("ATennisBall::Client_InterruptServiceToss_Implementation"));
 		InterruptServiceToss();
 	}
 }

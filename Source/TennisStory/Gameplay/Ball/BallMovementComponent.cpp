@@ -31,7 +31,6 @@ UBallMovementComponent::UBallMovementComponent()
 	CurrentLagTime = 0.f;
 	BoundsContextForFirstBounce = EBoundsContext::FullCourt;
 	
-	bLocalTossStarted = false;
 	TossStartLocation = FVector::ZeroVector;
 	TossEndLocation = FVector::ZeroVector;
 	CurrentTossAlpha = 0.f;
@@ -176,7 +175,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		OwnerPtr->SetActorLocation(NewLocation, true);
 	}
 
-	if (CurrentMovementState == EBallMovementState::ServiceToss && bLocalTossStarted)
+	if (CurrentMovementState == EBallMovementState::ServiceToss)
 	{
 		FVector NewBallLocation = FVector::ZeroVector;
 
@@ -307,17 +306,7 @@ void UBallMovementComponent::StartServiceToss(float TossHeight, float argTotalTo
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UBallMovementComponent::StartServiceToss - Failed to get ServingChar reference"));
 	}
 
-	if (OwnerPtr->HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 30.f, FColor::Blue, FString::Printf(TEXT("Authority TossStartLocation: %s | ActorLocation: %s"), *TossStartLocation.ToString(), *OwnerPtr->GetActorLocation().ToString()));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 30.f, FColor::Green, FString::Printf(TEXT("Proxy TossStartLocation: %s | ActorLocation: %s"), *TossStartLocation.ToString(), *OwnerPtr->GetActorLocation().ToString()));
-	}
-
 	CurrentMovementState = EBallMovementState::ServiceToss;
-	bLocalTossStarted = true;
 }
 
 void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
@@ -335,8 +324,6 @@ void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
 	{
 		CurrentServingCharacter->AttachBallToPlayer(OwnerPtr);
 	}
-
-	bLocalTossStarted = false;
 }
 
 void UBallMovementComponent::EnterPhysicalMovementState()

@@ -114,7 +114,6 @@ protected:
 	float LastPathHeight;
 
 	//Current ball toss state info
-	bool bLocalTossStarted;
 	FVector TossStartLocation;
 	FVector TossEndLocation;
 	float CurrentTossAlpha;
