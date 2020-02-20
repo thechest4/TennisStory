@@ -307,14 +307,14 @@ void UBallMovementComponent::StartServiceToss(float TossHeight, float argTotalTo
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UBallMovementComponent::StartServiceToss - Failed to get ServingChar reference"));
 	}
 
-	/*if (OwnerPtr->HasAuthority())
+	if (OwnerPtr->HasAuthority())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 30.f, FColor::Blue, FString::Printf(TEXT("Authority TossStartLocation: %s | ActorLocation: %s"), *TossStartLocation.ToString(), *OwnerPtr->GetActorLocation().ToString()));
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 30.f, FColor::Green, FString::Printf(TEXT("Proxy TossStartLocation: %s | ActorLocation: %s"), *TossStartLocation.ToString(), *OwnerPtr->GetActorLocation().ToString()));
-	}*/
+	}
 
 	CurrentMovementState = EBallMovementState::ServiceToss;
 	bLocalTossStarted = true;
