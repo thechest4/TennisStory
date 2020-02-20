@@ -205,6 +205,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	{
 		if (AllCharacters[i].IsValid())
 		{
+			AllCharacters[i]->CancelAllAbilities();
 			TeleportCharacterToCourt(AllCharacters[i].Get());
 		}
 	}

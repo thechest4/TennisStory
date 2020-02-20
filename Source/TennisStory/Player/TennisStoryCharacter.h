@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GameplayAbilities/Public/AbilitySystemInterface.h"
+#include "GameplayAbilitySpec.h"
 #include "GameplayTags.h"
 #include "Components/SplineComponent.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
@@ -39,6 +40,8 @@ struct FGrantedAbilityInfo
 
 	UPROPERTY(EditAnywhere)
 	EAbilityInput AbilityInput;
+
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
 };
 
 UCLASS(config=Game)
@@ -135,6 +138,8 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_RestoreBaseSpeed();
+
+	void CancelAllAbilities();
 
 protected:
 	virtual void BeginPlay() override;

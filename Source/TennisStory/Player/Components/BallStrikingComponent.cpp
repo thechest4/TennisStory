@@ -68,7 +68,7 @@ void UBallStrikingComponent::SetChargeEndTime()
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
-	if (OwnerTarget && TennisBall)
+	if (OwnerTarget && TennisBall && TennisBall->GetCurrentBallState() != ETennisBallState::ServiceState)
 	{
 		if (TennisBall->LastPlayerToHit.IsValid() && TennisBall->LastPlayerToHit == OwnerChar)
 		{

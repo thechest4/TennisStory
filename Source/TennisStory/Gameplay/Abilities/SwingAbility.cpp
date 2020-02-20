@@ -80,18 +80,19 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-}
-
-void USwingAbility::HandleSwingMontageBlendOut()
-{
-	CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
-	CurrentMontageTask = nullptr;
+	
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
+		CurrentMontageTask = nullptr;
+	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
 		if (OwnerChar->IsLocallyControlled())
 		{
+			OwnerChar->DisablePlayerTargeting();
 			OwnerChar->StopDistanceVisualization();
 		}
 
@@ -100,7 +101,10 @@ void USwingAbility::HandleSwingMontageBlendOut()
 			OwnerChar->Multicast_RestoreBaseSpeed();
 		}
 	}
+}
 
+void USwingAbility::HandleSwingMontageBlendOut()
+{
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 

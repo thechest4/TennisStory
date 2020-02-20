@@ -76,6 +76,12 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &UServeAbility::HandleServeMontageBlendOut);
+		CurrentMontageTask = nullptr;
+	}
 	
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
 	checkf(OwnerChar, TEXT("UServeAbility::EndAbility - Somehow OwnerChar is null!"))
@@ -99,9 +105,6 @@ void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 void UServeAbility::HandleServeMontageBlendOut()
 {
-	CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &UServeAbility::HandleServeMontageBlendOut);
-	CurrentMontageTask = nullptr;
-
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 

@@ -133,9 +133,9 @@ void ATennisStoryCharacter::BeginPlay()
 
 		if (HasAuthority())
 		{
-			for (FGrantedAbilityInfo AbilityInfo : AbilitiesToGive)
+			for (FGrantedAbilityInfo& AbilityInfo : AbilitiesToGive)
 			{
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
+				AbilityInfo.AbilitySpecHandle = AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
 			}
 		}
 	}
@@ -344,6 +344,14 @@ void ATennisStoryCharacter::ClampLocation(FVector MinLocation, FVector MaxLocati
 void ATennisStoryCharacter::UnclampLocation()
 {
 	bIsLocationClamped = false;
+}
+
+void ATennisStoryCharacter::CancelAllAbilities()
+{
+	for (FGrantedAbilityInfo& AbilityInfo : AbilitiesToGive)
+	{
+		AbilitySystemComp->CancelAbilityHandle(AbilityInfo.AbilitySpecHandle);
+	}
 }
 
 void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)
