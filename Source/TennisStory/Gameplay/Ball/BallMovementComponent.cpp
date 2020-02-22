@@ -324,6 +324,10 @@ void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
 	{
 		CurrentServingCharacter->AttachBallToPlayer(OwnerPtr);
 	}
+	else if (bWasInterrupted && CurrentServingCharacter)
+	{
+		CurrentServingCharacter->DetachBallFromPlayer(OwnerPtr);
+	}
 }
 
 void UBallMovementComponent::EnterPhysicalMovementState()
