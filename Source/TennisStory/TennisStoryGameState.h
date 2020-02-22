@@ -6,10 +6,10 @@
 #include "GameFramework/GameStateBase.h"
 #include "Gameplay/HalfCourt.h"
 #include "Player/TennisStoryPlayerController.h"
+#include "Player/TennisStoryCharacter.h"
 #include "TennisStoryGameState.generated.h"
 
 class ATennisBall;
-class ATennisStoryCharacter;
 class UScoreboardWidget;
 
 UENUM()
@@ -41,6 +41,9 @@ public:
 	
 	UPROPERTY()
 	TArray<TWeakObjectPtr<ATennisStoryPlayerController>> AssignedPlayers;
+	
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ATennisStoryCharacter>> AssignedCharacters;
 	
 	UPROPERTY()
 	TWeakObjectPtr<AHalfCourt> AssignedCourt;
@@ -151,9 +154,17 @@ public:
 
 	const int GetTeamIdForPlayer(ATennisStoryPlayerController* Player);
 
+	const FTeamData GetTeamForCharacter(ATennisStoryCharacter* Character);
+
+	const int GetTeamIdForCharacter(ATennisStoryCharacter* Character);
+
 	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player);
 
 	const TWeakObjectPtr<AHalfCourt> GetCourtForPlayer(ATennisStoryPlayerController* Player);
+
+	const TWeakObjectPtr<AHalfCourt> GetCourtToAimAtForCharacter(ATennisStoryCharacter* Character);
+
+	const TWeakObjectPtr<AHalfCourt> GetCourtForCharacter(ATennisStoryCharacter* Character);
 
 	void AwardPoint(int TeamId);
 

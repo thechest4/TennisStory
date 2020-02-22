@@ -93,6 +93,48 @@ const int ATennisStoryGameState::GetTeamIdForPlayer(ATennisStoryPlayerController
 	return IdToReturn;
 }
 
+const FTeamData ATennisStoryGameState::GetTeamForCharacter(ATennisStoryCharacter* Character)
+{
+	if (!TeamData.Num())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameState::GetTeamForCharacter - No TeamData found!"));
+	}
+
+	FTeamData CharTeam = TeamData[0];
+
+	for (FTeamData& Team : TeamData)
+	{
+		if (Team.AssignedCharacters.Contains(Character))
+		{
+			CharTeam = Team;
+			break;
+		}
+	}
+
+	return CharTeam;
+}
+
+const int ATennisStoryGameState::GetTeamIdForCharacter(ATennisStoryCharacter* Character)
+{
+	if (!TeamData.Num())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameState::GetTeamIdForCharacter - No TeamData found!"));
+	}
+
+	int IdToReturn = -1;
+
+	for (FTeamData& Team : TeamData)
+	{
+		if (Team.AssignedCharacters.Contains(Character))
+		{
+			IdToReturn = Team.TeamId;
+			break;
+		}
+	}
+
+	return IdToReturn;
+}
+
 const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtToAimAtForPlayer(ATennisStoryPlayerController* Player)
 {
 	TWeakObjectPtr<AHalfCourt> CourtToAimAt = nullptr;
@@ -121,6 +163,44 @@ const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtForPlayer(ATenni
 		for (FTeamData& Team : TeamData)
 		{
 			if (Team.AssignedPlayers.Contains(Player))
+			{
+				Court = Team.AssignedCourt;
+				break;
+			}
+		}
+	}
+
+	return Court;
+}
+
+const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtToAimAtForCharacter(ATennisStoryCharacter* Character)
+{
+	TWeakObjectPtr<AHalfCourt> CourtToAimAt = nullptr;
+
+	if (Character)
+	{
+		for (FTeamData& Team : TeamData)
+		{
+			if (!Team.AssignedCharacters.Contains(Character))
+			{
+				CourtToAimAt = Team.AssignedCourt;
+				break;
+			}
+		}
+	}
+
+	return CourtToAimAt;
+}
+
+const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtForCharacter(ATennisStoryCharacter* Character)
+{
+	TWeakObjectPtr<AHalfCourt> Court = nullptr;
+
+	if (Character)
+	{
+		for (FTeamData& Team : TeamData)
+		{
+			if (Team.AssignedCharacters.Contains(Character))
 			{
 				Court = Team.AssignedCourt;
 				break;

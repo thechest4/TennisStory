@@ -199,6 +199,7 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 
 	if (HasAuthority() && NewController != nullptr)
 	{
+		//NOTE(achester): this is kinda weird here since we probably don't want to be caching/replicating the team id, but actually it's only currently used as a quick way to set team colors
 		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 		if (GameState && TeamColorMaterials.Num())
 		{
@@ -214,7 +215,7 @@ void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingCon
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (TargetActor && GameState && Controller)
 	{
-		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForPlayer(Cast<ATennisStoryPlayerController>(Controller)), IsLocallyControlled(), TargetingContext);
+		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForCharacter(this), IsLocallyControlled(), TargetingContext);
 
 		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
 		//Basically a fallback in case another position isn't committed

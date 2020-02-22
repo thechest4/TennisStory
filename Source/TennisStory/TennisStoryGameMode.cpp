@@ -81,7 +81,7 @@ void ATennisStoryGameMode::StartPlay()
 	Super::StartPlay();
 	
 	//NOTE(achester): I believe this only works because the host player happens to spawn and be set up before StartPlay (and we only ever have the host serve first)
-	TSGameState->CurrentServingCharacter = Cast<ATennisStoryCharacter>(TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedPlayers[0]->GetPawn());
+	TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
 
 	SetUpNextPoint();
 }
@@ -102,20 +102,25 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 
 	ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(NewPlayer);
 
-	checkf(TSPC, TEXT("ATennisStoryGameMode::PostLogin - PlayerController was not derived from ATennisStoryPlayerController!"));
+	checkf(TSPC, TEXT("ATennisStoryGameMode::RestartPlayer - PlayerController was not derived from ATennisStoryPlayerController!"));
 
 	TWeakObjectPtr<AHalfCourt> SpawnCourt = nullptr;
+	FTeamData* PlayerTeam = nullptr;
 	for (FTeamData& Team : TSGameState->TeamData)
 	{
+		//NOTE(achester): This check assumes that the appropriate team for the new player is the one that has no players currently.  Will need to be changed for doubles!
 		if (!Team.AssignedPlayers.Num())
 		{
 			Team.AssignedPlayers.Add(TSPC);
 			SpawnCourt = Team.AssignedCourt;
+			PlayerTeam = &Team;
 			break;
 		}
 	}
+	
+	checkf(PlayerTeam, TEXT("ATennisStoryGameMode::RestartPlayer - PlayerTeam pointer was left uninitialized!"));
 
-	if (SpawnCourt.IsValid())
+	if (SpawnCourt.IsValid() && PlayerTeam)
 	{
 		FTransform SpawnTransform = SpawnCourt->GetPlayerServiceTransform(EServiceSide::Deuce);
 
@@ -133,6 +138,7 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			TennisChar->ServerDesiredRotation = SpawnTransform.GetRotation();
 
 			AllCharacters.Add(TennisChar);
+			PlayerTeam->AssignedCharacters.Add(TennisChar);
 
 			TennisChar->CacheCourtAimVector(SpawnCourt->GetActorForwardVector());
 
@@ -179,10 +185,9 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 
 void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Character)
 {
-	ATennisStoryPlayerController* PlayerController = Cast<ATennisStoryPlayerController>(Character->GetController());
-	if (PlayerController)
+	if (Character)
 	{
-		const FTeamData& PlayerTeam = TSGameState->GetTeamForPlayer(PlayerController);
+		const FTeamData& PlayerTeam = TSGameState->GetTeamForCharacter(Character);
 		if (PlayerTeam.TeamId >= 0 && PlayerTeam.AssignedCourt.IsValid())
 		{
 			if (PlayerTeam.TeamId == TSGameState->CurrentServiceTeam)
@@ -216,7 +221,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 		TSGameState->CurrentServingCharacter->Multicast_EnterServiceState();		
 		TSGameState->CurrentServingCharacter->AttachBallToPlayer(TSGameState->CurrentBallActor.Get());
 	
-		TWeakObjectPtr<AHalfCourt> Court = TSGameState->GetCourtForPlayer(Cast<ATennisStoryPlayerController>(TSGameState->CurrentServingCharacter->Controller));
+		TWeakObjectPtr<AHalfCourt> Court = TSGameState->GetCourtForCharacter(TSGameState->CurrentServingCharacter.Get());
 
 		checkf(Court.IsValid(), TEXT("ATennisStoryGameMode::SetUpNextPoint - Court was null"))
 
@@ -326,15 +331,13 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 	}
 
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit = TSGameState->CurrentBallActor->LastPlayerToHit;
-	ATennisStoryPlayerController* PlayerController = (LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(LastPlayerToHit->Controller) : nullptr;
-
 	if (!LastPlayerToHit.IsValid())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryGameMode::ResolvePoint - LastPlayerToHit was null"));
 		return;
 	}
 	
-	int WinnerTeamId = TSGameState->GetTeamIdForPlayer(PlayerController);
+	int WinnerTeamId = TSGameState->GetTeamIdForCharacter(LastPlayerToHit.Get());
 
 	if (!bLastPlayerWon)
 	{
@@ -383,7 +386,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
 		}
 		
 		TSGameState->CurrentServiceTeam = (TSGameState->CurrentServiceTeam) ? 0 : 1;
-		TSGameState->CurrentServingCharacter = Cast<ATennisStoryCharacter>(TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedPlayers[0]->GetPawn());
+		TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
 
 		if (TSGameState->GetTotalGameCountForCurrentSet() % 2)
 		{
@@ -405,9 +408,9 @@ void ATennisStoryGameMode::SwitchSides()
 		int NewCourt = (static_cast<int>(CurrentTeam.AssignedCourt->GetCourtSide())) ? 0 : 1;
 		CurrentTeam.AssignedCourt = TSGameState->GetCourt(static_cast<ECourtSide>(NewCourt));
 
-		for (int j = 0; j < CurrentTeam.AssignedPlayers.Num(); j++)
+		for (int j = 0; j < CurrentTeam.AssignedCharacters.Num(); j++)
 		{
-			ATennisStoryCharacter* Character = Cast<ATennisStoryCharacter>(CurrentTeam.AssignedPlayers[j]->GetPawn());
+			ATennisStoryCharacter* Character = CurrentTeam.AssignedCharacters[j].Get();
 			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
 		}
 	}

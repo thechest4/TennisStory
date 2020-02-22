@@ -65,9 +65,8 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
 	if (NumBounces < GameMode->GetAllowedBounces())
 	{
-		ATennisStoryPlayerController* Controller = (OwnerPtr->LastPlayerToHit.IsValid()) ? Cast<ATennisStoryPlayerController>(OwnerPtr->LastPlayerToHit->Controller) : nullptr;
 		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState) ? GameState->GetCourtToAimAtForPlayer(Controller) : nullptr;
+		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState && OwnerPtr->LastPlayerToHit.IsValid()) ? GameState->GetCourtToAimAtForCharacter(OwnerPtr->LastPlayerToHit.Get()) : nullptr;
 		FVector CurrentLocation = OwnerPtr->GetActorLocation();
 
 		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius(), BoundsContextForFirstBounce))
