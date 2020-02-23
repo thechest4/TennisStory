@@ -6,6 +6,7 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Player/TennisStoryPlayerController.h"
 #include "Gameplay/HalfCourt.h"
+#include "Gameplay/BounceLocationMarker.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CamPositioningComponent.h"
@@ -76,6 +77,16 @@ void ATennisStoryGameMode::StartPlay()
 
 		TSGameState->CurrentBallActor->OnBallOutOfBounds().AddUObject(this, &ATennisStoryGameMode::HandleBallOutOfBounds);
 		TSGameState->CurrentBallActor->OnBallHitBounceLimit().AddUObject(this, &ATennisStoryGameMode::HandleBallHitBounceLimit);
+	}
+
+	if (DefaultBounceMarkerClass)
+	{
+		FTransform SpawnTransform = FTransform::Identity;
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		BounceMarkerActor = GetWorld()->SpawnActor<ABounceLocationMarker>(DefaultBounceMarkerClass, SpawnTransform, SpawnParams);
 	}
 
 	Super::StartPlay();
@@ -249,7 +260,7 @@ void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character
 		if (TSGameState->CurrentBallActor->GetCurrentNumBounces() == 0)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("ATennisStoryGameMode::DetermineHitLegality - Can't hit serve before first bounce"));
-			ResolvePoint(true);
+			ResolvePoint(true, false, FVector::ZeroVector);
 		}
 		else if (false)
 		{
@@ -286,7 +297,7 @@ void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
 	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::GetCamPositioningCompFromWorld - Could not find Camera Positioning Component!"));
 }
 
-void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext)
+void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, FVector BounceLocation)
 {
 	if (BoundsContext == EBoundsContext::ServiceAd || BoundsContext == EBoundsContext::ServiceDeuce)
 	{
@@ -305,29 +316,39 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext)
 
 			FTimerHandle NextPointHandle;
 			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 0.75f);
+			
+			if (BounceMarkerActor.IsValid())
+			{
+				BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, 0.75f);
+			}
 		}
 		else
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Double Fault!"));
-			ResolvePoint(false);
+			ResolvePoint(false, true, BounceLocation);
 		}
 	}
 	else
 	{
-		ResolvePoint(false);
+		ResolvePoint(false, true, BounceLocation);
 	}
 }
 
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
 {
-	ResolvePoint(true);
+	ResolvePoint(true, false, FVector::ZeroVector);
 }
 
-void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon)
+void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation)
 {
 	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 	{
 		return;
+	}
+	
+	if (bShowBounceLocation && BounceMarkerActor.IsValid())
+	{
+		BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, 1.5f);
 	}
 
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit = TSGameState->CurrentBallActor->LastPlayerToHit;

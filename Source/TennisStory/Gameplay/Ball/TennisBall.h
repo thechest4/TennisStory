@@ -11,7 +11,7 @@
 
 class ATennisStoryCharacter;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBallOutOfBoundsEvent, EBoundsContext)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBallOutOfBoundsEvent, EBoundsContext, FVector)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
 
 UENUM(BlueprintType)

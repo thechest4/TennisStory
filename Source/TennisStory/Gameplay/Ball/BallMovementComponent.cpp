@@ -71,7 +71,7 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 
 		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius(), BoundsContextForFirstBounce))
 		{
-			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce);
+			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce, Hit.ImpactPoint);
 		}
 		
 		GenerateAndFollowBouncePath(Hit);

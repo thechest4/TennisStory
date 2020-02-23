@@ -7,6 +7,7 @@
 
 class ATennisStoryGameState;
 class ATennisBall;
+class ABounceLocationMarker;
 
 UCLASS(minimalapi)
 class ATennisStoryGameMode : public AGameModeBase
@@ -42,6 +43,11 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
 	TSubclassOf<ATennisBall> DefaultBallClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Classes)
+	TSubclassOf<ABounceLocationMarker> DefaultBounceMarkerClass;
+
+	TWeakObjectPtr<ABounceLocationMarker> BounceMarkerActor;
 
 	UPROPERTY(Transient)
 	ATennisStoryGameState* TSGameState;
@@ -59,11 +65,11 @@ protected:
 
 	int AllowedFaults;
 
-	void HandleBallOutOfBounds(EBoundsContext BoundsContext);
+	void HandleBallOutOfBounds(EBoundsContext BoundsContext, FVector BounceLocation);
 
 	void HandleBallHitBounceLimit();
 
-	void ResolvePoint(bool bLastPlayerWon);
+	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation);
 
 	void SwitchSides();
 
