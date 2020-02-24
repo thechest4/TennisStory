@@ -260,7 +260,7 @@ void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character
 		if (TSGameState->CurrentBallActor->GetCurrentNumBounces() == 0)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("ATennisStoryGameMode::DetermineHitLegality - Can't hit serve before first bounce"));
-			ResolvePoint(true, false, FVector::ZeroVector);
+			ResolvePoint(true, false, FVector::ZeroVector, FString(TEXT("ILLEGAL HIT")));
 		}
 		else if (false)
 		{
@@ -311,11 +311,11 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 			TSGameState->CurrentFaultCount++;
 			
 			TSGameState->CurrentPlayState = EPlayState::Waiting;
-			
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Fault!"));
+
+			TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")));
 
 			FTimerHandle NextPointHandle;
-			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 0.75f);
+			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
 			
 			if (BounceMarkerActor.IsValid())
 			{
@@ -324,22 +324,21 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Double Fault!"));
-			ResolvePoint(false, true, BounceLocation);
+			ResolvePoint(false, true, BounceLocation, FString(TEXT("DOUBLE FAULT")));
 		}
 	}
 	else
 	{
-		ResolvePoint(false, true, BounceLocation);
+		ResolvePoint(false, true, BounceLocation, FString(TEXT("OUT")));
 	}
 }
 
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
 {
-	ResolvePoint(true, false, FVector::ZeroVector);
+	ResolvePoint(true, false, FVector::ZeroVector, FString(TEXT("WINNER")));
 }
 
-void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation)
+void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, FString ResolutionString)
 {
 	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 	{
@@ -419,6 +418,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
+	
+	TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(ResolutionString), FText::FromString(TSGameState->CurrentGameScore.GetGameScoreDisplayString()));
 }
 
 void ATennisStoryGameMode::SwitchSides()

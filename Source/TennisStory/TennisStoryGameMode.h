@@ -69,7 +69,7 @@ protected:
 
 	void HandleBallHitBounceLimit();
 
-	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation);
+	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, FString ResolutionString);
 
 	void SwitchSides();
 

@@ -2,6 +2,7 @@
 
 #include "TennisStoryGameState.h"
 #include "UI/Score/ScoreboardWidget.h"
+#include "UI/Score/ScoreCalloutWidget.h"
 #include "Net/UnrealNetwork.h"
 
 void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -250,6 +251,35 @@ void ATennisStoryGameState::AddScoreWidgetToViewport()
 	}
 }
 
+void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float ShowDuration, const FText& HeaderText, const FText& BodyText)
+{
+	if (!ScoreCalloutWidgetClass)
+	{
+		return;
+	}
+
+	if (!ScoreCalloutWidgetObject)
+	{
+		ScoreCalloutWidgetObject = CreateWidget<UScoreCalloutWidget>(GetWorld(), ScoreCalloutWidgetClass);
+	}
+
+	checkf(ScoreCalloutWidgetObject, TEXT("ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation - ScoreCalloutWidgetObject was null!"))
+	
+	ScoreCalloutWidgetObject->ShowCalloutWidget(ShowDuration, HeaderText, BodyText);
+	ScoreCalloutWidgetObject->AddToViewport();
+
+	ScoreCalloutWidgetObject->OnCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
+}
+
+void ATennisStoryGameState::RemoveCalloutWidgetFromViewport()
+{
+	if (ScoreCalloutWidgetObject)
+	{
+		ScoreCalloutWidgetObject->RemoveFromViewport();
+		ScoreCalloutWidgetObject->OnCalloutWidgetFinished().RemoveDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
+	}
+}
+
 void ATennisStoryGameState::OnRep_NumSets()
 {
 	AddScoreWidgetToViewport();
@@ -295,7 +325,7 @@ FString FGameScore::GetDisplayStringForScore(int TeamId) const
 	int MyScore = Scores[TeamId];
 	int OtherTeamScore = Scores[OtherTeamId];
 	
-	if (MyScore >= 3 && MyScore == OtherTeamScore)
+	if (IsCurrentlyDeuce())
 	{
 		return DeuceString;
 	}
@@ -307,3 +337,14 @@ FString FGameScore::GetDisplayStringForScore(int TeamId) const
 
 	return ScoreDisplayValues[MyScore];
 }
+
+FString FGameScore::GetGameScoreDisplayString() const
+{
+	if (IsCurrentlyDeuce())
+	{
+		return FString(TEXT("DEUCE"));
+	}
+
+	return GetDisplayStringForScore(0) + FString(TEXT(" - ")) + GetDisplayStringForScore(1);
+}
+

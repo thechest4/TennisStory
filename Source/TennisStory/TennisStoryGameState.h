@@ -11,6 +11,7 @@
 
 class ATennisBall;
 class UScoreboardWidget;
+class UScoreCalloutWidget;
 
 UENUM()
 enum class EPlayState : uint8
@@ -95,7 +96,19 @@ public:
 		return static_cast<EServiceSide>(Side);
 	}
 
+	bool IsCurrentlyDeuce() const
+	{
+		if (Scores[0] >= 4 && Scores[0] == Scores[1])
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	FString GetDisplayStringForScore(int TeamId) const;
+
+	FString GetGameScoreDisplayString() const;
 };
 
 USTRUCT()
@@ -196,7 +209,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Score")
-	FString GetScoreDisplayString(int TeamId) const
+	FString GetGameScoreDisplayStringForTeam(int TeamId) const
 	{
 		return CurrentGameScore.GetDisplayStringForScore(TeamId);
 	}
@@ -205,6 +218,15 @@ public:
 
 	UPROPERTY()
 	UScoreboardWidget* ScoreboardWidgetObject;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void AddCalloutWidgetToViewport(float ShowDuration, const FText& HeaderText, const FText& BodyText);
+
+	UFUNCTION()
+	void RemoveCalloutWidgetFromViewport();
+
+	UPROPERTY()
+	UScoreCalloutWidget* ScoreCalloutWidgetObject;
 
 	EPlayState GetCurrentPlayState() const
 	{
@@ -248,6 +270,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
 	TSubclassOf<UScoreboardWidget> ScoreboardWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
+	TSubclassOf<UScoreCalloutWidget> ScoreCalloutWidgetClass;
 
 	UFUNCTION()
 	void OnRep_NumSets();
