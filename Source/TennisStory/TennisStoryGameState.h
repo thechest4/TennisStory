@@ -21,6 +21,24 @@ enum class EPlayState : uint8
 	Waiting
 };
 
+UENUM()
+enum class EPointResolutionContext : uint8
+{
+	Point,
+	Game,
+	Set,
+	Match
+};
+
+UENUM()
+enum class EPointResolutionType : uint8
+{
+	Winner,
+	Out,
+	DoubleFault,
+	IllegalHit
+};
+
 USTRUCT()
 struct FTeamData
 {
@@ -30,12 +48,17 @@ public:
 	FTeamData()
 	{
 		TeamId = -1;
+		TeamName = FString(TEXT("Default Team Name"));
 	}
 
 	FTeamData(int Id)
 	{
 		TeamId = Id;
+		TeamName = FString(TEXT("Default Team Name"));
 	}
+
+	UPROPERTY()
+	FString TeamName;
 
 	UPROPERTY()
 	int TeamId;
@@ -79,7 +102,7 @@ public:
 			Scores[i] = 0;
 		}
 
-		bHasBeenDeuce = true;
+		bHasBeenDeuce = false;
 	}
 
 	EServiceSide GetServiceSide()
@@ -98,8 +121,19 @@ public:
 
 	bool IsCurrentlyDeuce() const
 	{
-		if (Scores[0] >= 4 && Scores[0] == Scores[1])
+		if (Scores[0] >= 3 && Scores[0] == Scores[1])
 		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool IsCurrentlyAd(int& OutAdTeamId) const
+	{
+		if (bHasBeenDeuce && FMath::Abs(Scores[0] - Scores[1]) == 1 && (Scores[0] >= 4 || Scores[1] >= 4))
+		{
+			OutAdTeamId = (Scores[0] > Scores[1]) ? 0 : 1;
 			return true;
 		}
 
@@ -108,7 +142,7 @@ public:
 
 	FString GetDisplayStringForScore(int TeamId) const;
 
-	FString GetGameScoreDisplayString() const;
+	FString GetGameScoreDisplayString(TArray<FString>& TeamNameArray) const;
 };
 
 USTRUCT()
@@ -276,6 +310,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_NumSets();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teams")
+	TArray<FString> TeamNames;
 
 	friend class ATennisStoryGameMode;
 };

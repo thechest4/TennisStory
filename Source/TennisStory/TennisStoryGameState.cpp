@@ -303,10 +303,7 @@ void FGameScore::AddPoint(int TeamId)
 
 	if (!bHasBeenDeuce)
 	{
-		int Team0Score = Scores[0];
-		int Team1Score = Scores[1];
-
-		if (Team0Score >= 3 && Team0Score == Team1Score)
+		if (IsCurrentlyDeuce())
 		{
 			bHasBeenDeuce = true;
 		}
@@ -330,19 +327,34 @@ FString FGameScore::GetDisplayStringForScore(int TeamId) const
 		return DeuceString;
 	}
 
-	if (bHasBeenDeuce && FMath::Abs(MyScore - OtherTeamScore) == 1 && (MyScore >= 3 || OtherTeamScore >= 3))
+	int OutAdTeamId = -1;
+	if (IsCurrentlyAd(OutAdTeamId))
 	{
-		return (MyScore > OtherTeamScore) ? AdString : DisAdString;
+		return (TeamId == OutAdTeamId) ? AdString : DisAdString;
 	}
 
 	return ScoreDisplayValues[MyScore];
 }
 
-FString FGameScore::GetGameScoreDisplayString() const
+FString FGameScore::GetGameScoreDisplayString(TArray<FString>& TeamNameArray) const
 {
 	if (IsCurrentlyDeuce())
 	{
 		return FString(TEXT("DEUCE"));
+	}
+	
+	int OutAdTeamId = -1;
+	if (IsCurrentlyAd(OutAdTeamId))
+	{
+		checkf(OutAdTeamId >= 0, TEXT("FGameScore::GetGameScoreDisplayString - IsCurrentlyAd() returned true but provided an invalid team id!"))
+
+		FString TeamName = FString(TEXT("No Team Name Provided"));
+		if (OutAdTeamId < TeamNameArray.Num())
+		{
+			TeamName = TeamNameArray[OutAdTeamId];
+		}
+
+		return FString(TEXT("AD ")) + TeamName.ToUpper();
 	}
 
 	return GetDisplayStringForScore(0) + FString(TEXT(" - ")) + GetDisplayStringForScore(1);

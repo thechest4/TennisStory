@@ -39,6 +39,12 @@ void ATennisStoryGameMode::InitGameState()
 	for (int i = 0; i < MaxTeamNumber; i++)
 	{
 		FTeamData NewTeamData = FTeamData(i);
+
+		if (i < TSGameState->TeamNames.Num())
+		{
+			NewTeamData.TeamName = TSGameState->TeamNames[i];
+		}
+		
 		TSGameState->TeamData.Add(NewTeamData);
 	}
 
@@ -260,7 +266,7 @@ void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character
 		if (TSGameState->CurrentBallActor->GetCurrentNumBounces() == 0)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("ATennisStoryGameMode::DetermineHitLegality - Can't hit serve before first bounce"));
-			ResolvePoint(true, false, FVector::ZeroVector, FString(TEXT("ILLEGAL HIT")));
+			ResolvePoint(true, false, FVector::ZeroVector, EPointResolutionType::IllegalHit);
 		}
 		else if (false)
 		{
@@ -324,22 +330,24 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 		}
 		else
 		{
-			ResolvePoint(false, true, BounceLocation, FString(TEXT("DOUBLE FAULT")));
+			ResolvePoint(false, true, BounceLocation, EPointResolutionType::DoubleFault);
 		}
 	}
 	else
 	{
-		ResolvePoint(false, true, BounceLocation, FString(TEXT("OUT")));
+		ResolvePoint(false, true, BounceLocation, EPointResolutionType::Out);
 	}
 }
 
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
 {
-	ResolvePoint(true, false, FVector::ZeroVector, FString(TEXT("WINNER")));
+	ResolvePoint(true, false, FVector::ZeroVector, EPointResolutionType::Winner);
 }
 
-void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, FString ResolutionString)
+void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, EPointResolutionType PointType)
 {
+	EPointResolutionContext CurrentPointResolutionContext = EPointResolutionContext::Point;
+
 	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 	{
 		return;
@@ -380,6 +388,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 	if (WinnerGameScore >= PointsToWinGame && WinnerGameScore - LoserGameScore >= MarginToWinGame)
 	{
+		CurrentPointResolutionContext = EPointResolutionContext::Game;
+
 		TSGameState->AwardGame(WinnerTeamId);
 		
 		int WinnerSetScore = TSGameState->CurrentMatchScores[WinnerTeamId].SetScores[TSGameState->CurrentSet];
@@ -387,6 +397,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 		if (WinnerSetScore >= GamesToWinSet && WinnerSetScore - LoserSetScore >= MarginToWinSet)
 		{
+			CurrentPointResolutionContext = EPointResolutionContext::Set;
+
 			TSGameState->CurrentMatchScores[WinnerTeamId].SetsWon++;
 			
 			int WinnerSets = TSGameState->CurrentMatchScores[WinnerTeamId].SetsWon;
@@ -397,6 +409,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 			if (WinnerSets >= SetsToWinMatch)
 			{
+				CurrentPointResolutionContext = EPointResolutionContext::Match;
+
 				TSGameState->InitScores(MaxTeamNumber, NumSets);
 			}
 			else
@@ -418,8 +432,74 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 	FTimerHandle NextPointHandle;
 	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
+
+	FString ResolutionTypeString = FString();
+	FString ScoreCalloutString = FString();
+
+	TArray<FString> TeamNameArray = GenerateTeamNameArray();
+
+	if (CurrentPointResolutionContext == EPointResolutionContext::Point)
+	{
+		switch (PointType)
+		{
+			default:
+			{
+				ResolutionTypeString = FString(TEXT("Undefined Point Type"));
+				break;
+			}
+			case EPointResolutionType::Out:
+			{
+				ResolutionTypeString = FString(TEXT("OUT"));
+				break;
+			}
+			case EPointResolutionType::Winner:
+			{
+				ResolutionTypeString = FString(TEXT("WINNER"));
+				break;
+			}
+			case EPointResolutionType::DoubleFault:
+			{
+				ResolutionTypeString = FString(TEXT("DOUBLE FAULT"));
+				break;
+			}
+			case EPointResolutionType::IllegalHit:
+			{
+				ResolutionTypeString = FString(TEXT("ILLEGAL HIT"));
+				break;
+			}
+		}
+	}
+
+	switch (CurrentPointResolutionContext)
+	{
+		default:
+		{
+			ScoreCalloutString = FString(TEXT("Undefined Point Context"));
+			break;
+		}
+		case EPointResolutionContext::Point:
+		{
+			ScoreCalloutString = TSGameState->CurrentGameScore.GetGameScoreDisplayString(TeamNameArray);
+			break;
+		}
+		case EPointResolutionContext::Game:
+		{
+			//Current Set Score
+			break;
+		}
+		case EPointResolutionContext::Set:
+		{
+			//Current Match Score
+			break;
+		}
+		case EPointResolutionContext::Match:
+		{
+			//Probably not a needed case
+			break;
+		}
+	}
 	
-	TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(ResolutionString), FText::FromString(TSGameState->CurrentGameScore.GetGameScoreDisplayString()));
+	TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString));
 }
 
 void ATennisStoryGameMode::SwitchSides()
@@ -436,4 +516,16 @@ void ATennisStoryGameMode::SwitchSides()
 			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
 		}
 	}
+}
+
+TArray<FString> ATennisStoryGameMode::GenerateTeamNameArray()
+{
+	TArray<FString> TeamNameArray;
+
+	for (int i = 0; i < TSGameState->TeamData.Num(); i++)
+	{
+		TeamNameArray.Add(TSGameState->TeamData[i].TeamName);
+	}
+
+	return TeamNameArray;
 }

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Gameplay/HalfCourt.h"
+#include "TennisStoryGameState.h"
 #include "TennisStoryGameMode.generated.h"
 
 class ATennisStoryGameState;
@@ -69,9 +70,11 @@ protected:
 
 	void HandleBallHitBounceLimit();
 
-	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, FString ResolutionString);
+	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, EPointResolutionType PointType);
 
 	void SwitchSides();
+
+	TArray<FString> GenerateTeamNameArray();
 
 	//Match data params
 	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
