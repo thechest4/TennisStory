@@ -265,7 +265,6 @@ void ATennisStoryGameMode::DetermineHitLegality(ATennisStoryCharacter* Character
 	{
 		if (TSGameState->CurrentBallActor->GetCurrentNumBounces() == 0)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("ATennisStoryGameMode::DetermineHitLegality - Can't hit serve before first bounce"));
 			ResolvePoint(true, false, FVector::ZeroVector, EPointResolutionType::IllegalHit);
 		}
 		else if (false)
