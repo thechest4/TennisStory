@@ -247,6 +247,7 @@ void ATennisStoryGameState::AddScoreWidgetToViewport()
 	{
 		ScoreboardWidgetObject = CreateWidget<UScoreboardWidget>(GetWorld(), ScoreboardWidgetClass);
 		ScoreboardWidgetObject->AddSetScoreWidgets();
+		ScoreboardWidgetObject->SetTeamNames(TeamData[0].TeamName, TeamData[1].TeamName);
 		ScoreboardWidgetObject->AddToViewport();
 	}
 }

@@ -14,4 +14,13 @@ class TENNISSTORY_API UScoreboardWidget : public UUserWidget
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Score")
 	void AddSetScoreWidgets();
+
+	void SetTeamNames(FString Team0Name, FString Team1Name);
+
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	FString Team0Name;
+	
+	UPROPERTY(BlueprintReadOnly)
+	FString Team1Name;
 };
