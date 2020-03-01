@@ -329,6 +329,33 @@ FString ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull() const
 	return GetDisplayStringForCurrentGameScoreByTeam(0) + FString(TEXT(" - ")) + GetDisplayStringForCurrentGameScoreByTeam(1);
 }
 
+FString ATennisStoryGameState::GetDisplayStringForSetScore(int SetNum) const
+{
+	return FString::FromInt(CurrentMatchScores[0].SetScores[SetNum]) + FString(TEXT(" - ")) + FString::FromInt(CurrentMatchScores[1].SetScores[SetNum]);
+}
+
+FString ATennisStoryGameState::GetDisplayStringForMatchScoreShort() const
+{
+	return FString::FromInt(CurrentMatchScores[0].SetsWon) + FString(TEXT(" - ")) + FString::FromInt(CurrentMatchScores[1].SetsWon);
+}
+
+FString ATennisStoryGameState::GetDisplayStringForMatchScoreLong() const
+{
+	FString MatchScoreString = FString();
+
+	for (int i = 0; i < NumSets; i++)
+	{
+		MatchScoreString += GetDisplayStringForSetScore(i);
+
+		if (i != NumSets - 1)
+		{
+			MatchScoreString += FString(TEXT(", "));
+		}
+	}
+
+	return MatchScoreString;
+}
+
 void FGameScore::AddPoint(int TeamId)
 {
 	if (!Scores.Num())

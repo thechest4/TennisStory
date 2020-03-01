@@ -483,19 +483,19 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		case EPointResolutionContext::Game:
 		{
 			ResolutionTypeString = FString(TEXT("GAME - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
-			//Current Set Score
+			ScoreCalloutString = TSGameState->GetDisplayStringForSetScore(TSGameState->CurrentSet);
 			break;
 		}
 		case EPointResolutionContext::Set:
 		{
 			ResolutionTypeString = FString(TEXT("SET - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
-			//Current Match Score
+			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreShort();
 			break;
 		}
 		case EPointResolutionContext::Match:
 		{
 			ResolutionTypeString = FString(TEXT("GAME, SET, MATCH - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
-			//Probably will replace with a different widget
+			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreLong();
 			break;
 		}
 	}

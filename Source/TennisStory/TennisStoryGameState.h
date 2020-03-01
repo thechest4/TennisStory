@@ -318,6 +318,15 @@ protected:
 	//Returns a display string to describe the current game score for both teams (EX: 30 - 15, DEUCE, etc)
 	FString GetDisplayStringForCurrentGameScoreFull() const;
 
+	//Returns a display string to describe the current set score (game count) for both teams
+	FString GetDisplayStringForSetScore(int SetNum) const;
+
+	//Returns a display string to describe the match score (set count) for both teams
+	FString GetDisplayStringForMatchScoreShort() const;
+
+	//Returns a display string to describe the match score (full game counts for each set) for both teams
+	FString GetDisplayStringForMatchScoreLong() const;
+
 	//End Score Display String Functions
 
 	friend class ATennisStoryGameMode;
