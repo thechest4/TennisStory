@@ -452,7 +452,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 			}
 			case EPointResolutionType::Winner:
 			{
-				ResolutionTypeString = FString(TEXT("WINNER"));
+				ResolutionTypeString = (TSGameState->CurrentBallActor->bWasLastHitAServe) ? FString(TEXT("ACE")) : FString(TEXT("WINNER"));
 				break;
 			}
 			case EPointResolutionType::DoubleFault:
