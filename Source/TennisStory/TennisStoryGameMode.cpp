@@ -436,8 +436,6 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	FString ResolutionTypeString = FString();
 	FString ScoreCalloutString = FString();
 
-	TArray<FString> TeamNameArray = GenerateTeamNameArray();
-
 	if (CurrentPointResolutionContext == EPointResolutionContext::Point)
 	{
 		switch (PointType)
@@ -479,22 +477,25 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		}
 		case EPointResolutionContext::Point:
 		{
-			ScoreCalloutString = TSGameState->CurrentGameScore.GetGameScoreDisplayString(TeamNameArray);
+			ScoreCalloutString = TSGameState->GetDisplayStringForCurrentGameScoreFull();
 			break;
 		}
 		case EPointResolutionContext::Game:
 		{
+			ResolutionTypeString = FString(TEXT("GAME - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			//Current Set Score
 			break;
 		}
 		case EPointResolutionContext::Set:
 		{
+			ResolutionTypeString = FString(TEXT("SET - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			//Current Match Score
 			break;
 		}
 		case EPointResolutionContext::Match:
 		{
-			//Probably not a needed case
+			ResolutionTypeString = FString(TEXT("GAME, SET, MATCH - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
+			//Probably will replace with a different widget
 			break;
 		}
 	}
@@ -516,16 +517,4 @@ void ATennisStoryGameMode::SwitchSides()
 			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
 		}
 	}
-}
-
-TArray<FString> ATennisStoryGameMode::GenerateTeamNameArray()
-{
-	TArray<FString> TeamNameArray;
-
-	for (int i = 0; i < TSGameState->TeamData.Num(); i++)
-	{
-		TeamNameArray.Add(TSGameState->TeamData[i].TeamName);
-	}
-
-	return TeamNameArray;
 }

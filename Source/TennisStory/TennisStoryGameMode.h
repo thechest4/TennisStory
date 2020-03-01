@@ -74,8 +74,6 @@ protected:
 
 	void SwitchSides();
 
-	TArray<FString> GenerateTeamNameArray();
-
 	//Match data params
 	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
 	int NumSets = 3;

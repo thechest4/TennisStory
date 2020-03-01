@@ -139,10 +139,6 @@ public:
 
 		return false;
 	}
-
-	FString GetDisplayStringForScore(int TeamId) const;
-
-	FString GetGameScoreDisplayString(TArray<FString>& TeamNameArray) const;
 };
 
 USTRUCT()
@@ -245,7 +241,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Score")
 	FString GetGameScoreDisplayStringForTeam(int TeamId) const
 	{
-		return CurrentGameScore.GetDisplayStringForScore(TeamId);
+		return GetDisplayStringForCurrentGameScoreByTeam(TeamId);
 	}
 	
 	void AddScoreWidgetToViewport();
@@ -313,6 +309,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teams")
 	TArray<FString> TeamNames;
+
+	//Score Display String Functions
+
+	//Returns a display string for the current game score for the provided team
+	FString GetDisplayStringForCurrentGameScoreByTeam(int TeamId) const;
+
+	//Returns a display string to describe the current game score for both teams (EX: 30 - 15, DEUCE, etc)
+	FString GetDisplayStringForCurrentGameScoreFull() const;
+
+	//End Score Display String Functions
 
 	friend class ATennisStoryGameMode;
 };
