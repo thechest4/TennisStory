@@ -3,6 +3,7 @@
 #include "TennisStoryGameState.h"
 #include "UI/Score/ScoreboardWidget.h"
 #include "UI/Score/ScoreCalloutWidget.h"
+#include "Player/TennisStoryPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -279,6 +280,28 @@ void ATennisStoryGameState::RemoveCalloutWidgetFromViewport()
 		ScoreCalloutWidgetObject->RemoveFromViewport();
 		ScoreCalloutWidgetObject->OnCalloutWidgetFinished().RemoveDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
 	}
+}
+
+void ATennisStoryGameState::AddPlayerState(APlayerState* PlayerState)
+{
+	Super::AddPlayerState(PlayerState);
+
+	ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(PlayerState);
+
+	checkf(TSPS, TEXT("ATennisStoryGameState::AddPlayerState - PlayerState was not derived from ATennisStoryPlayerState"))
+
+	OnPlayerStateAdded().Broadcast(TSPS);
+}
+
+void ATennisStoryGameState::RemovePlayerState(APlayerState* PlayerState)
+{
+	Super::RemovePlayerState(PlayerState);
+	
+	ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(PlayerState);
+
+	checkf(TSPS, TEXT("ATennisStoryGameState::RemovePlayerState - PlayerState was not derived from ATennisStoryPlayerState"))
+
+	OnPlayerStateRemoved().Broadcast(TSPS);
 }
 
 void ATennisStoryGameState::OnRep_NumSets()

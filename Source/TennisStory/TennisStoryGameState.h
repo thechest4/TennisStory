@@ -9,9 +9,13 @@
 #include "Player/TennisStoryCharacter.h"
 #include "TennisStoryGameState.generated.h"
 
+class ATennisStoryPlayerState;
 class ATennisBall;
 class UScoreboardWidget;
 class UScoreCalloutWidget;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateAdded, ATennisStoryPlayerState*)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateRemoved, ATennisStoryPlayerState*)
 
 UENUM()
 enum class EPlayState : uint8
@@ -166,6 +170,9 @@ class TENNISSTORY_API ATennisStoryGameState : public AGameStateBase
 	GENERATED_BODY()
 	
 public:
+	FOnPlayerStateAdded& OnPlayerStateAdded(){ return PlayerStateAddedEvent; }
+	FOnPlayerStateRemoved& OnPlayerStateRemoved(){ return PlayerStateRemovedEvent; }
+
 	TWeakObjectPtr<ATennisBall> GetTennisBall() const { return CurrentBallActor; }
 	
 	TWeakObjectPtr<ATennisStoryCharacter> GetServingCharacter() const { return CurrentServingCharacter; }
@@ -262,6 +269,10 @@ public:
 	{
 		return CurrentPlayState;
 	}
+	
+	virtual void AddPlayerState(APlayerState* PlayerState) override;
+
+	virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
 protected:
 
@@ -328,6 +339,9 @@ protected:
 	FString GetDisplayStringForMatchScoreLong() const;
 
 	//End Score Display String Functions
+
+	FOnPlayerStateAdded PlayerStateAddedEvent;
+	FOnPlayerStateRemoved PlayerStateRemovedEvent;
 
 	friend class ATennisStoryGameMode;
 };
