@@ -3,13 +3,16 @@
 #include "TennisStoryGameState.h"
 #include "UI/Score/ScoreboardWidget.h"
 #include "UI/Score/ScoreCalloutWidget.h"
+#include "UI/MatchState/PlayerReadyStatusWidget.h"
+#include "UI/MatchState/ReadyUpWidget.h"
 #include "Player/TennisStoryPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	
+	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchState);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentPlayState);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentServiceTeam);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentFaultCount);
@@ -302,6 +305,78 @@ void ATennisStoryGameState::RemovePlayerState(APlayerState* PlayerState)
 	checkf(TSPS, TEXT("ATennisStoryGameState::RemovePlayerState - PlayerState was not derived from ATennisStoryPlayerState"))
 
 	OnPlayerStateRemoved().Broadcast(TSPS);
+}
+
+void ATennisStoryGameState::AddReadyStateWidgetToViewport()
+{
+	if (!PlayerReadyStateWidgetClass)
+	{
+		return;
+	}
+
+	if (!PlayerReadyStateWidgetObject)
+	{
+		PlayerReadyStateWidgetObject = CreateWidget<UPlayerReadyStatusWidget>(GetWorld(), PlayerReadyStateWidgetClass);
+		PlayerReadyStateWidgetObject->SetUpWidget();
+		PlayerReadyStateWidgetObject->AddToViewport();
+	}
+}
+
+void ATennisStoryGameState::RemoveReadyStateWidgetFromViewport()
+{
+	if (PlayerReadyStateWidgetObject)
+	{
+		PlayerReadyStateWidgetObject->CleanUpWidget();
+		PlayerReadyStateWidgetObject->RemoveFromViewport();
+	}
+}
+
+void ATennisStoryGameState::AddReadyUpWidgetToViewport()
+{
+	if (!ReadyUpWidgetClass)
+	{
+		return;
+	}
+
+	if (!ReadyUpWidgetObject)
+	{
+		ReadyUpWidgetObject = CreateWidget<UReadyUpWidget>(GetWorld(), ReadyUpWidgetClass);
+		ReadyUpWidgetObject->SetUpWidget();
+		ReadyUpWidgetObject->AddToViewport();
+	}
+}
+
+void ATennisStoryGameState::RemoveReadyUpWidgetFromViewport()
+{
+	if (ReadyUpWidgetObject)
+	{
+		ReadyUpWidgetObject->CleanUpWidget();
+		ReadyUpWidgetObject->RemoveFromViewport();
+	}
+}
+
+void ATennisStoryGameState::OnRep_MatchState()
+{
+	switch (CurrentMatchState)
+	{
+		default:
+		case EMatchState::Uninitialized:
+		{
+			break;
+		}
+		case EMatchState::WaitingForPlayers:
+		{
+			AddReadyStateWidgetToViewport();
+			AddReadyUpWidgetToViewport();
+			break;
+		}
+		case EMatchState::MatchInProgress:
+		{
+			RemoveReadyStateWidgetFromViewport();
+			RemoveReadyUpWidgetFromViewport();
+			break;
+		}
+	}
 }
 
 void ATennisStoryGameState::OnRep_NumSets()

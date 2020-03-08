@@ -13,9 +13,19 @@ class ATennisStoryPlayerState;
 class ATennisBall;
 class UScoreboardWidget;
 class UScoreCalloutWidget;
+class UPlayerReadyStatusWidget;
+class UReadyUpWidget;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateAdded, ATennisStoryPlayerState*)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateRemoved, ATennisStoryPlayerState*)
+
+UENUM()
+enum class EMatchState : uint8
+{
+	Uninitialized,
+	WaitingForPlayers,
+	MatchInProgress
+};
 
 UENUM()
 enum class EPlayState : uint8
@@ -274,7 +284,27 @@ public:
 
 	virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
+	UPROPERTY()
+	UPlayerReadyStatusWidget* PlayerReadyStateWidgetObject;
+
+	void AddReadyStateWidgetToViewport();
+	
+	void RemoveReadyStateWidgetFromViewport();
+
+	UPROPERTY()
+	UReadyUpWidget* ReadyUpWidgetObject;
+
+	void AddReadyUpWidgetToViewport();
+
+	void RemoveReadyUpWidgetFromViewport();
+
 protected:
+
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_MatchState)
+	EMatchState CurrentMatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
 
 	UPROPERTY(Transient, Replicated)
 	EPlayState CurrentPlayState;
@@ -314,6 +344,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
 	TSubclassOf<UScoreCalloutWidget> ScoreCalloutWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Match State")
+	TSubclassOf<UPlayerReadyStatusWidget> PlayerReadyStateWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Match State")
+	TSubclassOf<UReadyUpWidget> ReadyUpWidgetClass;
 
 	UFUNCTION()
 	void OnRep_NumSets();

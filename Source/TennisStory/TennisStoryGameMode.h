@@ -22,6 +22,9 @@ public:
 
 	virtual void StartPlay() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Match State")
+	void StartMatch();
+
 	virtual void RestartPlayer(AController* NewPlayer) override;
 
 	virtual void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation) override;

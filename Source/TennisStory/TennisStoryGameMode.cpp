@@ -96,8 +96,13 @@ void ATennisStoryGameMode::StartPlay()
 	}
 
 	Super::StartPlay();
-	
-	//NOTE(achester): I believe this only works because the host player happens to spawn and be set up before StartPlay (and we only ever have the host serve first)
+
+	TSGameState->CurrentMatchState = EMatchState::WaitingForPlayers;
+	TSGameState->OnRep_MatchState();
+}
+
+void ATennisStoryGameMode::StartMatch()
+{
 	TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
 
 	SetUpNextPoint();

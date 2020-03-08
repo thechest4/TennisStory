@@ -12,6 +12,8 @@ ATennisStoryPlayerState::ATennisStoryPlayerState(const FObjectInitializer& Objec
 void ATennisStoryPlayerState::Client_UpdateIsReady_Implementation(bool bNewReady)
 {
 	bIsReady = bNewReady;
+
+	OnReadyStateUpdated().Broadcast(this);
 }
 
 void ATennisStoryPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -23,5 +25,5 @@ void ATennisStoryPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 
 void ATennisStoryPlayerState::OnRep_IsReady()
 {
-
+	OnReadyStateUpdated().Broadcast(this);
 }

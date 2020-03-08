@@ -35,4 +35,6 @@ protected:
 	void OnRep_IsReady();
 	
 	FOnReadyStateUpdatedEvent ReadyStateUpdatedEvent;
+
+	friend class UReadyUpWidget;
 };
