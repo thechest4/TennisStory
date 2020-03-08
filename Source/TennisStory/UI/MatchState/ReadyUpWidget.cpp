@@ -21,7 +21,6 @@ void UReadyUpWidget::SetUpWidget()
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UReadyUpWidget::SetUpWidget - Did not find a LocalPlayerState"));
 	}
 
-	EnableWidgetInteraction();
 	HandleReadyStateUpdated(LocalPlayerState);
 }
 
@@ -38,16 +37,10 @@ void UReadyUpWidget::ToggleReadyState()
 {
 	if (LocalPlayerState)
 	{
-		LocalPlayerState->Client_UpdateIsReady(!LocalPlayerState->IsReady());
-		DisableWidgetInteraction();
+		LocalPlayerState->Server_UpdateIsReady(!LocalPlayerState->IsReady());
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UReadyUpWidget::ToggleReadyState - LocalPlayerState was null"));
 	}
-}
-
-void UReadyUpWidget::HandleReadyStateUpdated_Implementation(ATennisStoryPlayerState* PlayerState)
-{
-	EnableWidgetInteraction();
 }

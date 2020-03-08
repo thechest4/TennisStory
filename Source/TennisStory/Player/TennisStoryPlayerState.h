@@ -25,8 +25,8 @@ public:
 	}
 	
 protected:
-	UFUNCTION(Client, Reliable)
-	void Client_UpdateIsReady(bool bNewReady);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpdateIsReady(bool bNewReady);
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsReady)
 	bool bIsReady;

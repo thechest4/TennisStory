@@ -9,7 +9,12 @@ ATennisStoryPlayerState::ATennisStoryPlayerState(const FObjectInitializer& Objec
 	bIsReady = false;
 }
 
-void ATennisStoryPlayerState::Client_UpdateIsReady_Implementation(bool bNewReady)
+bool ATennisStoryPlayerState::Server_UpdateIsReady_Validate(bool bNewReady)
+{
+	return true;
+}
+
+void ATennisStoryPlayerState::Server_UpdateIsReady_Implementation(bool bNewReady)
 {
 	bIsReady = bNewReady;
 

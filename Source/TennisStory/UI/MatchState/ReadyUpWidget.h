@@ -21,15 +21,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleReadyState();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintImplementableEvent)
 	void HandleReadyStateUpdated(ATennisStoryPlayerState* PlayerState);
 	
-	UFUNCTION(BlueprintImplementableEvent)
-	void DisableWidgetInteraction();
-	
-	UFUNCTION(BlueprintImplementableEvent)
-	void EnableWidgetInteraction();
-
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	ATennisStoryPlayerState* LocalPlayerState;
