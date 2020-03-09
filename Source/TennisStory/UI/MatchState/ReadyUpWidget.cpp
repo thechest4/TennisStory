@@ -6,6 +6,8 @@
 
 void UReadyUpWidget::SetUpWidget()
 {
+	//NOTE(achester): the call below can actually fail to get a playerstate if on a client where the playerstates have not been fully replicated yet.
+	//As a result, we simply call the function again the first time the widget is interacted with since by then there should be no issues.  However this should probably change
 	TryGetLocalPlayerState();
 }
 
