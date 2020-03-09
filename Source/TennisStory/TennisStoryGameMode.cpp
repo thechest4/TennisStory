@@ -540,6 +540,11 @@ void ATennisStoryGameMode::SwitchSides()
 
 void ATennisStoryGameMode::HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState)
 {
+	if (TSGameState->PlayerArray.Num() != MaxTeamNumber)
+	{
+		return;
+	}
+
 	//If all player states are now ready, start match
 	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
 	{
