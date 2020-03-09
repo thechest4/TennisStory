@@ -19,6 +19,9 @@ public:
 	void CleanUpWidget();
 
 	UFUNCTION(BlueprintCallable)
+	void TryGetLocalPlayerState();
+
+	UFUNCTION(BlueprintCallable)
 	void ToggleReadyState();
 
 	UFUNCTION(BlueprintImplementableEvent)

@@ -6,22 +6,7 @@
 
 void UReadyUpWidget::SetUpWidget()
 {
-	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
-	{
-		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
-		if (TSPC && TSPC->IsLocalPlayerController())
-		{
-			LocalPlayerState = TSPC->GetPlayerState<ATennisStoryPlayerState>();
-			LocalPlayerState->OnReadyStateUpdated().AddUObject(this, &UReadyUpWidget::HandleReadyStateUpdated);
-		}
-	}
-
-	if (!LocalPlayerState)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("UReadyUpWidget::SetUpWidget - Did not find a LocalPlayerState"));
-	}
-
-	HandleReadyStateUpdated(LocalPlayerState);
+	TryGetLocalPlayerState();
 }
 
 void UReadyUpWidget::CleanUpWidget()
@@ -30,6 +15,28 @@ void UReadyUpWidget::CleanUpWidget()
 	{
 		LocalPlayerState->OnReadyStateUpdated().RemoveAll(this);
 		LocalPlayerState = nullptr;
+	}
+}
+
+void UReadyUpWidget::TryGetLocalPlayerState()
+{
+	if (LocalPlayerState)
+	{
+		return;
+	}
+
+	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
+	{
+		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
+		if (TSPC && TSPC->IsLocalPlayerController())
+		{
+			LocalPlayerState = TSPC->GetPlayerState<ATennisStoryPlayerState>();
+			if (LocalPlayerState)
+			{
+				LocalPlayerState->OnReadyStateUpdated().AddUObject(this, &UReadyUpWidget::HandleReadyStateUpdated);
+				HandleReadyStateUpdated(LocalPlayerState);
+			}
+		}
 	}
 }
 
