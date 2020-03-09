@@ -6,6 +6,10 @@
 
 void UReadyUpWidget::SetUpWidget()
 {
+	LocalPlayerController = TryGetLocalPlayerController();
+
+	checkf(LocalPlayerController, TEXT("UReadyUpWidget::SetUpWidget - LocalPlayerController was null!"))
+
 	//NOTE(achester): the call below can actually fail to get a playerstate if on a client where the playerstates have not been fully replicated yet.
 	//As a result, we simply call the function again the first time the widget is interacted with since by then there should be no issues.  However this should probably change
 	TryGetLocalPlayerState();
@@ -20,25 +24,32 @@ void UReadyUpWidget::CleanUpWidget()
 	}
 }
 
-void UReadyUpWidget::TryGetLocalPlayerState()
+ATennisStoryPlayerController* UReadyUpWidget::TryGetLocalPlayerController()
 {
-	if (LocalPlayerState)
-	{
-		return;
-	}
-
 	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
 	{
 		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
 		if (TSPC && TSPC->IsLocalPlayerController())
 		{
-			LocalPlayerState = TSPC->GetPlayerState<ATennisStoryPlayerState>();
-			if (LocalPlayerState)
-			{
-				LocalPlayerState->OnReadyStateUpdated().AddUObject(this, &UReadyUpWidget::HandleReadyStateUpdated);
-				HandleReadyStateUpdated(LocalPlayerState);
-			}
+			return TSPC;
 		}
+	}
+
+	return nullptr;
+}
+
+void UReadyUpWidget::TryGetLocalPlayerState()
+{
+	if (LocalPlayerState || !LocalPlayerController)
+	{
+		return;
+	}
+
+	LocalPlayerState = LocalPlayerController->GetPlayerState<ATennisStoryPlayerState>();
+	if (LocalPlayerState)
+	{
+		LocalPlayerState->OnReadyStateUpdated().AddUObject(this, &UReadyUpWidget::HandleReadyStateUpdated);
+		HandleReadyStateUpdated(LocalPlayerState);
 	}
 }
 

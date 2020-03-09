@@ -298,6 +298,10 @@ public:
 
 	void RemoveReadyUpWidgetFromViewport();
 
+	void SetLocalPlayerToUIInputMode();
+
+	void SetLocalPlayerToGameInputMode();
+
 protected:
 
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_MatchState)

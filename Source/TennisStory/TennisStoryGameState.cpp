@@ -355,6 +355,38 @@ void ATennisStoryGameState::RemoveReadyUpWidgetFromViewport()
 	}
 }
 
+void ATennisStoryGameState::SetLocalPlayerToUIInputMode()
+{
+	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
+	{
+		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
+		if (TSPC && TSPC->IsLocalPlayerController())
+		{
+			FInputModeUIOnly UIOnlyInput;
+			TSPC->SetInputMode(UIOnlyInput);
+			TSPC->bShowMouseCursor = true;
+
+			break;
+		}
+	}
+}
+
+void ATennisStoryGameState::SetLocalPlayerToGameInputMode()
+{
+	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
+	{
+		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
+		if (TSPC && TSPC->IsLocalPlayerController())
+		{
+			FInputModeGameOnly GameOnlyInput;
+			TSPC->SetInputMode(GameOnlyInput);
+			TSPC->bShowMouseCursor = false;
+
+			break;
+		}
+	}
+}
+
 void ATennisStoryGameState::OnRep_MatchState()
 {
 	switch (CurrentMatchState)
@@ -368,12 +400,18 @@ void ATennisStoryGameState::OnRep_MatchState()
 		{
 			AddReadyStateWidgetToViewport();
 			AddReadyUpWidgetToViewport();
+
+			SetLocalPlayerToUIInputMode();
+
 			break;
 		}
 		case EMatchState::MatchInProgress:
 		{
 			RemoveReadyStateWidgetFromViewport();
 			RemoveReadyUpWidgetFromViewport();
+
+			SetLocalPlayerToGameInputMode();
+
 			break;
 		}
 	}

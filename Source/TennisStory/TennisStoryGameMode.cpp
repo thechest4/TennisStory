@@ -5,6 +5,7 @@
 #include "EngineUtils.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/TennisStoryPlayerController.h"
+#include "Player/TennisStoryPlayerState.h"
 #include "Gameplay/HalfCourt.h"
 #include "Gameplay/BounceLocationMarker.h"
 #include "Gameplay/Ball/TennisBall.h"
@@ -97,12 +98,26 @@ void ATennisStoryGameMode::StartPlay()
 
 	Super::StartPlay();
 
+	//Register to all player ready updates
+	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+	{
+		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+		TSPS->OnReadyStateUpdated().AddUObject(this, &ATennisStoryGameMode::HandlePlayerReadyStateUpdated);
+	}
+
+	TSGameState->OnPlayerStateAdded().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateAdded);
+	TSGameState->OnPlayerStateRemoved().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateRemoved);
+
+	//Update match state
 	TSGameState->CurrentMatchState = EMatchState::WaitingForPlayers;
 	TSGameState->OnRep_MatchState();
 }
 
 void ATennisStoryGameMode::StartMatch()
 {
+	TSGameState->CurrentMatchState = EMatchState::MatchInProgress;
+	TSGameState->OnRep_MatchState();
+
 	TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
 
 	SetUpNextPoint();
@@ -521,4 +536,45 @@ void ATennisStoryGameMode::SwitchSides()
 			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
 		}
 	}
+}
+
+void ATennisStoryGameMode::HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState)
+{
+	//If all player states are now ready, start match
+	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+	{
+		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+		
+		checkf(TSPS, TEXT("ATennisStoryGameMode::HandlePlayerReadyStateUpdated - Found a PlayerState that was not of the right type!"))
+
+		if (!TSPS->IsReady())
+		{
+			return;
+		}
+	}
+	
+	//We would have returned already if we found a player that was not ready.  So unregister all our handlers related to player readiness, and start the match!
+	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+	{
+		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+
+		checkf(TSPS, TEXT("ATennisStoryGameMode::HandlePlayerReadyStateUpdated - Found a PlayerState that was not of the right type!"))
+
+		TSPS->OnReadyStateUpdated().RemoveAll(this);
+	}
+
+	TSGameState->OnPlayerStateAdded().RemoveAll(this);
+	TSGameState->OnPlayerStateRemoved().RemoveAll(this);
+
+	StartMatch();
+}
+
+void ATennisStoryGameMode::HandlePlayerStateAdded(ATennisStoryPlayerState* PlayerState)
+{
+	PlayerState->OnReadyStateUpdated().AddUObject(this, &ATennisStoryGameMode::HandlePlayerReadyStateUpdated);
+}
+
+void ATennisStoryGameMode::HandlePlayerStateRemoved(ATennisStoryPlayerState* PlayerState)
+{
+	PlayerState->OnReadyStateUpdated().RemoveAll(this);
 }

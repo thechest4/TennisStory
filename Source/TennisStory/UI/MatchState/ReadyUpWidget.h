@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ReadyUpWidget.generated.h"
 
+class ATennisStoryPlayerController;
 class ATennisStoryPlayerState;
 
 UCLASS()
@@ -18,6 +19,8 @@ public:
 
 	void CleanUpWidget();
 
+	ATennisStoryPlayerController* TryGetLocalPlayerController();
+
 	UFUNCTION(BlueprintCallable)
 	void TryGetLocalPlayerState();
 
@@ -28,6 +31,10 @@ public:
 	void HandleReadyStateUpdated(ATennisStoryPlayerState* PlayerState);
 	
 protected:
+	
+	UPROPERTY()
+	ATennisStoryPlayerController* LocalPlayerController;
+
 	UPROPERTY(BlueprintReadOnly)
 	ATennisStoryPlayerState* LocalPlayerState;
 };

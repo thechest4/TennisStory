@@ -9,6 +9,7 @@
 class ATennisStoryGameState;
 class ATennisBall;
 class ABounceLocationMarker;
+class ATennisStoryPlayerState;
 
 UCLASS(minimalapi)
 class ATennisStoryGameMode : public AGameModeBase
@@ -92,6 +93,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
 	int MarginToWinGame = 2;
+
+	//Handling PlayerState readiness
+	UFUNCTION()
+	void HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState);
+
+	UFUNCTION()
+	void HandlePlayerStateAdded(ATennisStoryPlayerState* PlayerState);
+	
+	UFUNCTION()
+	void HandlePlayerStateRemoved(ATennisStoryPlayerState* PlayerState);
 
 private:
 	const int MaxTeamNumber = 2;
