@@ -7,6 +7,7 @@ ATennisStoryPlayerState::ATennisStoryPlayerState(const FObjectInitializer& Objec
 	:Super(ObjectInitializer)
 {
 	bIsReady = false;
+	bOnlySpectator = true;
 }
 
 bool ATennisStoryPlayerState::Server_UpdateIsReady_Validate(bool bNewReady)

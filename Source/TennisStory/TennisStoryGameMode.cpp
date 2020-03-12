@@ -115,6 +115,16 @@ void ATennisStoryGameMode::StartPlay()
 
 void ATennisStoryGameMode::StartMatch()
 {
+	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
+	{
+		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
+		if (TSPC)
+		{
+			TSPC->PlayerState->bOnlySpectator = false;
+			RestartPlayer(TSPC);
+		}
+	}
+
 	TSGameState->CurrentMatchState = EMatchState::MatchInProgress;
 	TSGameState->OnRep_MatchState();
 
@@ -212,7 +222,7 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 	}
 	else
 	{
-		NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
+		//NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
 
 		SetPlayerDefaults(NewPlayer->GetPawn());
 

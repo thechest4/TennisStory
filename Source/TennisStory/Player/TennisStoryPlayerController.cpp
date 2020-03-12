@@ -5,5 +5,7 @@
 
 void ATennisStoryPlayerController::BeginPlay()
 {
+	Super::BeginPlay();
+
 	SetControlRotation(FRotator::ZeroRotator);
 }
