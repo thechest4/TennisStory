@@ -25,6 +25,8 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 
 	AllowedBounces = 1;
 	AllowedFaults = 1;
+
+	bStartPlayersAsSpectators = true;
 }
 
 void ATennisStoryGameMode::InitGameState()
@@ -111,7 +113,6 @@ void ATennisStoryGameMode::StartMatch()
 		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
 		if (TSPC && !TSPC->GetPawn())
 		{
-			TSPC->PlayerState->bOnlySpectator = false;
 			RestartPlayer(TSPC);
 		}
 	}
