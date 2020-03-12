@@ -50,9 +50,6 @@ void ATennisStoryGameMode::InitGameState()
 	}
 
 	TSGameState->InitScores(MaxTeamNumber, NumSets);
-
-	//This only will show the scoreboard on the host, other clients will show it when the NumSets value replicates
-	TSGameState->AddScoreWidgetToViewport();
 	
 	if (!TSGameState->Courts.Num())
 	{
@@ -120,7 +117,7 @@ void ATennisStoryGameMode::StartMatch()
 	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
 	{
 		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
-		if (TSPC)
+		if (TSPC && !TSPC->GetPawn())
 		{
 			TSPC->PlayerState->bOnlySpectator = false;
 			RestartPlayer(TSPC);
@@ -131,6 +128,8 @@ void ATennisStoryGameMode::StartMatch()
 	TSGameState->OnRep_MatchState();
 
 	TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
+	
+	TSGameState->InitScores(MaxTeamNumber, NumSets);
 
 	SetUpNextPoint();
 }
@@ -458,8 +457,6 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 			if (WinnerSets >= SetsToWinMatch)
 			{
 				CurrentPointResolutionContext = EPointResolutionContext::Match;
-
-				TSGameState->InitScores(MaxTeamNumber, NumSets);
 			}
 			else
 			{
@@ -478,8 +475,16 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 	TSGameState->CurrentPlayState = EPlayState::Waiting;
 
-	FTimerHandle NextPointHandle;
-	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
+	if (CurrentPointResolutionContext != EPointResolutionContext::Match)
+	{
+		FTimerHandle NextPointHandle;
+		GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
+	}
+	else
+	{
+		FTimerHandle NextMatchHandle;
+		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::StartMatch, 5.f);
+	}
 
 	FString ResolutionTypeString = FString();
 	FString ScoreCalloutString = FString();

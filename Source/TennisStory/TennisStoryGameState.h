@@ -262,6 +262,8 @@ public:
 	}
 	
 	void AddScoreWidgetToViewport();
+	
+	void RemoveScoreWidgetFromViewport();
 
 	UPROPERTY()
 	UScoreboardWidget* ScoreboardWidgetObject;
@@ -340,7 +342,7 @@ protected:
 	UPROPERTY(Transient, Replicated)
 	TArray<TWeakObjectPtr<AHalfCourt>> Courts;
 
-	UPROPERTY(Transient, ReplicatedUsing = OnRep_NumSets)
+	UPROPERTY(Transient, Replicated)
 	int NumSets;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
@@ -354,9 +356,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Match State")
 	TSubclassOf<UReadyUpWidget> ReadyUpWidgetClass;
-
-	UFUNCTION()
-	void OnRep_NumSets();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teams")
 	TArray<FString> TeamNames;

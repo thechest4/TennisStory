@@ -256,6 +256,14 @@ void ATennisStoryGameState::AddScoreWidgetToViewport()
 	}
 }
 
+void ATennisStoryGameState::RemoveScoreWidgetFromViewport()
+{
+	if (ScoreboardWidgetObject)
+	{
+		ScoreboardWidgetObject->RemoveFromViewport();
+	}
+}
+
 void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float ShowDuration, const FText& HeaderText, const FText& BodyText)
 {
 	if (!ScoreCalloutWidgetClass)
@@ -401,12 +409,16 @@ void ATennisStoryGameState::OnRep_MatchState()
 			AddReadyStateWidgetToViewport();
 			AddReadyUpWidgetToViewport();
 
+			RemoveScoreWidgetFromViewport();
+
 			SetLocalPlayerToUIInputMode();
 
 			break;
 		}
 		case EMatchState::MatchInProgress:
 		{
+			AddScoreWidgetToViewport();
+
 			RemoveReadyStateWidgetFromViewport();
 			RemoveReadyUpWidgetFromViewport();
 
@@ -415,11 +427,6 @@ void ATennisStoryGameState::OnRep_MatchState()
 			break;
 		}
 	}
-}
-
-void ATennisStoryGameState::OnRep_NumSets()
-{
-	AddScoreWidgetToViewport();
 }
 
 FString ATennisStoryGameState::GetDisplayStringForCurrentGameScoreByTeam(int TeamId) const
