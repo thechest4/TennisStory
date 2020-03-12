@@ -24,7 +24,8 @@ enum class EMatchState : uint8
 {
 	Uninitialized,
 	WaitingForPlayers,
-	MatchInProgress
+	MatchInProgress,
+	WaitingForNextMatch
 };
 
 UENUM()

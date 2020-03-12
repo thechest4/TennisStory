@@ -97,15 +97,7 @@ void ATennisStoryGameMode::StartPlay()
 
 	Super::StartPlay();
 
-	//Register to all player ready updates
-	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
-	{
-		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
-		TSPS->OnReadyStateUpdated().AddUObject(this, &ATennisStoryGameMode::HandlePlayerReadyStateUpdated);
-	}
-
-	TSGameState->OnPlayerStateAdded().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateAdded);
-	TSGameState->OnPlayerStateRemoved().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateRemoved);
+	RegisterToPlayerReadyStateUpdates();
 
 	//Update match state
 	TSGameState->CurrentMatchState = EMatchState::WaitingForPlayers;
@@ -365,14 +357,16 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 			
 			TSGameState->CurrentPlayState = EPlayState::Waiting;
 
-			TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")));
+			float ResetDuration = 1.5f;
+
+			TSGameState->AddCalloutWidgetToViewport(ResetDuration, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")));
 
 			FTimerHandle NextPointHandle;
-			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
+			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, ResetDuration);
 			
 			if (BounceMarkerActor.IsValid())
 			{
-				BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, 0.75f);
+				BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, ResetDuration);
 			}
 		}
 		else
@@ -398,11 +392,6 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
 	{
 		return;
-	}
-	
-	if (bShowBounceLocation && BounceMarkerActor.IsValid())
-	{
-		BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, 1.5f);
 	}
 
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit = TSGameState->CurrentBallActor->LastPlayerToHit;
@@ -473,21 +462,9 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		}
 	}
 
-	TSGameState->CurrentPlayState = EPlayState::Waiting;
-
-	if (CurrentPointResolutionContext != EPointResolutionContext::Match)
-	{
-		FTimerHandle NextPointHandle;
-		GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, 1.5f);
-	}
-	else
-	{
-		FTimerHandle NextMatchHandle;
-		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::StartMatch, 5.f);
-	}
-
 	FString ResolutionTypeString = FString();
 	FString ScoreCalloutString = FString();
+	int CalloutDisplayDuration = 1.5f;
 
 	if (CurrentPointResolutionContext == EPointResolutionContext::Point)
 	{
@@ -535,25 +512,61 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		}
 		case EPointResolutionContext::Game:
 		{
+			CalloutDisplayDuration = 3.f;
+
 			ResolutionTypeString = FString(TEXT("GAME - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForSetScore(TSGameState->CurrentSet);
 			break;
 		}
 		case EPointResolutionContext::Set:
 		{
+			CalloutDisplayDuration = 3.f;
+
 			ResolutionTypeString = FString(TEXT("SET - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreShort();
 			break;
 		}
 		case EPointResolutionContext::Match:
 		{
+			//NOTE(achester): Negative duration means it will not remove itself and we'll need to remove the widget manually
+			CalloutDisplayDuration = -1.f;
+
 			ResolutionTypeString = FString(TEXT("GAME, SET, MATCH - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreLong();
 			break;
 		}
 	}
 	
-	TSGameState->AddCalloutWidgetToViewport(1.5f, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString));
+	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString));
+	
+	if (bShowBounceLocation && BounceMarkerActor.IsValid())
+	{
+		BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, CalloutDisplayDuration);
+	}
+
+	TSGameState->CurrentPlayState = EPlayState::Waiting;
+
+	if (CurrentPointResolutionContext != EPointResolutionContext::Match)
+	{
+		FTimerHandle NextPointHandle;
+		GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, CalloutDisplayDuration);
+	}
+	else
+	{
+		for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+		{
+			ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+
+			checkf(TSPS, TEXT("ATennisStoryGameMode::ResolvePoint - Found a PlayerState that was not of the right type!"))
+
+			TSPS->bIsReady = false;
+		}
+
+		static const float EnterWaitingStateDelay = 3.f;
+
+		FTimerHandle NextMatchHandle;
+		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::EnterWaitingForNextMatchState, EnterWaitingStateDelay);
+	}
 }
 
 void ATennisStoryGameMode::SwitchSides()
@@ -616,4 +629,25 @@ void ATennisStoryGameMode::HandlePlayerStateAdded(ATennisStoryPlayerState* Playe
 void ATennisStoryGameMode::HandlePlayerStateRemoved(ATennisStoryPlayerState* PlayerState)
 {
 	PlayerState->OnReadyStateUpdated().RemoveAll(this);
+}
+
+void ATennisStoryGameMode::RegisterToPlayerReadyStateUpdates()
+{
+	//Register to all player ready updates
+	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+	{
+		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+		TSPS->OnReadyStateUpdated().AddUObject(this, &ATennisStoryGameMode::HandlePlayerReadyStateUpdated);
+	}
+
+	TSGameState->OnPlayerStateAdded().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateAdded);
+	TSGameState->OnPlayerStateRemoved().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateRemoved);
+}
+
+void ATennisStoryGameMode::EnterWaitingForNextMatchState()
+{
+	RegisterToPlayerReadyStateUpdates();
+
+	TSGameState->CurrentMatchState = EMatchState::WaitingForNextMatch;
+	TSGameState->OnRep_MatchState();
 }

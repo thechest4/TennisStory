@@ -252,6 +252,10 @@ void ATennisStoryGameState::AddScoreWidgetToViewport()
 		ScoreboardWidgetObject = CreateWidget<UScoreboardWidget>(GetWorld(), ScoreboardWidgetClass);
 		ScoreboardWidgetObject->AddSetScoreWidgets();
 		ScoreboardWidgetObject->SetTeamNames(TeamData[0].TeamName, TeamData[1].TeamName);
+	}
+	
+	if (!ScoreboardWidgetObject->IsInViewport())
+	{
 		ScoreboardWidgetObject->AddToViewport();
 	}
 }
@@ -279,7 +283,11 @@ void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float Show
 	checkf(ScoreCalloutWidgetObject, TEXT("ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation - ScoreCalloutWidgetObject was null!"))
 	
 	ScoreCalloutWidgetObject->ShowCalloutWidget(ShowDuration, HeaderText, BodyText);
-	ScoreCalloutWidgetObject->AddToViewport();
+
+	if (!ScoreCalloutWidgetObject->IsInViewport())
+	{
+		ScoreCalloutWidgetObject->AddToViewport();
+	}
 
 	ScoreCalloutWidgetObject->OnCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
 }
@@ -325,7 +333,12 @@ void ATennisStoryGameState::AddReadyStateWidgetToViewport()
 	if (!PlayerReadyStateWidgetObject)
 	{
 		PlayerReadyStateWidgetObject = CreateWidget<UPlayerReadyStatusWidget>(GetWorld(), PlayerReadyStateWidgetClass);
-		PlayerReadyStateWidgetObject->SetUpWidget();
+	}
+
+	PlayerReadyStateWidgetObject->SetUpWidget();
+
+	if (!PlayerReadyStateWidgetObject->IsInViewport())
+	{
 		PlayerReadyStateWidgetObject->AddToViewport();
 	}
 }
@@ -349,7 +362,12 @@ void ATennisStoryGameState::AddReadyUpWidgetToViewport()
 	if (!ReadyUpWidgetObject)
 	{
 		ReadyUpWidgetObject = CreateWidget<UReadyUpWidget>(GetWorld(), ReadyUpWidgetClass);
-		ReadyUpWidgetObject->SetUpWidget();
+	}
+	
+	ReadyUpWidgetObject->SetUpWidget();
+
+	if (!ReadyUpWidgetObject->IsInViewport())
+	{
 		ReadyUpWidgetObject->AddToViewport();
 	}
 }
@@ -419,10 +437,20 @@ void ATennisStoryGameState::OnRep_MatchState()
 		{
 			AddScoreWidgetToViewport();
 
+			RemoveCalloutWidgetFromViewport();
 			RemoveReadyStateWidgetFromViewport();
 			RemoveReadyUpWidgetFromViewport();
 
 			SetLocalPlayerToGameInputMode();
+
+			break;
+		}
+		case EMatchState::WaitingForNextMatch:
+		{
+			AddReadyStateWidgetToViewport();
+			AddReadyUpWidgetToViewport();
+			
+			SetLocalPlayerToUIInputMode();
 
 			break;
 		}

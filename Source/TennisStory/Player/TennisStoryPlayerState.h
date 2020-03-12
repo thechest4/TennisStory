@@ -37,4 +37,5 @@ protected:
 	FOnReadyStateUpdatedEvent ReadyStateUpdatedEvent;
 
 	friend class UReadyUpWidget;
+	friend class ATennisStoryGameMode;
 };

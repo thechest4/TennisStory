@@ -29,6 +29,10 @@ void ABounceLocationMarker::Multicast_ShowMarkerAtLocation_Implementation(FVecto
 	
 	ParticleSystemComp->ActivateSystem();
 
+	static const float MAX_DURATION = 5.f;
+
+	Duration = (Duration > 0.f) ? Duration : MAX_DURATION;
+
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &ABounceLocationMarker::HideMarker, Duration);
 }

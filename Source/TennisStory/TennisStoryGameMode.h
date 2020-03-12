@@ -106,6 +106,11 @@ protected:
 	UFUNCTION()
 	void HandlePlayerStateRemoved(ATennisStoryPlayerState* PlayerState);
 
+	void RegisterToPlayerReadyStateUpdates();
+
+	UFUNCTION()
+	void EnterWaitingForNextMatchState();
+
 private:
 	const int MaxTeamNumber = 2;
 };
