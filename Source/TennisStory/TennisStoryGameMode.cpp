@@ -72,6 +72,8 @@ void ATennisStoryGameMode::InitGameState()
 
 void ATennisStoryGameMode::StartPlay()
 {
+	//NOTE(achester): Super call found below
+
 	if (DefaultBallClass)
 	{
 		FTransform BallSpawnTransform = FTransform::Identity;
@@ -135,6 +137,8 @@ void ATennisStoryGameMode::StartMatch()
 
 void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 {
+	//NOTE(achester): Deliberately not calling Super here
+
 	if (NewPlayer == nullptr || NewPlayer->IsPendingKillPending())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ATennisStoryGameMode::RestartPlayer - NewPlayer was null or pending kill"));
@@ -214,6 +218,8 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 
 void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation)
 {
+	//NOTE(achester): Deliberately not calling Super here
+
 	NewPlayer->Possess(NewPlayer->GetPawn());
 
 	if (NewPlayer->GetPawn() == nullptr)
@@ -222,11 +228,24 @@ void ATennisStoryGameMode::FinishRestartPlayer(AController* NewPlayer, const FRo
 	}
 	else
 	{
-		//NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
-
 		SetPlayerDefaults(NewPlayer->GetPawn());
 
 		K2_OnRestartPlayer(NewPlayer);
+	}
+}
+
+void ATennisStoryGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	if (!CameraPositioningComp.IsValid())
+	{
+		GetCamPositioningCompFromWorld();
+	}
+
+	if (NewPlayer && CameraPositioningComp.IsValid())
+	{
+		NewPlayer->SetViewTarget(CameraPositioningComp->GetOwner());
 	}
 }
 

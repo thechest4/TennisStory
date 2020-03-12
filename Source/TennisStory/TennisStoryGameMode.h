@@ -30,6 +30,8 @@ public:
 
 	virtual void FinishRestartPlayer(AController* NewPlayer, const FRotator& StartRotation) override;
 
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
 	int GetAllowedBounces() const
 	{
 		return AllowedBounces;
