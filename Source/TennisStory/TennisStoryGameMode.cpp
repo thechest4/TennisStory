@@ -157,6 +157,12 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			Team.AssignedPlayers.Add(TSPC);
 			SpawnCourt = Team.AssignedCourt;
 			PlayerTeam = &Team;
+
+			if (TSPC->GetPlayerState<ATennisStoryPlayerState>() && !TSPC->GetPlayerState<ATennisStoryPlayerState>()->GetPlayerName().Equals(FString()))
+			{
+				Team.TeamName = TSPC->GetPlayerState<ATennisStoryPlayerState>()->GetPlayerName();
+			}
+
 			break;
 		}
 	}

@@ -27,6 +27,6 @@ public:
 	void HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState);
 
 protected:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	ATennisStoryPlayerState* AssociatedPlayerState;
 };
