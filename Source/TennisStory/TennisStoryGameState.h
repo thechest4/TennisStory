@@ -385,6 +385,8 @@ protected:
 	//Returns a display string to describe the match score (set count) for both teams
 	FString GetDisplayStringForMatchScoreShort() const;
 
+	int GetNumCompletedSets() const;
+
 	//Returns a display string to describe the match score (full game counts for each set) for both teams
 	FString GetDisplayStringForMatchScoreLong() const;
 

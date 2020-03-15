@@ -541,17 +541,33 @@ FString ATennisStoryGameState::GetDisplayStringForMatchScoreShort() const
 	return FString::FromInt(CurrentMatchScores[0].SetsWon) + FString(TEXT(" - ")) + FString::FromInt(CurrentMatchScores[1].SetsWon);
 }
 
+int ATennisStoryGameState::GetNumCompletedSets() const
+{
+	int NumCompletedSets = 0;
+
+	for (int i = 0; i < CurrentMatchScores.Num(); i++)
+	{
+		NumCompletedSets += CurrentMatchScores[i].SetsWon;
+	}
+
+	return NumCompletedSets;
+}
+
 FString ATennisStoryGameState::GetDisplayStringForMatchScoreLong() const
 {
 	FString MatchScoreString = FString();
 
-	for (int i = 0; i < NumSets; i++)
-	{
-		MatchScoreString += GetDisplayStringForSetScore(i);
+	const int CompletedSets = GetNumCompletedSets();
 
-		if (i != NumSets - 1)
+	for (int i = 0; i < CompletedSets; i++)
+	{
+		FString SetScore = GetDisplayStringForSetScore(i);
+		SetScore.RemoveSpacesInline();
+		MatchScoreString += SetScore;
+
+		if (i != CompletedSets - 1)
 		{
-			MatchScoreString += FString(TEXT(", "));
+			MatchScoreString += FString(TEXT(" | "));
 		}
 	}
 
