@@ -12,5 +12,5 @@ class TENNISSTORY_API ATennisStoryPlayerController : public APlayerController
 	GENERATED_BODY()
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* aPawn) override;
 };
