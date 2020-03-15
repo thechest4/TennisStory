@@ -381,6 +381,35 @@ void ATennisStoryGameState::RemoveReadyUpWidgetFromViewport()
 	}
 }
 
+void ATennisStoryGameState::AddPlayAgainWidgetToViewport()
+{
+	if (!PlayAgainWidgetClass)
+	{
+		return;
+	}
+
+	if (!PlayAgainWidgetObject)
+	{
+		PlayAgainWidgetObject = CreateWidget<UReadyUpWidget>(GetWorld(), PlayAgainWidgetClass);
+	}
+	
+	PlayAgainWidgetObject->SetUpWidget();
+
+	if (!PlayAgainWidgetObject->IsInViewport())
+	{
+		PlayAgainWidgetObject->AddToViewport();
+	}
+}
+
+void ATennisStoryGameState::RemovePlayAgainWidgetFromViewport()
+{
+	if (PlayAgainWidgetObject)
+	{
+		PlayAgainWidgetObject->CleanUpWidget();
+		PlayAgainWidgetObject->RemoveFromViewport();
+	}
+}
+
 void ATennisStoryGameState::SetLocalPlayerToUIInputMode()
 {
 	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
@@ -440,6 +469,7 @@ void ATennisStoryGameState::OnRep_MatchState()
 			RemoveCalloutWidgetFromViewport();
 			RemoveReadyStateWidgetFromViewport();
 			RemoveReadyUpWidgetFromViewport();
+			RemovePlayAgainWidgetFromViewport();
 
 			SetLocalPlayerToGameInputMode();
 
@@ -448,7 +478,7 @@ void ATennisStoryGameState::OnRep_MatchState()
 		case EMatchState::WaitingForNextMatch:
 		{
 			AddReadyStateWidgetToViewport();
-			AddReadyUpWidgetToViewport();
+			AddPlayAgainWidgetToViewport();
 			
 			SetLocalPlayerToUIInputMode();
 

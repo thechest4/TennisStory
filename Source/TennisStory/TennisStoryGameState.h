@@ -297,9 +297,16 @@ public:
 	UPROPERTY()
 	UReadyUpWidget* ReadyUpWidgetObject;
 
+	UPROPERTY()
+	UReadyUpWidget* PlayAgainWidgetObject;
+
 	void AddReadyUpWidgetToViewport();
 
 	void RemoveReadyUpWidgetFromViewport();
+
+	void AddPlayAgainWidgetToViewport();
+
+	void RemovePlayAgainWidgetFromViewport();
 
 	void SetLocalPlayerToUIInputMode();
 
@@ -357,6 +364,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Match State")
 	TSubclassOf<UReadyUpWidget> ReadyUpWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Match State")
+	TSubclassOf<UReadyUpWidget> PlayAgainWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Teams")
 	TArray<FString> TeamNames;
