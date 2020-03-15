@@ -1,6 +1,7 @@
 
 #include "TennisStoryGameMode.h"
 #include "TennisStoryGameState.h"
+#include "TennisStoryGameInstance.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "Player/TennisStoryCharacter.h"
@@ -36,7 +37,9 @@ void ATennisStoryGameMode::InitGameState()
 	TSGameState = Cast<ATennisStoryGameState>(GameState);
 
 	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
-	
+
+	TSGameInstance = GetGameInstance<UTennisStoryGameInstance>();
+
 	TSGameState->CurrentPlayState = EPlayState::Waiting;
 
 	for (int i = 0; i < MaxTeamNumber; i++)
@@ -99,11 +102,34 @@ void ATennisStoryGameMode::StartPlay()
 
 	Super::StartPlay();
 
-	RegisterToPlayerReadyStateUpdates();
+	switch (TSGameInstance->GetOnlinePlayType())
+	{
+		default:
+		case EOnlinePlayType::Offline:
+		{
+			FString Error;
+			TSGameInstance->CreateLocalPlayer(1, Error, true);
 
-	//Update match state
-	TSGameState->CurrentMatchState = EMatchState::WaitingForPlayers;
-	TSGameState->OnRep_MatchState();
+			checkf(Error.Len() == 0, TEXT("ATennisStoryGameMode::StartPlay - %s"), *Error)
+
+			TSGameState->CurrentMatchState = EMatchState::MatchInProgress;
+			TSGameState->OnRep_MatchState();
+
+			StartMatch();
+
+			break;
+		}
+		case EOnlinePlayType::Online:
+		{
+			RegisterToPlayerReadyStateUpdates();
+
+			//Update match state
+			TSGameState->CurrentMatchState = EMatchState::WaitingForPlayers;
+			TSGameState->OnRep_MatchState();
+
+			break;
+		}
+	}
 }
 
 void ATennisStoryGameMode::StartMatch()
@@ -158,7 +184,7 @@ void ATennisStoryGameMode::RestartPlayer(AController* NewPlayer)
 			SpawnCourt = Team.AssignedCourt;
 			PlayerTeam = &Team;
 
-			if (TSPC->GetPlayerState<ATennisStoryPlayerState>() && !TSPC->GetPlayerState<ATennisStoryPlayerState>()->GetPlayerName().Equals(FString()))
+			if (TSPC->GetPlayerState<ATennisStoryPlayerState>() && TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Online)
 			{
 				Team.TeamName = TSPC->GetPlayerState<ATennisStoryPlayerState>()->GetPlayerName();
 			}
@@ -569,10 +595,10 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 			TSPS->bIsReady = false;
 		}
 
-		static const float EnterWaitingStateDelay = 3.f;
+		static const float EnterWaitingStateDelay = (TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Online) ? 3.f : 5.f;
 
 		FTimerHandle NextMatchHandle;
-		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::EnterWaitingForNextMatchState, EnterWaitingStateDelay);
+		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::HandleMatchEnded, EnterWaitingStateDelay);
 	}
 }
 
@@ -649,6 +675,24 @@ void ATennisStoryGameMode::RegisterToPlayerReadyStateUpdates()
 
 	TSGameState->OnPlayerStateAdded().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateAdded);
 	TSGameState->OnPlayerStateRemoved().AddUObject(this, &ATennisStoryGameMode::HandlePlayerStateRemoved);
+}
+
+void ATennisStoryGameMode::HandleMatchEnded()
+{
+	switch (TSGameInstance->GetOnlinePlayType())
+	{
+		default:
+		case EOnlinePlayType::Offline:
+		{
+			StartMatch();
+			break;
+		}
+		case EOnlinePlayType::Online:
+		{
+			EnterWaitingForNextMatchState();
+			break;
+		}
+	}
 }
 
 void ATennisStoryGameMode::EnterWaitingForNextMatchState()

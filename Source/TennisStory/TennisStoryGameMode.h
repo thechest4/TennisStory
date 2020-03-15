@@ -6,6 +6,7 @@
 #include "TennisStoryGameState.h"
 #include "TennisStoryGameMode.generated.h"
 
+class UTennisStoryGameInstance;
 class ATennisStoryGameState;
 class ATennisBall;
 class ABounceLocationMarker;
@@ -60,6 +61,9 @@ protected:
 	ATennisStoryGameState* TSGameState;
 
 	UPROPERTY(Transient)
+	UTennisStoryGameInstance* TSGameInstance;
+
+	UPROPERTY(Transient)
 	TArray<TWeakObjectPtr<ATennisStoryCharacter>> AllCharacters;
 
 	void GetCourtsFromWorld();
@@ -108,7 +112,10 @@ protected:
 
 	void RegisterToPlayerReadyStateUpdates();
 
+	//Match End handling
 	UFUNCTION()
+	void HandleMatchEnded();
+
 	void EnterWaitingForNextMatchState();
 
 private:
