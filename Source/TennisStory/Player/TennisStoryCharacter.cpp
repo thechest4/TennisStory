@@ -306,6 +306,16 @@ void ATennisStoryCharacter::Multicast_ExitServiceState_Implementation()
 	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.Service")));
 }
 
+void ATennisStoryCharacter::Multicast_LockAbilities_Implementation()
+{
+	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.AbilitiesLocked")));
+}
+
+void ATennisStoryCharacter::Multicast_UnlockAbilities_Implementation()
+{
+	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.AbilitiesLocked")));
+}
+
 void ATennisStoryCharacter::Multicast_SetActorTransform_Implementation(FTransform NewTransform)
 {
 	SetActorTransform(NewTransform);

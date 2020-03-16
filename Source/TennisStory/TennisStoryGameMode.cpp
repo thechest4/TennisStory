@@ -12,6 +12,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CamPositioningComponent.h"
+#include "UI/Score/ServiceCalloutWidget.h"
 
 ATennisStoryGameMode::ATennisStoryGameMode()
 {
@@ -380,6 +381,10 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	if (bIsLoveAll)
 	{
 		TSGameState->AddServiceWidgetToViewport(ServiceCalloutDuration, FText::FromString(HeaderText), FText::FromString(BodyText));
+
+		TSGameState->CurrentServingCharacter->Multicast_LockAbilities();
+
+		TSGameState->ServiceWidgetObject->OnServiceCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameMode::HandleServiceWidgetFinished);
 	}
 }
 
@@ -754,4 +759,11 @@ void ATennisStoryGameMode::EnterWaitingForNextMatchState()
 
 	TSGameState->CurrentMatchState = EMatchState::WaitingForNextMatch;
 	TSGameState->OnRep_MatchState();
+}
+
+void ATennisStoryGameMode::HandleServiceWidgetFinished()
+{
+	TSGameState->ServiceWidgetObject->OnServiceCalloutWidgetFinished().RemoveDynamic(this, &ATennisStoryGameMode::HandleServiceWidgetFinished);
+
+	TSGameState->CurrentServingCharacter->Multicast_UnlockAbilities();
 }

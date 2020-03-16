@@ -105,6 +105,9 @@ protected:
 
 	void EnterWaitingForNextMatchState();
 
+	UFUNCTION()
+	void HandleServiceWidgetFinished();
+
 private:
 	const int MaxTeamNumber = 2;
 };

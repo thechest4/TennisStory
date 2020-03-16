@@ -111,6 +111,12 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ExitServiceState();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_LockAbilities();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UnlockAbilities();
+
 	bool HasBallAttached() const
 	{
 		return bHasBallAttached;
