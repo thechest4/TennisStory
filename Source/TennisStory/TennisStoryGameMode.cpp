@@ -324,7 +324,59 @@ void ATennisStoryGameMode::SetUpNextPoint()
 		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("ATennisStoryGameMode::SetUpNextPoint - CurrentServingCharacter was not valid!"));
 	}
 
+	//Generate text for Service Callout Widget
+	bool bIsLoveAll = true;
+	for (int i = 0; i < TSGameState->CurrentGameScore.Scores.Num(); i++)
+	{
+		if (TSGameState->CurrentGameScore.Scores[i] != 0)
+		{
+			bIsLoveAll = false;
+			break;
+		}
+	}
+
+	bool bIsFirstGameOfSet = true;
+	for (int i = 0; i < TSGameState->CurrentMatchScores.Num(); i++)
+	{
+		if (TSGameState->CurrentMatchScores[i].SetScores[TSGameState->CurrentSet] != 0)
+		{
+			bIsFirstGameOfSet = false;
+			break;
+		}
+	}
+
+	FString HeaderText = FString(TEXT("Uninitialized Header Text"));
+	FString BodyText = TSGameState->TeamData[TSGameState->CurrentServiceTeam].TeamName.ToUpper() + FString(TEXT(" TO SERVE"));
+	float ServiceCalloutDuration = 1.5f;
+
+	if (bIsLoveAll)
+	{
+		if (bIsFirstGameOfSet)
+		{
+			if (TSGameState->CurrentSet == 0)
+			{
+				HeaderText = FString::Printf(TEXT("MATCH START - %s vs %s"), *TSGameState->TeamData[0].TeamName.ToUpper(), *TSGameState->TeamData[1].TeamName.ToUpper());
+				ServiceCalloutDuration = 3.f;
+			}
+			else
+			{
+				HeaderText = FString::Printf(TEXT("SET %d START"), (TSGameState->CurrentSet + 1));
+				ServiceCalloutDuration = 2.5f;
+			}
+		}
+		else
+		{
+			HeaderText = FString::Printf(TEXT("GAME START"));
+			ServiceCalloutDuration = 2.f;
+		}
+	}
+
 	TSGameState->CurrentPlayState = EPlayState::Service;
+
+	if (bIsLoveAll)
+	{
+		TSGameState->AddServiceWidgetToViewport(ServiceCalloutDuration, FText::FromString(HeaderText), FText::FromString(BodyText));
+	}
 }
 
 void ATennisStoryGameMode::ReportServeHit()
@@ -392,7 +444,7 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 
 			float ResetDuration = 1.5f;
 
-			TSGameState->AddCalloutWidgetToViewport(ResetDuration, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")));
+			TSGameState->AddCalloutWidgetToViewport(ResetDuration, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")), false);
 
 			FTimerHandle NextPointHandle;
 			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, ResetDuration);
@@ -570,7 +622,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		}
 	}
 	
-	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString));
+	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), false);
 	
 	if (bShowBounceLocation && BounceMarkerActor.IsValid())
 	{

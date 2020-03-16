@@ -3,6 +3,7 @@
 #include "TennisStoryGameState.h"
 #include "UI/Score/ScoreboardWidget.h"
 #include "UI/Score/ScoreCalloutWidget.h"
+#include "UI/Score/ServiceCalloutWidget.h"
 #include "UI/MatchState/PlayerReadyStatusWidget.h"
 #include "UI/MatchState/ReadyUpWidget.h"
 #include "Player/TennisStoryPlayerState.h"
@@ -268,7 +269,7 @@ void ATennisStoryGameState::RemoveScoreWidgetFromViewport()
 	}
 }
 
-void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float ShowDuration, const FText& HeaderText, const FText& BodyText)
+void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float ShowDuration, const FText& HeaderText, const FText& BodyText, bool bShowSideSwitch)
 {
 	if (!ScoreCalloutWidgetClass)
 	{
@@ -282,7 +283,7 @@ void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float Show
 
 	checkf(ScoreCalloutWidgetObject, TEXT("ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation - ScoreCalloutWidgetObject was null!"))
 	
-	ScoreCalloutWidgetObject->ShowCalloutWidget(ShowDuration, HeaderText, BodyText);
+	ScoreCalloutWidgetObject->ShowCalloutWidget(ShowDuration, HeaderText, BodyText, bShowSideSwitch);
 
 	if (!ScoreCalloutWidgetObject->IsInViewport())
 	{
@@ -298,6 +299,39 @@ void ATennisStoryGameState::RemoveCalloutWidgetFromViewport()
 	{
 		ScoreCalloutWidgetObject->RemoveFromViewport();
 		ScoreCalloutWidgetObject->OnCalloutWidgetFinished().RemoveDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
+	}
+}
+
+void ATennisStoryGameState::AddServiceWidgetToViewport_Implementation(float ShowDuration, const FText& HeaderText, const FText& BodyText)
+{
+	if (!ServiceWidgetClass)
+	{
+		return;
+	}
+
+	if (!ServiceWidgetObject)
+	{
+		ServiceWidgetObject = CreateWidget<UServiceCalloutWidget>(GetWorld(), ServiceWidgetClass);
+	}
+
+	checkf(ServiceWidgetObject, TEXT("ATennisStoryGameState::AddServiceWidgetToViewport_Implementation - ServiceWidgetObject was null!"))
+	
+	ServiceWidgetObject->ShowCalloutWidget(ShowDuration, HeaderText, BodyText);
+
+	if (!ServiceWidgetObject->IsInViewport())
+	{
+		ServiceWidgetObject->AddToViewport();
+	}
+
+	ServiceWidgetObject->OnServiceCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameState::RemoveServiceWidgetFromViewport);
+}
+
+void ATennisStoryGameState::RemoveServiceWidgetFromViewport()
+{
+	if (ServiceWidgetObject)
+	{
+		ServiceWidgetObject->RemoveFromViewport();
+		ServiceWidgetObject->OnServiceCalloutWidgetFinished().RemoveDynamic(this, &ATennisStoryGameState::RemoveServiceWidgetFromViewport);
 	}
 }
 

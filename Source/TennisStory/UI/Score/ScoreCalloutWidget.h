@@ -17,7 +17,7 @@ public:
 	FOnCalloutWidgetFinishedEvent& OnCalloutWidgetFinished(){ return CalloutWidgetFinishedEvent; }
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Score")
-	void ShowCalloutWidget(float Duration, const FText& HeaderText, const FText& BodyText);
+	void ShowCalloutWidget(float Duration, const FText& HeaderText, const FText& BodyText, bool bSideSwitch);
 
 	UFUNCTION(BlueprintCallable, Category = "Widget Events")
 	void BroadcastWidgetFinishedEvent();

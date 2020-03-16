@@ -13,6 +13,7 @@ class ATennisStoryPlayerState;
 class ATennisBall;
 class UScoreboardWidget;
 class UScoreCalloutWidget;
+class UServiceCalloutWidget;
 class UPlayerReadyStatusWidget;
 class UReadyUpWidget;
 
@@ -270,13 +271,22 @@ public:
 	UScoreboardWidget* ScoreboardWidgetObject;
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void AddCalloutWidgetToViewport(float ShowDuration, const FText& HeaderText, const FText& BodyText);
+	void AddCalloutWidgetToViewport(float ShowDuration, const FText& HeaderText, const FText& BodyText, bool bShowSideSwitch);
 
 	UFUNCTION()
 	void RemoveCalloutWidgetFromViewport();
 
 	UPROPERTY()
 	UScoreCalloutWidget* ScoreCalloutWidgetObject;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void AddServiceWidgetToViewport(float ShowDuration, const FText& HeaderText, const FText& BodyText);
+
+	UFUNCTION()
+	void RemoveServiceWidgetFromViewport();
+
+	UPROPERTY()
+	UServiceCalloutWidget* ServiceWidgetObject;
 
 	EPlayState GetCurrentPlayState() const
 	{
@@ -358,6 +368,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
 	TSubclassOf<UScoreCalloutWidget> ScoreCalloutWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Score UI")
+	TSubclassOf<UServiceCalloutWidget> ServiceWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Match State")
 	TSubclassOf<UPlayerReadyStatusWidget> PlayerReadyStateWidgetClass;
