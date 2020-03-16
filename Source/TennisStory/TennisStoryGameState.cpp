@@ -13,6 +13,7 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
+	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchLengthParams);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentMatchState);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentPlayState);
 	DOREPLIFETIME(ATennisStoryGameState, CurrentServiceTeam);
@@ -553,11 +554,54 @@ FString ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull() const
 	{
 		return FString(TEXT("DEUCE"));
 	}
+
+	int OutLeadingTeamIndex = -1;
+	ECriticalPointType CriticalPointType = GetCriticalPointType(OutLeadingTeamIndex);
+	switch (CriticalPointType)
+	{
+		default:
+		case ECriticalPointType::None:
+		{
+			break;
+		}
+		case ECriticalPointType::GamePoint:
+		{
+			return FString(TEXT("GAME POINT"));
+		}
+		case ECriticalPointType::BreakPoint:
+		{
+			return FString(TEXT("BREAK POINT"));
+		}
+		case ECriticalPointType::SetPoint:
+		{
+			checkf(OutLeadingTeamIndex >= 0, TEXT("ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull - GetCriticalPointType() returned ECriticalPointType::SetPoint but provided an invalid team id!"))
+
+			return FString(TEXT("SET POINT ")) + TeamData[OutLeadingTeamIndex].TeamName.ToUpper();
+		}
+		case ECriticalPointType::MatchPoint:
+		{
+			checkf(OutLeadingTeamIndex >= 0, TEXT("ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull - GetCriticalPointType() returned ECriticalPointType::MatchPoint but provided an invalid team id!"))
+
+			return FString(TEXT("MATCH POINT ")) + TeamData[OutLeadingTeamIndex].TeamName.ToUpper();
+		}
+		case ECriticalPointType::DualGamePoint:
+		{
+			return FString(TEXT("DUAL GAME POINT"));
+		}
+		case ECriticalPointType::DualSetPoint:
+		{
+			return FString(TEXT("DUAL SET POINT"));
+		}
+		case ECriticalPointType::DualMatchPoint:
+		{
+			return FString(TEXT("DUAL MATCH POINT"));
+		}
+	}
 	
 	int OutAdTeamId = -1;
 	if (CurrentGameScore.IsCurrentlyAd(OutAdTeamId))
 	{
-		checkf(OutAdTeamId >= 0, TEXT("FGameScore::GetGameScoreDisplayString - IsCurrentlyAd() returned true but provided an invalid team id!"))
+		checkf(OutAdTeamId >= 0, TEXT("ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull - IsCurrentlyAd() returned true but provided an invalid team id!"))
 
 		return FString(TEXT("AD ")) + TeamData[OutAdTeamId].TeamName.ToUpper();
 	}
@@ -606,6 +650,128 @@ FString ATennisStoryGameState::GetDisplayStringForMatchScoreLong() const
 	}
 
 	return MatchScoreString;
+}
+
+//NOTE(achester): The notion of a Dual CriticalPointType is an assumption of only 2 teams
+ECriticalPointType ATennisStoryGameState::GetCriticalPointType(int& OutLeadingTeam) const
+{
+	bool bIsGamePoint = false;
+	int LeadingTeamIndex = -1;
+	int OtherTeamIndex = -1;
+	bool bIsDualGamePoint = false;
+
+	for (int i = 0; i < CurrentGameScore.Scores.Num(); i++)
+	{
+		if (CurrentGameScore.Scores[i] >= CurrentMatchLengthParams.PointsToWinGame - 1)
+		{
+			//NOTE(achester): Assumption of only 2 teams
+			OtherTeamIndex = (i) ? 0 : 1;
+
+			if (CurrentGameScore.Scores[i] - CurrentGameScore.Scores[OtherTeamIndex] >= CurrentMatchLengthParams.MarginToWinGame - 1)
+			{
+				if (bIsGamePoint)
+				{
+					//if we get to here but it was already a game point, that means both teams have game scoring opportunity
+					bIsDualGamePoint = true;
+				}
+				else
+				{
+					bIsGamePoint = true;
+					LeadingTeamIndex = i;
+				}
+			}
+		}
+	}
+
+	if (!bIsGamePoint)
+	{
+		return ECriticalPointType::None;
+	}
+
+	bool bIsSetPoint = false;
+	bool bIsDualSetPoint = false;
+
+	if (bIsGamePoint)
+	{
+		if (!bIsDualGamePoint)
+		{
+			if (CurrentMatchScores[LeadingTeamIndex].SetScores[CurrentSet] >= CurrentMatchLengthParams.GamesToWinSet - 1 &&
+				CurrentMatchScores[LeadingTeamIndex].SetScores[CurrentSet] - CurrentMatchScores[OtherTeamIndex].SetScores[CurrentSet] >= CurrentMatchLengthParams.MarginToWinSet - 1)
+			{
+				bIsSetPoint = true;
+			}
+		}
+		else if (CurrentMatchLengthParams.MarginToWinSet <= 1)
+		{
+			for (int i = 0; i < CurrentMatchScores.Num(); i++)
+			{
+				if (CurrentMatchScores[i].SetScores[CurrentSet] >= CurrentMatchLengthParams.GamesToWinSet - 1)
+				{
+					if (bIsSetPoint)
+					{
+						bIsDualSetPoint = true;
+					}
+					else
+					{
+						bIsSetPoint = true;
+						LeadingTeamIndex = i;
+					}
+				}
+			}
+		}
+	}
+
+	bool bIsMatchPoint = false;
+	bool bIsDualMatchPoint = false;
+
+	if (bIsSetPoint)
+	{
+		if (!bIsDualSetPoint)
+		{
+			if (CurrentMatchScores[LeadingTeamIndex].SetsWon == CurrentMatchLengthParams.SetsToWinMatch - 1)
+			{
+				bIsMatchPoint = true;
+			}
+		}
+		else
+		{
+			for (int i = 0; i < CurrentMatchScores.Num(); i++)
+			{
+				if (CurrentMatchScores[i].SetsWon == CurrentMatchLengthParams.SetsToWinMatch - 1)
+				{
+					if (bIsMatchPoint)
+					{
+						bIsDualMatchPoint = true;
+					}
+					else
+					{
+						bIsMatchPoint = true;
+						LeadingTeamIndex = i;
+					}
+				}
+			}
+		}
+	}
+
+	OutLeadingTeam = LeadingTeamIndex;
+
+	if (bIsMatchPoint)
+	{
+		return (bIsDualMatchPoint) ? ECriticalPointType::DualMatchPoint : ECriticalPointType::MatchPoint;
+	}
+	else if (bIsSetPoint)
+	{
+		return (bIsDualSetPoint) ? ECriticalPointType::DualSetPoint : ECriticalPointType::SetPoint;
+	}
+	else
+	{
+		if (bIsDualGamePoint)
+		{
+			return ECriticalPointType::DualGamePoint;
+		}
+
+		return (LeadingTeamIndex == CurrentServiceTeam) ? ECriticalPointType::GamePoint : ECriticalPointType::BreakPoint;
+	}
 }
 
 void FGameScore::AddPoint(int TeamId)

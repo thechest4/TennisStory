@@ -89,6 +89,19 @@ public:
 	TWeakObjectPtr<AHalfCourt> AssignedCourt;
 };
 
+UENUM()
+enum class ECriticalPointType : uint8
+{
+	None,
+	GamePoint,
+	BreakPoint,
+	SetPoint,
+	MatchPoint,
+	DualGamePoint, //Dual points only occur if the margin to win a game/set is 0
+	DualSetPoint,
+	DualMatchPoint
+};
+
 USTRUCT()
 struct FGameScore
 {
@@ -174,6 +187,44 @@ public:
 
 	UPROPERTY()
 	int SetsWon;
+};
+
+USTRUCT(BlueprintType)
+struct FMatchLengthParams
+{
+	GENERATED_BODY()
+
+public:
+	FMatchLengthParams(){};
+
+	FMatchLengthParams(int argNumSets, int argGamesToWinSet, int argMarginToWinSet, int argPointsToWinGame, int argMarginToWinGame)
+	{
+		NumSets = argNumSets;
+		GamesToWinSet = argGamesToWinSet;
+		MarginToWinSet = argMarginToWinSet;
+		PointsToWinGame = argPointsToWinGame;
+		MarginToWinGame = argMarginToWinGame;
+
+		SetsToWinMatch = FMath::CeilToInt(NumSets / 2.f);
+	}
+
+	UPROPERTY(EditDefaultsOnly)
+	int NumSets = 3;
+	
+	UPROPERTY(EditDefaultsOnly)
+	int GamesToWinSet = 6;
+	
+	UPROPERTY(EditDefaultsOnly)
+	int MarginToWinSet = 2;
+	
+	UPROPERTY(EditDefaultsOnly)
+	int PointsToWinGame = 4;
+
+	UPROPERTY(EditDefaultsOnly)
+	int MarginToWinGame = 2;
+
+	UPROPERTY()
+	int SetsToWinMatch = 0;
 };
 
 UCLASS()
@@ -324,6 +375,9 @@ public:
 
 protected:
 
+	UPROPERTY(Transient, Replicated)
+	FMatchLengthParams CurrentMatchLengthParams;
+
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_MatchState)
 	EMatchState CurrentMatchState;
 
@@ -402,6 +456,8 @@ protected:
 
 	//Returns a display string to describe the match score (full game counts for each set) for both teams
 	FString GetDisplayStringForMatchScoreLong() const;
+
+	ECriticalPointType GetCriticalPointType(int& OutLeadingTeam) const;
 
 	//End Score Display String Functions
 

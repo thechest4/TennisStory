@@ -7,7 +7,6 @@
 #include "TennisStoryGameMode.generated.h"
 
 class UTennisStoryGameInstance;
-class ATennisStoryGameState;
 class ATennisBall;
 class ABounceLocationMarker;
 class ATennisStoryPlayerState;
@@ -86,19 +85,7 @@ protected:
 
 	//Match data params
 	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
-	int NumSets = 3;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
-	int GamesToWinSet = 6;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
-	int MarginToWinSet = 2;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
-	int PointsToWinGame = 4;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Match Length")
-	int MarginToWinGame = 2;
+	FMatchLengthParams CurrentMatchLengthParams;
 
 	//Handling PlayerState readiness
 	UFUNCTION()

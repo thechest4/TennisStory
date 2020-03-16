@@ -28,6 +28,8 @@ ATennisStoryGameMode::ATennisStoryGameMode()
 	AllowedFaults = 1;
 
 	bStartPlayersAsSpectators = true;
+
+	CurrentMatchLengthParams = FMatchLengthParams(3, 6, 2, 4, 2);
 }
 
 void ATennisStoryGameMode::InitGameState()
@@ -39,6 +41,8 @@ void ATennisStoryGameMode::InitGameState()
 	checkf(TSGameState, TEXT("ATennisStoryGameMode::InitGameState - GameState was not derived from ATennisStoryGameState!"));
 
 	TSGameInstance = GetGameInstance<UTennisStoryGameInstance>();
+
+	TSGameState->CurrentMatchLengthParams = CurrentMatchLengthParams;
 
 	TSGameState->CurrentPlayState = EPlayState::Waiting;
 
@@ -54,7 +58,7 @@ void ATennisStoryGameMode::InitGameState()
 		TSGameState->TeamData.Add(NewTeamData);
 	}
 
-	TSGameState->InitScores(MaxTeamNumber, NumSets);
+	TSGameState->InitScores(MaxTeamNumber, CurrentMatchLengthParams.NumSets);
 	
 	if (!TSGameState->Courts.Num())
 	{
@@ -148,7 +152,7 @@ void ATennisStoryGameMode::StartMatch()
 
 	TSGameState->CurrentServingCharacter = TSGameState->TeamData[TSGameState->CurrentServiceTeam].AssignedCharacters[0];
 	
-	TSGameState->InitScores(MaxTeamNumber, NumSets);
+	TSGameState->InitScores(MaxTeamNumber, CurrentMatchLengthParams.NumSets);
 
 	SetUpNextPoint();
 }
@@ -507,7 +511,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	int WinnerGameScore = TSGameState->CurrentGameScore.Scores[WinnerTeamId];
 	int LoserGameScore = TSGameState->CurrentGameScore.Scores[LoserTeamId];
 
-	if (WinnerGameScore >= PointsToWinGame && WinnerGameScore - LoserGameScore >= MarginToWinGame)
+	if (WinnerGameScore >= CurrentMatchLengthParams.PointsToWinGame && WinnerGameScore - LoserGameScore >= CurrentMatchLengthParams.MarginToWinGame)
 	{
 		CurrentPointResolutionContext = EPointResolutionContext::Game;
 
@@ -516,7 +520,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		int WinnerSetScore = TSGameState->CurrentMatchScores[WinnerTeamId].SetScores[TSGameState->CurrentSet];
 		int LoserSetScore = TSGameState->CurrentMatchScores[LoserTeamId].SetScores[TSGameState->CurrentSet];
 
-		if (WinnerSetScore >= GamesToWinSet && WinnerSetScore - LoserSetScore >= MarginToWinSet)
+		if (WinnerSetScore >= CurrentMatchLengthParams.GamesToWinSet && WinnerSetScore - LoserSetScore >= CurrentMatchLengthParams.MarginToWinSet)
 		{
 			CurrentPointResolutionContext = EPointResolutionContext::Set;
 
@@ -525,10 +529,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 			int WinnerSets = TSGameState->CurrentMatchScores[WinnerTeamId].SetsWon;
 			int LoserSets = TSGameState->CurrentMatchScores[LoserTeamId].SetsWon;
 
-			float TotalSets = NumSets;
-			int SetsToWinMatch = FMath::CeilToInt(TotalSets / 2.f);
-
-			if (WinnerSets >= SetsToWinMatch)
+			if (WinnerSets >= CurrentMatchLengthParams.SetsToWinMatch)
 			{
 				CurrentPointResolutionContext = EPointResolutionContext::Match;
 			}
