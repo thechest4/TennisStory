@@ -516,6 +516,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	int WinnerGameScore = TSGameState->CurrentGameScore.Scores[WinnerTeamId];
 	int LoserGameScore = TSGameState->CurrentGameScore.Scores[LoserTeamId];
 
+	bool bDidSideSwitchOccur = false;
+
 	if (WinnerGameScore >= CurrentMatchLengthParams.PointsToWinGame && WinnerGameScore - LoserGameScore >= CurrentMatchLengthParams.MarginToWinGame)
 	{
 		CurrentPointResolutionContext = EPointResolutionContext::Game;
@@ -550,6 +552,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		if (TSGameState->GetTotalGameCountForCurrentSet() % 2)
 		{
 			SwitchSides();
+			bDidSideSwitchOccur = true;
 		}
 	}
 
@@ -628,7 +631,7 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 		}
 	}
 	
-	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), false);
+	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), bDidSideSwitchOccur);
 	
 	if (bShowBounceLocation && BounceMarkerActor.IsValid())
 	{
