@@ -6,7 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "TennisStoryPlayerController.generated.h"
 
-class UGameMenuWidget;
+class UPlayerWidgetManager;
 
 UCLASS()
 class TENNISSTORY_API ATennisStoryPlayerController : public APlayerController
@@ -16,16 +16,22 @@ class TENNISSTORY_API ATennisStoryPlayerController : public APlayerController
 public:
 	void HideGameMenu();
 
+	UPlayerWidgetManager* GetPlayerWidgetManager() { return WidgetManagerObject; }
+
 protected:
+	virtual void SetPlayer(UPlayer* InPlayer) override;
+
 	virtual void OnPossess(APawn* aPawn) override;
 
 	virtual void SetupInputComponent() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Game Menu")
-	TSubclassOf<UGameMenuWidget> GameMenuClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Widget Manager")
+	TSubclassOf<UPlayerWidgetManager> WidgetManagerClass;
 
 	UPROPERTY()
-	UGameMenuWidget* GameMenuObject;
+	UPlayerWidgetManager* WidgetManagerObject;
+
+	void CreatePlayerWidgetManager();
 
 	void ShowGameMenu();
 };

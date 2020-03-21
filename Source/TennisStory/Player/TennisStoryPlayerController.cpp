@@ -2,7 +2,15 @@
 
 #include "TennisStoryPlayerController.h"
 #include "Net/UnrealNetwork.h"
-#include "UI/GameMenu/GameMenuWidget.h"
+#include "UI/PlayerWidgetManager.h"
+
+void ATennisStoryPlayerController::SetPlayer(UPlayer* InPlayer)
+{
+	Super::SetPlayer(InPlayer);
+
+	//This is the first place our ULocalPlayer is available, so it's the first place we can call UUserWidget::SetOwningPlayer
+	CreatePlayerWidgetManager();
+}
 
 void ATennisStoryPlayerController::OnPossess(APawn* aPawn)
 {
@@ -20,42 +28,37 @@ void ATennisStoryPlayerController::SetupInputComponent()
 	InputComponent->BindAction("ToggleGameMenu", IE_Pressed, this, &ATennisStoryPlayerController::ShowGameMenu);
 }
 
-void ATennisStoryPlayerController::ShowGameMenu()
+void ATennisStoryPlayerController::CreatePlayerWidgetManager()
 {
-	if (!GameMenuClass || !IsPrimaryPlayer())
+	if (!WidgetManagerClass || !IsPrimaryPlayer())
 	{
 		return;
 	}
 
-	if (!GameMenuObject)
+	if (!WidgetManagerObject)
 	{
-		GameMenuObject = CreateWidget<UGameMenuWidget>(GetWorld(), GameMenuClass);
-		GameMenuObject->AddToViewport(10);
-		GameMenuObject->SetOwningPlayer(this);
+		WidgetManagerObject = CreateWidget<UPlayerWidgetManager>(GetWorld(), WidgetManagerClass);
+		WidgetManagerObject->AddToViewport(10);
+		WidgetManagerObject->SetOwningPlayer(this);
 	}
+}
 
-	checkf(GameMenuObject, TEXT("ATennisStoryPlayerController::ShowGameMenu - GameMenuObject was null!"))
+void ATennisStoryPlayerController::ShowGameMenu()
+{
+	ensureMsgf(WidgetManagerObject, TEXT("ATennisStoryPlayerController::ShowGameMenu - WidgetManagerObject was null!"));
 
-	if (GameMenuObject->GetVisibility() != ESlateVisibility::Visible)
+	if (WidgetManagerObject)
 	{
-		GameMenuObject->SetVisibility(ESlateVisibility::Visible);
-		
-		FInputModeUIOnly UIInputOnly;
-		UIInputOnly.SetWidgetToFocus(GameMenuObject->TakeWidget());
-
-		SetInputMode(UIInputOnly);
-		bShowMouseCursor = true;
+		WidgetManagerObject->ShowGameMenu();
 	}
 }
 
 void ATennisStoryPlayerController::HideGameMenu()
 {
-	if (GameMenuObject)
-	{
-		GameMenuObject->SetVisibility(ESlateVisibility::Collapsed);
+	ensureMsgf(WidgetManagerObject, TEXT("ATennisStoryPlayerController::HideGameMenu - WidgetManagerObject was null!"));
 
-		FInputModeGameOnly GameOnlyInput;
-		SetInputMode(GameOnlyInput);
-		bShowMouseCursor = false;
+	if (WidgetManagerObject)
+	{
+		WidgetManagerObject->HideGameMenu();
 	}
 }
