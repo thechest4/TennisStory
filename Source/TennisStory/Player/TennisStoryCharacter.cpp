@@ -471,7 +471,7 @@ void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, F
 
 bool ATennisStoryCharacter::Server_CommitTargetPosition_Validate(FVector WorldLocation)
 {
-	return TargetActor;
+	return TargetActor != nullptr;
 }
 
 void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector WorldLocation)
