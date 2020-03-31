@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TennisStoryGameState.h"
+#include "UI/PlayerWidgetManager.h"
 #include "UI/Score/ScoreboardWidget.h"
 #include "UI/Score/ScoreCalloutWidget.h"
 #include "UI/Score/ServiceCalloutWidget.h"
@@ -358,123 +359,20 @@ void ATennisStoryGameState::RemovePlayerState(APlayerState* PlayerState)
 	OnPlayerStateRemoved().Broadcast(TSPS);
 }
 
-void ATennisStoryGameState::AddReadyStateWidgetToViewport()
-{
-	if (!PlayerReadyStateWidgetClass)
-	{
-		return;
-	}
-
-	if (!PlayerReadyStateWidgetObject)
-	{
-		PlayerReadyStateWidgetObject = CreateWidget<UPlayerReadyStatusWidget>(GetWorld(), PlayerReadyStateWidgetClass);
-	}
-
-	PlayerReadyStateWidgetObject->SetUpWidget();
-
-	if (!PlayerReadyStateWidgetObject->IsInViewport())
-	{
-		PlayerReadyStateWidgetObject->AddToViewport();
-	}
-}
-
-void ATennisStoryGameState::RemoveReadyStateWidgetFromViewport()
-{
-	if (PlayerReadyStateWidgetObject)
-	{
-		PlayerReadyStateWidgetObject->CleanUpWidget();
-		PlayerReadyStateWidgetObject->RemoveFromViewport();
-	}
-}
-
-void ATennisStoryGameState::AddReadyUpWidgetToViewport()
-{
-	if (!ReadyUpWidgetClass)
-	{
-		return;
-	}
-
-	if (!ReadyUpWidgetObject)
-	{
-		ReadyUpWidgetObject = CreateWidget<UReadyUpWidget>(GetWorld(), ReadyUpWidgetClass);
-	}
-	
-	ReadyUpWidgetObject->SetUpWidget();
-
-	if (!ReadyUpWidgetObject->IsInViewport())
-	{
-		ReadyUpWidgetObject->AddToViewport();
-	}
-}
-
-void ATennisStoryGameState::RemoveReadyUpWidgetFromViewport()
-{
-	if (ReadyUpWidgetObject)
-	{
-		ReadyUpWidgetObject->CleanUpWidget();
-		ReadyUpWidgetObject->RemoveFromViewport();
-	}
-}
-
-void ATennisStoryGameState::AddPlayAgainWidgetToViewport()
-{
-	if (!PlayAgainWidgetClass)
-	{
-		return;
-	}
-
-	if (!PlayAgainWidgetObject)
-	{
-		PlayAgainWidgetObject = CreateWidget<UReadyUpWidget>(GetWorld(), PlayAgainWidgetClass);
-	}
-	
-	PlayAgainWidgetObject->SetUpWidget();
-
-	if (!PlayAgainWidgetObject->IsInViewport())
-	{
-		PlayAgainWidgetObject->AddToViewport();
-	}
-}
-
-void ATennisStoryGameState::RemovePlayAgainWidgetFromViewport()
-{
-	if (PlayAgainWidgetObject)
-	{
-		PlayAgainWidgetObject->CleanUpWidget();
-		PlayAgainWidgetObject->RemoveFromViewport();
-	}
-}
-
-void ATennisStoryGameState::SetLocalPlayerToUIInputMode()
+UPlayerWidgetManager* ATennisStoryGameState::GetLocalPlayerWidgetManager()
 {
 	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
 	{
 		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
 		if (TSPC && TSPC->IsLocalPlayerController())
 		{
-			FInputModeUIOnly UIOnlyInput;
-			TSPC->SetInputMode(UIOnlyInput);
-			TSPC->bShowMouseCursor = true;
-
-			break;
+			return TSPC->GetPlayerWidgetManager();
 		}
 	}
-}
 
-void ATennisStoryGameState::SetLocalPlayerToGameInputMode()
-{
-	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
-	{
-		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
-		if (TSPC && TSPC->IsLocalPlayerController())
-		{
-			FInputModeGameOnly GameOnlyInput;
-			TSPC->SetInputMode(GameOnlyInput);
-			TSPC->bShowMouseCursor = false;
+	checkNoEntry()
 
-			break;
-		}
-	}
+	return nullptr;
 }
 
 void ATennisStoryGameState::OnRep_MatchState()
@@ -488,34 +386,25 @@ void ATennisStoryGameState::OnRep_MatchState()
 		}
 		case EMatchState::WaitingForPlayers:
 		{
-			AddReadyStateWidgetToViewport();
-			AddReadyUpWidgetToViewport();
+			GetLocalPlayerWidgetManager()->ShowReadyWidgets();
 
 			RemoveScoreWidgetFromViewport();
-
-			SetLocalPlayerToUIInputMode();
 
 			break;
 		}
 		case EMatchState::MatchInProgress:
 		{
+			GetLocalPlayerWidgetManager()->HideReadyWidgets();
+
 			AddScoreWidgetToViewport();
 
 			RemoveCalloutWidgetFromViewport();
-			RemoveReadyStateWidgetFromViewport();
-			RemoveReadyUpWidgetFromViewport();
-			RemovePlayAgainWidgetFromViewport();
-
-			SetLocalPlayerToGameInputMode();
 
 			break;
 		}
 		case EMatchState::WaitingForNextMatch:
 		{
-			AddReadyStateWidgetToViewport();
-			AddPlayAgainWidgetToViewport();
-			
-			SetLocalPlayerToUIInputMode();
+			GetLocalPlayerWidgetManager()->ShowReadyWidgets();
 
 			break;
 		}

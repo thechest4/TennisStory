@@ -10,12 +10,21 @@ class UGameMenuWidget;
 class UReadyUpWidget;
 class UPlayerReadyStatusWidget;
 
+UENUM()
+enum class EInputMode : uint8
+{
+	GameMode,
+	UIMode
+};
+
 UCLASS()
 class TENNISSTORY_API UPlayerWidgetManager : public UUserWidget
 {
 	GENERATED_BODY()
 	
 public:
+	UPlayerWidgetManager(const FObjectInitializer& ObjectInitializer);
+
 	UFUNCTION(BlueprintCallable, Category = "Player Widget Manager")
 	UGameMenuWidget* GetGameMenuWidgetObject() { return GameMenuWidgetObject; }
 	
@@ -58,6 +67,13 @@ protected:
 
 	UPROPERTY()
 	TArray<UUserWidget*> AllWidgets;
+
+	UPROPERTY()
+	TArray<UUserWidget*> WidgetsWantingUIInput;
+
+	EInputMode CurrentInputMode;
+
+	void SetAppropriateInputMode();
 
 	void SetPlayerInputToUIMode();
 	

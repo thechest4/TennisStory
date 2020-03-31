@@ -4,6 +4,13 @@
 #include "UI/GameMenu/GameMenuWidget.h"
 #include "UI/MatchState/PlayerReadyStatusWidget.h"
 #include "UI/MatchState/ReadyUpWidget.h"
+#include "Framework/Application/SlateApplication.h"
+
+UPlayerWidgetManager::UPlayerWidgetManager(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
+{
+	CurrentInputMode = EInputMode::GameMode;
+}
 
 void UPlayerWidgetManager::ShowGameMenu()
 {
@@ -15,8 +22,12 @@ void UPlayerWidgetManager::ShowGameMenu()
 	}
 
 	GameMenuWidgetObject->SetVisibility(ESlateVisibility::Visible);
+	
+	checkf(!WidgetsWantingUIInput.Contains(GameMenuWidgetObject), TEXT("UPlayerWidgetManager::ShowGameMenu - GameMenuWidgetObject already in WidgetsWantingUIInput TArray!"))
 
-	SetPlayerInputToUIMode();
+	WidgetsWantingUIInput.Add(GameMenuWidgetObject);
+	
+	SetAppropriateInputMode();
 }
 
 void UPlayerWidgetManager::HideGameMenu()
@@ -30,7 +41,9 @@ void UPlayerWidgetManager::HideGameMenu()
 
 	GameMenuWidgetObject->SetVisibility(ESlateVisibility::Collapsed);
 
-	SetPlayerInputToGameMode();
+	WidgetsWantingUIInput.Remove(GameMenuWidgetObject);
+	
+	SetAppropriateInputMode();
 }
 
 void UPlayerWidgetManager::ShowReadyWidgets()
@@ -44,7 +57,16 @@ void UPlayerWidgetManager::ShowReadyWidgets()
 	}
 
 	ReadyStateWidgetObject->SetVisibility(ESlateVisibility::Visible);
+	ReadyStateWidgetObject->SetUpWidget();
+
 	ReadyUpWidgetObject->SetVisibility(ESlateVisibility::Visible);
+	ReadyUpWidgetObject->SetUpWidget();
+
+	checkf(!WidgetsWantingUIInput.Contains(ReadyUpWidgetObject), TEXT("UPlayerWidgetManager::ShowReadyWidgets - ReadyUpWidget already in WidgetsWantingUIInput TArray!"))
+
+	WidgetsWantingUIInput.Add(ReadyUpWidgetObject);
+	
+	SetAppropriateInputMode();
 }
 
 void UPlayerWidgetManager::HideReadyWidgets()
@@ -58,7 +80,14 @@ void UPlayerWidgetManager::HideReadyWidgets()
 	}
 	
 	ReadyStateWidgetObject->SetVisibility(ESlateVisibility::Collapsed);
+	ReadyStateWidgetObject->CleanUpWidget();
+
 	ReadyUpWidgetObject->SetVisibility(ESlateVisibility::Collapsed);
+	ReadyUpWidgetObject->CleanUpWidget();
+
+	WidgetsWantingUIInput.Remove(ReadyUpWidgetObject);
+	
+	SetAppropriateInputMode();
 }
 
 void UPlayerWidgetManager::HideAllWidgets()
@@ -81,7 +110,21 @@ void UPlayerWidgetManager::NativeOnInitialized()
 
 	HideAllWidgets();
 
+	GameMenuWidgetObject->OnGameMenuWantsClose().BindUObject(this, &UPlayerWidgetManager::HideGameMenu);
+
 	Super::NativeOnInitialized();
+}
+
+void UPlayerWidgetManager::SetAppropriateInputMode()
+{
+	if (WidgetsWantingUIInput.Num() > 0 && CurrentInputMode != EInputMode::UIMode)
+	{
+		SetPlayerInputToUIMode();
+	}
+	else if (WidgetsWantingUIInput.Num() == 0 && CurrentInputMode != EInputMode::GameMode)
+	{
+		SetPlayerInputToGameMode();
+	}
 }
 
 void UPlayerWidgetManager::SetPlayerInputToUIMode()
@@ -91,10 +134,12 @@ void UPlayerWidgetManager::SetPlayerInputToUIMode()
 	checkf(OwningPlayer, TEXT("UPlayerWidgetManager::SetPlayerInputToUIMode - OwningPlayer was null"))
 
 	FInputModeUIOnly UIInputOnly;
-	//UIInputOnly.SetWidgetToFocus(GameMenuWidgetObject->TakeWidget());
+	UIInputOnly.SetWidgetToFocus(TakeWidget());
 
 	OwningPlayer->SetInputMode(UIInputOnly);
 	OwningPlayer->bShowMouseCursor = true;
+
+	CurrentInputMode = EInputMode::UIMode;
 }
 
 void UPlayerWidgetManager::SetPlayerInputToGameMode()
@@ -106,4 +151,8 @@ void UPlayerWidgetManager::SetPlayerInputToGameMode()
 	FInputModeGameOnly GameInputOnly;
 	OwningPlayer->SetInputMode(GameInputOnly);
 	OwningPlayer->bShowMouseCursor = false;
+	
+	CurrentInputMode = EInputMode::GameMode;
+	
+	FSlateApplication::Get().SetAllUserFocusToGameViewport();
 }

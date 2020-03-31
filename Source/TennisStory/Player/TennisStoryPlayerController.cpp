@@ -25,7 +25,10 @@ void ATennisStoryPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	
-	InputComponent->BindAction("ToggleGameMenu", IE_Pressed, this, &ATennisStoryPlayerController::ShowGameMenu);
+	if (IsPrimaryPlayer())
+	{
+		InputComponent->BindAction("ToggleGameMenu", IE_Pressed, this, &ATennisStoryPlayerController::ShowGameMenu);
+	}
 }
 
 void ATennisStoryPlayerController::CreatePlayerWidgetManager()

@@ -3,17 +3,7 @@
 #include "GameMenuWidget.h"
 #include "Player/TennisStoryPlayerController.h"
 
-void UGameMenuWidget::HideGameMenu()
+void UGameMenuWidget::BroadcastWantsCloseEvent()
 {
-	APlayerController* OwningPlayer = GetOwningPlayer();
-	ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(OwningPlayer);
-
-	if (TSPC)
-	{
-		TSPC->HideGameMenu();
-	}
-	else
-	{
-		RemoveFromViewport();
-	}
+	GameMenuWantsCloseEvent.ExecuteIfBound();
 }

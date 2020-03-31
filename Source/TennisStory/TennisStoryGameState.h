@@ -348,30 +348,7 @@ public:
 
 	virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
-	UPROPERTY()
-	UPlayerReadyStatusWidget* PlayerReadyStateWidgetObject;
-
-	void AddReadyStateWidgetToViewport();
-	
-	void RemoveReadyStateWidgetFromViewport();
-
-	UPROPERTY()
-	UReadyUpWidget* ReadyUpWidgetObject;
-
-	UPROPERTY()
-	UReadyUpWidget* PlayAgainWidgetObject;
-
-	void AddReadyUpWidgetToViewport();
-
-	void RemoveReadyUpWidgetFromViewport();
-
-	void AddPlayAgainWidgetToViewport();
-
-	void RemovePlayAgainWidgetFromViewport();
-
-	void SetLocalPlayerToUIInputMode();
-
-	void SetLocalPlayerToGameInputMode();
+	UPlayerWidgetManager* GetLocalPlayerWidgetManager();
 
 protected:
 
