@@ -20,6 +20,9 @@ class UReadyUpWidget;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateAdded, ATennisStoryPlayerState*)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerStateRemoved, ATennisStoryPlayerState*)
 
+DECLARE_LOG_CATEGORY_EXTERN(LogTS_MatchState, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogTS_MatchUI, Log, All)
+
 UENUM()
 enum class EMatchState : uint8
 {
@@ -351,7 +354,6 @@ public:
 	UPlayerWidgetManager* GetLocalPlayerWidgetManager();
 
 protected:
-
 	UPROPERTY(Transient, Replicated)
 	FMatchLengthParams CurrentMatchLengthParams;
 
@@ -376,14 +378,23 @@ protected:
 	UPROPERTY(Transient, Replicated)
 	TArray<FTeamData> TeamData;
 
-	UPROPERTY(Transient, Replicated)
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_GameScore)
 	FGameScore CurrentGameScore;
-	
-	UPROPERTY(Transient, Replicated)
-	TArray<FMatchScore> CurrentMatchScores;
 
-	UPROPERTY(Transient, Replicated)
+	UFUNCTION()
+	void OnRep_GameScore();
+	
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_MatchScore)
+	TArray<FMatchScore> CurrentMatchScores;
+	
+	UFUNCTION()
+	void OnRep_MatchScore();
+
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_CurrentSet)
 	int CurrentSet;
+
+	UFUNCTION()
+	void OnRep_CurrentSet();
 
 	UPROPERTY(Transient, Replicated)
 	TWeakObjectPtr<ATennisBall> CurrentBallActor;
@@ -423,6 +434,9 @@ protected:
 	//Returns a display string to describe the current game score for both teams (EX: 30 - 15, DEUCE, etc)
 	FString GetDisplayStringForCurrentGameScoreFull() const;
 
+	//Returns a display string to describe the current game score for both teams without substitution strings
+	FString GetRawDisplayStringForCurrentGameScore() const;
+
 	//Returns a display string to describe the current set score (game count) for both teams
 	FString GetDisplayStringForSetScore(int SetNum) const;
 
@@ -432,7 +446,7 @@ protected:
 	int GetNumCompletedSets() const;
 
 	//Returns a display string to describe the match score (full game counts for each set) for both teams
-	FString GetDisplayStringForMatchScoreLong() const;
+	FString GetDisplayStringForMatchScoreLong(bool bOnlyCompletedSets = true) const;
 
 	ECriticalPointType GetCriticalPointType(int& OutLeadingTeam) const;
 

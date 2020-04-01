@@ -10,6 +10,9 @@
 #include "Player/TennisStoryPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
+DEFINE_LOG_CATEGORY(LogTS_MatchState)
+DEFINE_LOG_CATEGORY(LogTS_MatchUI)
+
 void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -31,6 +34,8 @@ void ATennisStoryGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 void ATennisStoryGameState::InitScores(int NumTeams, int argNumSets)
 {
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::InitScores"))
+
 	NumSets = argNumSets;
 	CurrentSet = 0;
 	CurrentGameScore = FGameScore(NumTeams);
@@ -222,13 +227,17 @@ const TWeakObjectPtr<AHalfCourt> ATennisStoryGameState::GetCourtForCharacter(ATe
 void ATennisStoryGameState::AwardPoint(int TeamId)
 {
 	CurrentGameScore.AddPoint(TeamId);
+
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::AwardPoint - Point awarded to team %d, current game score: %s"), TeamId, *GetDisplayStringForCurrentGameScoreFull());
 }
 
 void ATennisStoryGameState::AwardGame(int TeamId)
 {
 	CurrentMatchScores[TeamId].SetScores[CurrentSet]++;
-
+	
 	CurrentGameScore.ResetScore();
+	
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::AwardGame - Game awarded to team %d, current set score: %s"), TeamId, *GetDisplayStringForSetScore(CurrentSet));
 }
 
 int ATennisStoryGameState::GetTotalGameCountForCurrentSet()
@@ -293,6 +302,8 @@ void ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation(float Show
 	}
 
 	ScoreCalloutWidgetObject->OnCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameState::RemoveCalloutWidgetFromViewport);
+
+	UE_LOG(LogTS_MatchUI, Log, TEXT("ATennisStoryGameState::AddCalloutWidgetToViewport_Implementation - %s | %s"), *HeaderText.ToString(), *BodyText.ToString())
 }
 
 void ATennisStoryGameState::RemoveCalloutWidgetFromViewport()
@@ -326,6 +337,8 @@ void ATennisStoryGameState::AddServiceWidgetToViewport_Implementation(float Show
 	}
 
 	ServiceWidgetObject->OnServiceCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameState::RemoveServiceWidgetFromViewport);
+
+	UE_LOG(LogTS_MatchUI, Log, TEXT("ATennisStoryGameState::AddServiceWidgetToViewport_Implementation - %s | %s"), *HeaderText.ToString(), *BodyText.ToString())
 }
 
 void ATennisStoryGameState::RemoveServiceWidgetFromViewport()
@@ -409,6 +422,21 @@ void ATennisStoryGameState::OnRep_MatchState()
 			break;
 		}
 	}
+}
+
+void ATennisStoryGameState::OnRep_GameScore()
+{
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::OnRep_GameScore - Current Game Score: %s"), *GetRawDisplayStringForCurrentGameScore());
+}
+
+void ATennisStoryGameState::OnRep_MatchScore()
+{
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::OnRep_MatchScore - Current Match Score: %s"), *GetDisplayStringForMatchScoreLong(false));
+}
+
+void ATennisStoryGameState::OnRep_CurrentSet()
+{
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameState::OnRep_CurrentSet - Starting Set %d"), CurrentSet);
 }
 
 FString ATennisStoryGameState::GetDisplayStringForCurrentGameScoreByTeam(int TeamId) const
@@ -498,6 +526,11 @@ FString ATennisStoryGameState::GetDisplayStringForCurrentGameScoreFull() const
 	return GetDisplayStringForCurrentGameScoreByTeam(0) + FString(TEXT(" - ")) + GetDisplayStringForCurrentGameScoreByTeam(1);
 }
 
+FString ATennisStoryGameState::GetRawDisplayStringForCurrentGameScore() const
+{
+	return FString::FromInt(CurrentGameScore.Scores[0]) + FString(TEXT(" - ")) + FString::FromInt(CurrentGameScore.Scores[1]);
+}
+
 FString ATennisStoryGameState::GetDisplayStringForSetScore(int SetNum) const
 {
 	return FString::FromInt(CurrentMatchScores[0].SetScores[SetNum]) + FString(TEXT(" - ")) + FString::FromInt(CurrentMatchScores[1].SetScores[SetNum]);
@@ -520,19 +553,19 @@ int ATennisStoryGameState::GetNumCompletedSets() const
 	return NumCompletedSets;
 }
 
-FString ATennisStoryGameState::GetDisplayStringForMatchScoreLong() const
+FString ATennisStoryGameState::GetDisplayStringForMatchScoreLong(bool bOnlyCompletedSets /*= true*/) const
 {
 	FString MatchScoreString = FString();
 
-	const int CompletedSets = GetNumCompletedSets();
+	const int SetsToDisplay = (bOnlyCompletedSets) ? GetNumCompletedSets() : NumSets;
 
-	for (int i = 0; i < CompletedSets; i++)
+	for (int i = 0; i < SetsToDisplay; i++)
 	{
 		FString SetScore = GetDisplayStringForSetScore(i);
 		SetScore.RemoveSpacesInline();
 		MatchScoreString += SetScore;
 
-		if (i != CompletedSets - 1)
+		if (i != SetsToDisplay - 1)
 		{
 			MatchScoreString += FString(TEXT(" | "));
 		}

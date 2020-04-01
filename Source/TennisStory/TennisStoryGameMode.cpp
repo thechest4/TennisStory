@@ -378,13 +378,15 @@ void ATennisStoryGameMode::SetUpNextPoint()
 
 	TSGameState->CurrentPlayState = EPlayState::Service;
 
-	if (bIsLoveAll)
+	if (bIsLoveAll && TSGameState->CurrentFaultCount == 0)
 	{
 		TSGameState->AddServiceWidgetToViewport(ServiceCalloutDuration, FText::FromString(HeaderText), FText::FromString(BodyText));
 
 		TSGameState->CurrentServingCharacter->Multicast_LockAbilities();
 
 		TSGameState->ServiceWidgetObject->OnServiceCalloutWidgetFinished().AddDynamic(this, &ATennisStoryGameMode::HandleServiceWidgetFinished);
+		
+		UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::SetUpNextPoint - Game start, team %d to serve"), TSGameState->CurrentServiceTeam)
 	}
 }
 
@@ -462,6 +464,8 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 			{
 				BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, ResetDuration);
 			}
+
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::HandleBallOutOfBounds - Fault"))
 		}
 		else
 		{
@@ -559,36 +563,47 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	FString ResolutionTypeString = FString();
 	FString ScoreCalloutString = FString();
 	int CalloutDisplayDuration = 1.5f;
-
-	if (CurrentPointResolutionContext == EPointResolutionContext::Point)
+	
+	switch (PointType)
 	{
-		switch (PointType)
+		default:
 		{
-			default:
-			{
-				ResolutionTypeString = FString(TEXT("Undefined Point Type"));
-				break;
-			}
-			case EPointResolutionType::Out:
-			{
-				ResolutionTypeString = FString(TEXT("OUT"));
-				break;
-			}
-			case EPointResolutionType::Winner:
-			{
-				ResolutionTypeString = (TSGameState->CurrentBallActor->bWasLastHitAServe) ? FString(TEXT("ACE")) : FString(TEXT("WINNER"));
-				break;
-			}
-			case EPointResolutionType::DoubleFault:
-			{
-				ResolutionTypeString = FString(TEXT("DOUBLE FAULT"));
-				break;
-			}
-			case EPointResolutionType::IllegalHit:
-			{
-				ResolutionTypeString = FString(TEXT("ILLEGAL HIT"));
-				break;
-			}
+			checkNoEntry()
+
+			ResolutionTypeString = FString(TEXT("Undefined Point Type"));
+			break;
+		}
+		case EPointResolutionType::Out:
+		{
+			ResolutionTypeString = FString(TEXT("OUT"));
+				
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Ball hit out by team: %d"), LoserTeamId)
+
+			break;
+		}
+		case EPointResolutionType::Winner:
+		{
+			ResolutionTypeString = (TSGameState->CurrentBallActor->bWasLastHitAServe) ? FString(TEXT("ACE")) : FString(TEXT("WINNER"));
+				
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Winner by team: %d"), WinnerTeamId)
+
+			break;
+		}
+		case EPointResolutionType::DoubleFault:
+		{
+			ResolutionTypeString = FString(TEXT("DOUBLE FAULT"));
+				
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Double Fault by team: %d"), LoserTeamId)
+
+			break;
+		}
+		case EPointResolutionType::IllegalHit:
+		{
+			ResolutionTypeString = FString(TEXT("ILLEGAL HIT"));
+				
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Illegal Hit by team: %d"), LoserTeamId)
+
+			break;
 		}
 	}
 
@@ -596,6 +611,8 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	{
 		default:
 		{
+			checkNoEntry()
+
 			ScoreCalloutString = FString(TEXT("Undefined Point Context"));
 			break;
 		}
@@ -610,6 +627,9 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 			ResolutionTypeString = FString(TEXT("GAME - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForSetScore(TSGameState->CurrentSet);
+
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Game won by team %d, current set score: %s"), WinnerTeamId, *ScoreCalloutString)
+
 			break;
 		}
 		case EPointResolutionContext::Set:
@@ -618,6 +638,9 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 			ResolutionTypeString = FString(TEXT("SET - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreShort();
+			
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Set won by team %d, current match score: %s"), WinnerTeamId, *ScoreCalloutString)
+
 			break;
 		}
 		case EPointResolutionContext::Match:
@@ -627,11 +650,14 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 
 			ResolutionTypeString = FString(TEXT("GAME, SET, MATCH - ")) + TSGameState->TeamData[WinnerTeamId].TeamName.ToUpper();
 			ScoreCalloutString = TSGameState->GetDisplayStringForMatchScoreLong();
+
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Match won by team %d, final match score: %s"), WinnerTeamId, *ScoreCalloutString)
+
 			break;
 		}
 	}
 	
-	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), bDidSideSwitchOccur);
+	TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), (CurrentPointResolutionContext != EPointResolutionContext::Match) ? bDidSideSwitchOccur : false);
 	
 	if (bShowBounceLocation && BounceMarkerActor.IsValid())
 	{
@@ -677,6 +703,8 @@ void ATennisStoryGameMode::SwitchSides()
 			Character->CacheCourtAimVector(CurrentTeam.AssignedCourt->GetActorForwardVector());
 		}
 	}
+
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::SwitchSides"))
 }
 
 void ATennisStoryGameMode::HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState)
