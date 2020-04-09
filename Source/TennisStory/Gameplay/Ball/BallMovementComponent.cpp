@@ -332,12 +332,14 @@ void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
 void UBallMovementComponent::EnterPhysicalMovementState()
 {
 	CurrentMovementState = EBallMovementState::Physical;
-	Velocity = 0.f;
-	
+
 	if (BallCollisionComponent)
 	{
 		BallCollisionComponent->SetSimulatePhysics(true);
+		BallCollisionComponent->SetPhysicsLinearVelocity(CurrentDirection * Velocity);
 	}
+	
+	Velocity = 0.f;
 }
 
 #if WITH_EDITORONLY_DATA
