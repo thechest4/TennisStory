@@ -278,6 +278,24 @@ void ATennisStoryGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void ATennisStoryGameMode::StartToLeaveMap()
+{
+	Super::StartToLeaveMap();
+
+	if (TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Offline)
+	{
+		TArray<ULocalPlayer*> LocalPlayers = TSGameInstance->GetLocalPlayers();
+
+		for (int i = LocalPlayers.Num() - 1; i >= 0; i--)
+		{
+			if (!LocalPlayers[i]->IsPrimaryPlayer())
+			{
+				TSGameInstance->RemoveLocalPlayer(LocalPlayers[i]);
+			}
+		}
+	}
+}
+
 void ATennisStoryGameMode::TeleportCharacterToCourt(ATennisStoryCharacter* Character)
 {
 	if (Character)

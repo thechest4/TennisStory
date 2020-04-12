@@ -7,3 +7,8 @@ void UGameMenuWidget::BroadcastWantsCloseEvent()
 {
 	GameMenuWantsCloseEvent.ExecuteIfBound();
 }
+
+void UGameMenuWidget::BroadcastReturningToMainMenuEvent()
+{
+	ReturningToMainMenuEvent.ExecuteIfBound();
+}

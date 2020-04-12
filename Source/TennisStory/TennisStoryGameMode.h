@@ -32,6 +32,8 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void StartToLeaveMap() override;
+
 	int GetAllowedBounces() const
 	{
 		return AllowedBounces;

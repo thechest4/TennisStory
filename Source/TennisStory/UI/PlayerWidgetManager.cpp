@@ -111,6 +111,7 @@ void UPlayerWidgetManager::NativeOnInitialized()
 	HideAllWidgets();
 
 	GameMenuWidgetObject->OnGameMenuWantsClose().BindUObject(this, &UPlayerWidgetManager::HideGameMenu);
+	GameMenuWidgetObject->OnReturningToMainMenu().BindUObject(this, &UPlayerWidgetManager::SetPlayerInputToGameMode);
 
 	Super::NativeOnInitialized();
 }
