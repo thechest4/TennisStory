@@ -210,6 +210,16 @@ void ATennisStoryCharacter::PossessedBy(AController* NewController)
 	}
 }
 
+void ATennisStoryCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (RacquetActor)
+	{
+		RacquetActor->Destroy();
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext)
 {
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();

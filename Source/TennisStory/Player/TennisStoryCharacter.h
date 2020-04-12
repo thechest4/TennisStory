@@ -156,6 +156,8 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	void MoveForward(float Value);
 
 	void MoveRight(float Value);
