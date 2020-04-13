@@ -726,8 +726,8 @@ void ATennisStoryGameMode::EndMatch(bool bWasForfeit/* = false*/, FString Winner
 	{
 		float CalloutDisplayDuration = -1.f;
 
-		FString ResolutionTypeString = FString::Printf(TEXT("%s HAS DISCONNECTED"), *LoserName);
-		FString ScoreCalloutString = WinnerName + FString(TEXT(" WINS BY DEFAULT"));
+		FString ResolutionTypeString = FString::Printf(TEXT("%s HAS DISCONNECTED"), *LoserName.ToUpper());
+		FString ScoreCalloutString = WinnerName.ToUpper() + FString(TEXT(" WINS BY DEFAULT"));
 
 		UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::EndMatch - Player %s disconnected, match is ended"), *LoserName)
 
