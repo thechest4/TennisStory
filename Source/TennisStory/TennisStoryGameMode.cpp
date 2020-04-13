@@ -142,11 +142,17 @@ void ATennisStoryGameMode::StartMatch()
 	for (FConstPlayerControllerIterator ControllerItr = GetWorld()->GetPlayerControllerIterator(); ControllerItr; ControllerItr++)
 	{
 		ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(ControllerItr->Get());
-		if (TSPC && !TSPC->GetPawn())
+		if (TSPC && 
+			(TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Offline ||
+			(TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Online && PlayersWaitingToPlay.Contains(TSPC->PlayerState)))) //Only check PlayersWaitingToPlay in Online mode
 		{
+			checkf(!TSPC->GetPawn(), TEXT("This player controller already has a pawn before being spawned!"))
+
 			RestartPlayer(TSPC);
 		}
 	}
+
+	PlayersWaitingToPlay.Empty();
 
 	TSGameState->CurrentMatchState = EMatchState::MatchInProgress;
 	TSGameState->OnRep_MatchState();
@@ -283,6 +289,13 @@ void ATennisStoryGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 
 	ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(Exiting);
+
+	//If we're the disconnecting client then no need to end the match, the session will be closed
+	if (TSPC->IsLocalController())
+	{
+		return;
+	}
+
 	if (TSPC)
 	{
 		FString WinnerName, LoserName;
@@ -769,25 +782,20 @@ void ATennisStoryGameMode::SwitchSides()
 
 void ATennisStoryGameMode::HandlePlayerReadyStateUpdated(ATennisStoryPlayerState* PlayerState)
 {
-	if (TSGameState->PlayerArray.Num() != MaxTeamNumber)
+	if (PlayerState->IsReady() && !PlayersWaitingToPlay.Contains(PlayerState))
+	{
+		PlayersWaitingToPlay.Add(PlayerState);
+	}
+	else if (!PlayerState->IsReady() && PlayersWaitingToPlay.Contains(PlayerState))
+	{
+		PlayersWaitingToPlay.Remove(PlayerState);
+	}
+
+	if (PlayersWaitingToPlay.Num() < MaxTeamNumber)
 	{
 		return;
 	}
 
-	//If all player states are now ready, start match
-	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
-	{
-		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
-		
-		checkf(TSPS, TEXT("ATennisStoryGameMode::HandlePlayerReadyStateUpdated - Found a PlayerState that was not of the right type!"))
-
-		if (!TSPS->IsReady())
-		{
-			return;
-		}
-	}
-	
-	//We would have returned already if we found a player that was not ready.  So unregister all our handlers related to player readiness, and start the match!
 	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
 	{
 		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);

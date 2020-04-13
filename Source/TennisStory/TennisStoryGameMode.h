@@ -69,6 +69,9 @@ protected:
 	UPROPERTY(Transient)
 	TArray<TWeakObjectPtr<ATennisStoryCharacter>> AllCharacters;
 
+	UPROPERTY(Transient)
+	TArray<TWeakObjectPtr<ATennisStoryPlayerState>> PlayersWaitingToPlay;
+
 	void GetCourtsFromWorld();
 
 	void GetCamPositioningCompFromWorld();
