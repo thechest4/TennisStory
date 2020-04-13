@@ -839,16 +839,16 @@ void ATennisStoryGameMode::HandleMatchEnded()
 		case EOnlinePlayType::Online:
 		{
 			//Destroy all characters as well as clear all team assignments.  This allows the next match to init players without worrying about existing assignments or pawns
+			for (int i = 0; i < AllCharacters.Num(); i++)
+			{
+				if (AllCharacters[i].IsValid())
+				{
+					AllCharacters[i]->Destroy();
+				}
+			}
+
 			for (int i = 0; i < TSGameState->TeamData.Num(); i++)
 			{
-				for (int j = 0; j < TSGameState->TeamData[i].AssignedCharacters.Num(); j++)
-				{
-					if (TSGameState->TeamData[i].AssignedCharacters[j].IsValid())
-					{
-						TSGameState->TeamData[i].AssignedCharacters[j]->Destroy();
-					}
-				}
-
 				TSGameState->TeamData[i].AssignedCharacters.Empty();
 				TSGameState->TeamData[i].AssignedPlayers.Empty();
 			}
