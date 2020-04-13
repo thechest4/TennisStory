@@ -278,6 +278,31 @@ void ATennisStoryGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void ATennisStoryGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	ATennisStoryPlayerController* TSPC = Cast<ATennisStoryPlayerController>(Exiting);
+	if (TSPC)
+	{
+		FString WinnerName, LoserName;
+
+		for (int i = 0; i < TSGameState->TeamData.Num(); i++)
+		{
+			if (TSGameState->TeamData[i].AssignedPlayers.Contains(TSPC))
+			{
+				LoserName = TSGameState->TeamData[i].TeamName;
+			}
+			else
+			{
+				WinnerName = TSGameState->TeamData[i].TeamName;
+			}
+		}
+
+		EndMatch(true, WinnerName, LoserName);
+	}
+}
+
 void ATennisStoryGameMode::StartToLeaveMap()
 {
 	Super::StartToLeaveMap();
@@ -691,20 +716,37 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 	}
 	else
 	{
-		for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
-		{
-			ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
-
-			checkf(TSPS, TEXT("ATennisStoryGameMode::ResolvePoint - Found a PlayerState that was not of the right type!"))
-
-			TSPS->bIsReady = false;
-		}
-
-		static const float EnterWaitingStateDelay = (TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Online) ? 3.f : 5.f;
-
-		FTimerHandle NextMatchHandle;
-		GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::HandleMatchEnded, EnterWaitingStateDelay);
+		EndMatch();
 	}
+}
+
+void ATennisStoryGameMode::EndMatch(bool bWasForfeit/* = false*/, FString WinnerName/* = FString()*/, FString LoserName/* = FString()*/)
+{
+	if (bWasForfeit)
+	{
+		float CalloutDisplayDuration = -1.f;
+
+		FString ResolutionTypeString = FString::Printf(TEXT("MATCH ENDED DUE TO %s DISCONNECTION"), *LoserName);
+		FString ScoreCalloutString = WinnerName + FString(TEXT(" WINS BY DEFAULT"));
+
+		UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::EndMatch - Match was forfeited due to disconnection"))
+
+		TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), false);
+	}
+
+	for (int i = 0; i < TSGameState->PlayerArray.Num(); i++)
+	{
+		ATennisStoryPlayerState* TSPS = Cast<ATennisStoryPlayerState>(TSGameState->PlayerArray[i]);
+
+		checkf(TSPS, TEXT("ATennisStoryGameMode::ResolvePoint - Found a PlayerState that was not of the right type!"))
+
+		TSPS->bIsReady = false;
+	}
+
+	static const float EnterWaitingStateDelay = (TSGameInstance->GetOnlinePlayType() == EOnlinePlayType::Online) ? 3.f : 5.f;
+
+	FTimerHandle NextMatchHandle;
+	GetWorldTimerManager().SetTimer(NextMatchHandle, this, &ATennisStoryGameMode::HandleMatchEnded, EnterWaitingStateDelay);
 }
 
 void ATennisStoryGameMode::SwitchSides()

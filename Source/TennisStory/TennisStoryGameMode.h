@@ -32,6 +32,8 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void Logout(AController* Exiting) override;
+
 	virtual void StartToLeaveMap() override;
 
 	int GetAllowedBounces() const
@@ -82,6 +84,8 @@ protected:
 	void HandleBallHitBounceLimit();
 
 	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, EPointResolutionType PointType);
+
+	void EndMatch(bool bWasForfeit = false, FString WinnerName = FString(), FString LoserName = FString());
 
 	void SwitchSides();
 
