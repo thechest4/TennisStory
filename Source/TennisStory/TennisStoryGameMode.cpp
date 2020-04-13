@@ -726,10 +726,10 @@ void ATennisStoryGameMode::EndMatch(bool bWasForfeit/* = false*/, FString Winner
 	{
 		float CalloutDisplayDuration = -1.f;
 
-		FString ResolutionTypeString = FString::Printf(TEXT("MATCH ENDED DUE TO %s DISCONNECTION"), *LoserName);
+		FString ResolutionTypeString = FString::Printf(TEXT("%s HAS DISCONNECTED"), *LoserName);
 		FString ScoreCalloutString = WinnerName + FString(TEXT(" WINS BY DEFAULT"));
 
-		UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::EndMatch - Match was forfeited due to disconnection"))
+		UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::EndMatch - Player %s disconnected, match is ended"), *LoserName)
 
 		TSGameState->AddCalloutWidgetToViewport(CalloutDisplayDuration, FText::FromString(ResolutionTypeString), FText::FromString(ScoreCalloutString), false);
 	}
@@ -843,7 +843,10 @@ void ATennisStoryGameMode::HandleMatchEnded()
 			{
 				for (int j = 0; j < TSGameState->TeamData[i].AssignedCharacters.Num(); j++)
 				{
-					TSGameState->TeamData[i].AssignedCharacters[j]->Destroy();
+					if (TSGameState->TeamData[i].AssignedCharacters[j].IsValid())
+					{
+						TSGameState->TeamData[i].AssignedCharacters[j]->Destroy();
+					}
 				}
 
 				TSGameState->TeamData[i].AssignedCharacters.Empty();
