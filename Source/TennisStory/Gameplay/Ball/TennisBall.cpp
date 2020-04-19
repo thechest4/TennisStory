@@ -10,6 +10,7 @@
 #include "Components/DecalComponent.h"
 #include "Player/Components/BallStrikingComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 ATennisBall::FOnBallSpawnedEvent ATennisBall::BallSpawnedEvent;
 
@@ -36,6 +37,11 @@ ATennisBall::ATennisBall()
 	BallMovementComp = CreateDefaultSubobject<UBallMovementComponent>(TEXT("BallMovementComp"));
 
 	BallTrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+
+	BallTrailParticleEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Ball Trail Component"));
+	BallTrailParticleEffect->SetupAttachment(RootComponent);
+
+	bTrailAlwaysOn = false;
 }
 
 void ATennisBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -44,6 +50,7 @@ void ATennisBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
 	DOREPLIFETIME(ATennisBall, bWasLastHitAServe);
 	DOREPLIFETIME(ATennisBall, LastPlayerToHit);
+	DOREPLIFETIME(ATennisBall, CurrentBallState);
 }
 
 void ATennisBall::BeginPlay()
@@ -53,6 +60,11 @@ void ATennisBall::BeginPlay()
 	ApplyBallState();
 
 	ATennisBall::BallSpawnedEvent.Broadcast(this);
+
+	if (!bTrailAlwaysOn)
+	{
+		BallTrailParticleEffect->SetActive(false);
+	}
 }
 
 bool ATennisBall::IsInServiceState()
@@ -125,12 +137,28 @@ void ATennisBall::Multicast_SpawnHitParticleEffect_Implementation(UParticleSyste
 
 void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext)
 {
+	if (!BallTrailParticleEffect->IsActive() && !bTrailAlwaysOn)
+	{
+		BallTrailParticleEffect->SetActive(true);
+	}
+
 	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity, bFromHit);
 	BallMovementComp->ProvideBoundsContext(BoundsContext);
 
 	if (HasAuthority() && bFromHit)
 	{
 		Multicast_SpawnBounceLocationParticleEffect(TrajectoryData.TrajectoryEndLocation);
+	}
+}
+
+void ATennisBall::OnRep_BallState()
+{
+	if (CurrentBallState == ETennisBallState::ServiceState)
+	{
+		if (!bTrailAlwaysOn)
+		{
+			BallTrailParticleEffect->SetActive(false);
+		}
 	}
 }
 
@@ -142,6 +170,8 @@ void ATennisBall::ApplyBallState()
 		{
 			LastPlayerToHit.Reset();
 			BallMovementComp->StopMoving();
+			OnRep_BallState();
+
 			break;
 		}
 	}

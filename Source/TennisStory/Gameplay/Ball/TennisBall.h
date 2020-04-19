@@ -100,15 +100,25 @@ protected:
 	UPROPERTY()
 	USplineComponent* BallTrajectorySplineComp;
 
+	UPROPERTY(ReplicatedUsing = OnRep_BallState)
 	ETennisBallState CurrentBallState;
+
+	UFUNCTION()
+	void OnRep_BallState();
 
 	void ApplyBallState();
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
 	UParticleSystem* BounceParticleEffect;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
+	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
 	UParticleSystem* BounceLocationParticleEffect;
+
+	UPROPERTY(EditAnywhere, Category = "Ball FX")
+	bool bTrailAlwaysOn;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
+	UParticleSystemComponent* BallTrailParticleEffect;
 
 private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;
