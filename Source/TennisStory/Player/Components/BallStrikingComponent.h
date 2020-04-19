@@ -51,6 +51,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = Aiming)
 	UCurveFloat* TrajectoryCurve;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
+	UParticleSystem* HitFX;
 
 	float CalculateChargedBallSpeed();
 

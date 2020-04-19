@@ -94,6 +94,11 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		{
 			TennisBall->LastPlayerToHit = OwnerChar;
 			TennisBall->bWasLastHitAServe = false;
+
+			if (HitFX)
+			{
+				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
+			}
 		}
 	}
 }
