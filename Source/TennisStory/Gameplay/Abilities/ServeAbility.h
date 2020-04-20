@@ -53,7 +53,7 @@ protected:
 	float BadServeMargin = 0.3f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
-	TArray<UParticleSystem*> OrderedServeHitFX;
+	TArray<UParticleSystem*> OrderedServeHitVFX;
 	
 	//Returns an index that is used to retrieve a serve speed and hit FX from the Ordered TArrays
 	int EvaluateServeQuality(UBallMovementComponent* BallMovementComp);
@@ -64,6 +64,9 @@ protected:
 	bool bServeReleased;
 
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
+	TArray<USoundBase*> OrderedServeHitSFX;
 
 	FDelegateHandle OnPlayerHitServeDelegateHandle;
 };

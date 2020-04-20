@@ -147,6 +147,9 @@ public:
 
 	void CancelAllAbilities();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlaySound(USoundBase* Sound, FVector Location);
+
 protected:
 	virtual void BeginPlay() override;
 

@@ -55,6 +55,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
 	UParticleSystem* HitFX;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
+	float ThresholdForMediumHit = 0.3f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
+	TArray<USoundBase*> OrderedHitSFX;
+
 	float CalculateChargedBallSpeed();
 
 	//Charge State

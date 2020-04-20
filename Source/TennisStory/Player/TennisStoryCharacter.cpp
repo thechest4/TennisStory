@@ -375,6 +375,11 @@ void ATennisStoryCharacter::CancelAllAbilities()
 	}
 }
 
+void ATennisStoryCharacter::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector Location)
+{
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
+}
+
 void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = ModifiedBaseSpeed;

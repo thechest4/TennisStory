@@ -116,8 +116,15 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 	{
 		int ServeQualityIndex = EvaluateServeQuality(TennisBall->BallMovementComp);
 		
-		checkf(OrderedServeSpeeds.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - ServeSpeeds array doesn't have the right number of items!"))
-		checkf(OrderedServeHitFX.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - HitFX array doesn't have the right number of items!"))
+		ensureMsgf(OrderedServeSpeeds.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - ServeSpeeds array doesn't have the right number of items!"));
+
+		if (OrderedServeSpeeds.Num() != static_cast<int>(EServeQuality::MAX))
+		{
+			return;
+		}
+
+		ensureMsgf(OrderedServeHitVFX.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - HitFX array doesn't have the right number of items!"));
+		ensureMsgf(OrderedServeHitSFX.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - HitSFX array doesn't have the right number of items!"));
 
 		//This call changes the BallMovementComponent CurrentMovementState so it should be done before the FollowPath call
 		TennisBall->InterruptServiceToss();
@@ -149,10 +156,22 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			GameMode->ReportServeHit();
 			
-			UParticleSystem* HitFX = OrderedServeHitFX[ServeQualityIndex];
-			if (HitFX)
+			if (OrderedServeHitVFX.Num() == static_cast<int>(EServeQuality::MAX))
 			{
-				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
+				UParticleSystem* HitVFX = OrderedServeHitVFX[ServeQualityIndex];
+				if (HitVFX)
+				{
+					TennisBall->Multicast_SpawnHitParticleEffect(HitVFX, TennisBall->GetActorLocation());
+				}
+			}
+
+			if (OrderedServeHitSFX.Num() == static_cast<int>(EServeQuality::MAX))
+			{
+				USoundBase* HitSFX = OrderedServeHitSFX[ServeQualityIndex];
+				if (HitSFX)
+				{
+					Player->Multicast_PlaySound(HitSFX, TennisBall->GetActorLocation());
+				}
 			}
 		}
 	}

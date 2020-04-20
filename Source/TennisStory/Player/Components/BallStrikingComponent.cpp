@@ -99,6 +99,17 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			{
 				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
 			}
+
+			ensureMsgf(OrderedHitSFX.Num() == 2, TEXT("UBallStrikingComponent::HandleRacquetOverlapBegin - OrderedHitSFX had the wrong number of items!"));
+			if (OrderedHitSFX.Num() == 2)
+			{
+				float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
+				float ChargeQuality = ChargeDuration / MaxChargeDuration;
+				
+				int SFXIndex = (ChargeQuality > ThresholdForMediumHit) ? 1 : 0;
+
+				OwnerChar->Multicast_PlaySound(OrderedHitSFX[SFXIndex], TennisBall->GetActorLocation());
+			}
 		}
 	}
 }
