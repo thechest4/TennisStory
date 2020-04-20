@@ -64,6 +64,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnHitParticleEffect(UParticleSystem* HitFX, FVector Location);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlaySound(USoundBase* Sound, FVector Location);
+
 	FVector GetCurrentDirection() const
 	{
 		if (!BallMovementComp)

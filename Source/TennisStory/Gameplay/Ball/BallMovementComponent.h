@@ -118,6 +118,9 @@ protected:
 	FVector TossEndLocation;
 	float CurrentTossAlpha;
 	float TotalTossDuration;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Bounce SFX")
+	TArray<USoundBase*> OrderedBounceSFX;
 	
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

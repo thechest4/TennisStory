@@ -135,6 +135,11 @@ void ATennisBall::Multicast_SpawnHitParticleEffect_Implementation(UParticleSyste
 	}
 }
 
+void ATennisBall::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector Location)
+{
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
+}
+
 void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext)
 {
 	if (!BallTrailParticleEffect->IsActive() && !bTrailAlwaysOn)

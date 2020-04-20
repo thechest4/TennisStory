@@ -77,6 +77,12 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 		GenerateAndFollowBouncePath(Hit);
 
 		OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+
+		ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
+		if (OrderedBounceSFX.Num() == 2)
+		{
+			OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[1], OwnerPtr->GetActorLocation());
+		}
 	}
 	else if (OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
 	{
@@ -91,6 +97,12 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 		if (NormalImpulse.Size() > MinImpulseForParticles)
 		{
 			OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+
+			ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
+			if (OrderedBounceSFX.Num() == 2)
+			{
+				OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[0], OwnerPtr->GetActorLocation());
+			}
 		}
 		
 		NumBounces++;
