@@ -35,9 +35,12 @@ enum class ESnapPoint : uint8
 {
 	ServiceDeuce,
 	ServiceAd,
-	Mid,
-	Left,
-	Right
+	BackMid,
+	BackLeft,
+	BackRight,
+	FrontMid,
+	FrontLeft,
+	FrontRight
 };
 
 UCLASS()
@@ -140,13 +143,22 @@ protected:
 	USceneComponent* AdNetPlayerLocation;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
-	USceneComponent* MidSnapPoint;
+	USceneComponent* BackMidSnapPoint;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
-	USceneComponent* RightSnapPoint;
+	USceneComponent* BackRightSnapPoint;
 
 	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
-	USceneComponent* LeftSnapPoint;
+	USceneComponent* BackLeftSnapPoint;
+
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* FrontMidSnapPoint;
+
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* FrontRightSnapPoint;
+
+	UPROPERTY(EditAnywhere, Category = "Target Snap Points")
+	USceneComponent* FrontLeftSnapPoint;
 
 	UPROPERTY(EditAnywhere, Category = "Court Dimensions")
 	float CourtLength = 1188.5f;
@@ -196,13 +208,22 @@ protected:
 	UBillboardComponent* AdNetPlayerIcon;
 
 	UPROPERTY()
-	UBillboardComponent* MidSnapPointIcon;
+	UBillboardComponent* BackMidSnapPointIcon;
 
 	UPROPERTY()
-	UBillboardComponent* RightSnapPointIcon;
+	UBillboardComponent* BackRightSnapPointIcon;
 
 	UPROPERTY()
-	UBillboardComponent* LeftSnapPointIcon;
+	UBillboardComponent* BackLeftSnapPointIcon;
+
+	UPROPERTY()
+	UBillboardComponent* FrontMidSnapPointIcon;
+						 
+	UPROPERTY()			 
+	UBillboardComponent* FrontRightSnapPointIcon;
+						 
+	UPROPERTY()			 
+	UBillboardComponent* FrontLeftSnapPointIcon;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif

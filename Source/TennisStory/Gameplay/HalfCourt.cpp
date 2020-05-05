@@ -46,17 +46,29 @@ AHalfCourt::AHalfCourt()
 	//Net Player Locations (For Doubles) End
 
 	//Target Snap Points
-	MidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Mid Target Snap Point"));
-	MidSnapPoint->SetupAttachment(RootComponent);
-	MidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
+	BackMidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Back Mid Target Snap Point"));
+	BackMidSnapPoint->SetupAttachment(RootComponent);
+	BackMidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
 
-	RightSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Right Target Snap Point"));
-	RightSnapPoint->SetupAttachment(RootComponent);
-	RightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	BackRightSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Back Right Target Snap Point"));
+	BackRightSnapPoint->SetupAttachment(RootComponent);
+	BackRightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
 
-	LeftSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Left Target Snap Point"));
-	LeftSnapPoint->SetupAttachment(RootComponent);
-	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	BackLeftSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Back Left Target Snap Point"));
+	BackLeftSnapPoint->SetupAttachment(RootComponent);
+	BackLeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	
+	FrontMidSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Front Mid Target Snap Point"));
+	FrontMidSnapPoint->SetupAttachment(RootComponent);
+	FrontMidSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.0f, 0.0f));
+	
+	FrontRightSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Front Right Target Snap Point"));
+	FrontRightSnapPoint->SetupAttachment(RootComponent);
+	FrontRightSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	
+	FrontLeftSnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Front Left Target Snap Point"));
+	FrontLeftSnapPoint->SetupAttachment(RootComponent);
+	FrontLeftSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, -0.25f * CourtWidth, 0.0f));
 	//Target Snap Points End
 
 #if WITH_EDITORONLY_DATA
@@ -172,45 +184,87 @@ AHalfCourt::AHalfCourt()
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TargetIcon(TEXT("/Game/Art/Icons/TargetIcon"));
 
-	MidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Mid Snap Point Icon"));
-	if (MidSnapPointIcon)
+	BackMidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Back Mid Snap Point Icon"));
+	if (BackMidSnapPointIcon)
 	{
-		MidSnapPointIcon->SetupAttachment(MidSnapPoint);
-		MidSnapPointIcon->SetHiddenInGame(true);
-		MidSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-		MidSnapPointIcon->SetEditorScale(IconEditorScale);
+		BackMidSnapPointIcon->SetupAttachment(BackMidSnapPoint);
+		BackMidSnapPointIcon->SetHiddenInGame(true);
+		BackMidSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		BackMidSnapPointIcon->SetEditorScale(IconEditorScale);
 
 		if (TargetIcon.Succeeded())
 		{
-			MidSnapPointIcon->SetSprite(TargetIcon.Object);
+			BackMidSnapPointIcon->SetSprite(TargetIcon.Object);
 		}
 	}
 	
-	RightSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Right Snap Point Icon"));
-	if (RightSnapPointIcon)
+	BackRightSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Back Right Snap Point Icon"));
+	if (BackRightSnapPointIcon)
 	{
-		RightSnapPointIcon->SetupAttachment(RightSnapPoint);
-		RightSnapPointIcon->SetHiddenInGame(true);
-		RightSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-		RightSnapPointIcon->SetEditorScale(IconEditorScale);
+		BackRightSnapPointIcon->SetupAttachment(BackRightSnapPoint);
+		BackRightSnapPointIcon->SetHiddenInGame(true);
+		BackRightSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		BackRightSnapPointIcon->SetEditorScale(IconEditorScale);
 		
 		if (TargetIcon.Succeeded())
 		{
-			RightSnapPointIcon->SetSprite(TargetIcon.Object);
+			BackRightSnapPointIcon->SetSprite(TargetIcon.Object);
 		}
 	}
 
-	LeftSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Left Snap Point Icon"));
-	if (LeftSnapPointIcon)
+	BackLeftSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Back Left Snap Point Icon"));
+	if (BackLeftSnapPointIcon)
 	{
-		LeftSnapPointIcon->SetupAttachment(LeftSnapPoint);
-		LeftSnapPointIcon->SetHiddenInGame(true);
-		LeftSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
-		LeftSnapPointIcon->SetEditorScale(IconEditorScale);
+		BackLeftSnapPointIcon->SetupAttachment(BackLeftSnapPoint);
+		BackLeftSnapPointIcon->SetHiddenInGame(true);
+		BackLeftSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		BackLeftSnapPointIcon->SetEditorScale(IconEditorScale);
 
 		if (TargetIcon.Succeeded())
 		{
-			LeftSnapPointIcon->SetSprite(TargetIcon.Object);
+			BackLeftSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
+	}
+
+	FrontMidSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Front Mid Snap Point Icon"));
+	if (FrontMidSnapPointIcon)
+	{
+		FrontMidSnapPointIcon->SetupAttachment(FrontMidSnapPoint);
+		FrontMidSnapPointIcon->SetHiddenInGame(true);
+		FrontMidSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		FrontMidSnapPointIcon->SetEditorScale(IconEditorScale);
+
+		if (TargetIcon.Succeeded())
+		{
+			FrontMidSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
+	}
+	
+	FrontRightSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Front Right Snap Point Icon"));
+	if (FrontRightSnapPointIcon)
+	{
+		FrontRightSnapPointIcon->SetupAttachment(FrontRightSnapPoint);
+		FrontRightSnapPointIcon->SetHiddenInGame(true);
+		FrontRightSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		FrontRightSnapPointIcon->SetEditorScale(IconEditorScale);
+		
+		if (TargetIcon.Succeeded())
+		{
+			FrontRightSnapPointIcon->SetSprite(TargetIcon.Object);
+		}
+	}
+
+	FrontLeftSnapPointIcon = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Front Left Snap Point Icon"));
+	if (FrontLeftSnapPointIcon)
+	{
+		FrontLeftSnapPointIcon->SetupAttachment(FrontLeftSnapPoint);
+		FrontLeftSnapPointIcon->SetHiddenInGame(true);
+		FrontLeftSnapPointIcon->SetRelativeLocation(FVector(0.0f, 0.0f, IconHeight));
+		FrontLeftSnapPointIcon->SetEditorScale(IconEditorScale);
+
+		if (TargetIcon.Succeeded())
+		{
+			FrontLeftSnapPointIcon->SetSprite(TargetIcon.Object);
 		}
 	}
 #endif
@@ -228,10 +282,6 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 		
 		return ServiceBoxSnapPoint;
 	}
-	else if (SnapPoint == ESnapPoint::Mid)
-	{
-		return MidSnapPoint->GetComponentLocation();
-	}
 	else
 	{
 		//Figure out if the Control Rotation (AimRightVector) is the same as this court
@@ -242,11 +292,79 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 		//If rotation are the same, return what was requested.  Otherwise return the inverse of the request
 		if (DotProd > 0.f)
 		{
-			return (SnapPoint == ESnapPoint::Right) ? RightSnapPoint->GetComponentLocation() : LeftSnapPoint->GetComponentLocation();
+			switch (SnapPoint)
+			{
+				case ESnapPoint::BackMid:
+				{
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackLeft:
+				{
+					return FrontLeftSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackRight:
+				{
+					return FrontRightSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontMid:
+				{
+					return BackMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontLeft:
+				{
+					return BackLeftSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontRight:
+				{
+					return BackRightSnapPoint->GetComponentLocation();
+				}
+				default:
+				{
+					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
+
+					checkNoEntry()
+
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+			}
 		}
 		else if (DotProd < 0.f)
 		{
-			return (SnapPoint == ESnapPoint::Right) ? LeftSnapPoint->GetComponentLocation() : RightSnapPoint->GetComponentLocation();
+			switch (SnapPoint)
+			{
+				case ESnapPoint::BackMid:
+				{
+					return BackMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackLeft:
+				{
+					return BackRightSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackRight:
+				{
+					return BackLeftSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontMid:
+				{
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontLeft:
+				{
+					return FrontRightSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontRight:
+				{
+					return FrontLeftSnapPoint->GetComponentLocation();
+				}
+				default:
+				{
+					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
+
+					checkNoEntry()
+
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+			}
 		}
 	}
 
@@ -396,9 +514,13 @@ void AHalfCourt::RecalculateCourtLocations()
 	DeuceNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
 	AdNetPlayerLocation->SetRelativeLocation(FVector(0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
 
-	MidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
-	RightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
-	LeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+	BackMidSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.0f, 0.0f));
+	BackRightSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	BackLeftSnapPoint->SetRelativeLocation(FVector(-0.25f * CourtLength, -0.25f * CourtWidth, 0.0f));
+
+	FrontMidSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.0f, 0.0f));
+	FrontRightSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.25f * CourtWidth, 0.0f));
+	FrontLeftSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, -0.25f * CourtWidth, 0.0f));
 }
 
 #if WITH_EDITORONLY_DATA
@@ -430,14 +552,23 @@ void AHalfCourt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	FVector AdNetPlayerRelativeLocation = AdNetPlayerLocation->GetRelativeTransform().GetLocation();
 	AdNetPlayerLocation->SetRelativeLocation(FVector(AdNetPlayerRelativeLocation.X, AdNetPlayerRelativeLocation.Y, 0.0f));
 
-	FVector MidSnapPointLocation = MidSnapPoint->GetRelativeTransform().GetLocation();
-	MidSnapPoint->SetRelativeLocation(FVector(MidSnapPointLocation.X, MidSnapPointLocation.Y, 0.0f));
+	FVector BackMidSnapPointLocation = BackMidSnapPoint->GetRelativeTransform().GetLocation();
+	BackMidSnapPoint->SetRelativeLocation(FVector(BackMidSnapPointLocation.X, BackMidSnapPointLocation.Y, 0.0f));
 
-	FVector RightSnapPointLocation = RightSnapPoint->GetRelativeTransform().GetLocation();
-	RightSnapPoint->SetRelativeLocation(FVector(RightSnapPointLocation.X, RightSnapPointLocation.Y, 0.0f));
+	FVector BackRightSnapPointLocation = BackRightSnapPoint->GetRelativeTransform().GetLocation();
+	BackRightSnapPoint->SetRelativeLocation(FVector(BackRightSnapPointLocation.X, BackRightSnapPointLocation.Y, 0.0f));
 
-	FVector LeftSnapPointLocation = LeftSnapPoint->GetRelativeTransform().GetLocation();
-	LeftSnapPoint->SetRelativeLocation(FVector(LeftSnapPointLocation.X, LeftSnapPointLocation.Y, 0.0f));
+	FVector BackLeftSnapPointLocation = BackLeftSnapPoint->GetRelativeTransform().GetLocation();
+	BackLeftSnapPoint->SetRelativeLocation(FVector(BackLeftSnapPointLocation.X, BackLeftSnapPointLocation.Y, 0.0f));
+
+	FVector FrontMidSnapPointLocation = FrontMidSnapPoint->GetRelativeTransform().GetLocation();
+	FrontMidSnapPoint->SetRelativeLocation(FVector(FrontMidSnapPointLocation.X, FrontMidSnapPointLocation.Y, 0.0f));
+
+	FVector FrontRightSnapPointLocation = FrontRightSnapPoint->GetRelativeTransform().GetLocation();
+	FrontRightSnapPoint->SetRelativeLocation(FVector(FrontRightSnapPointLocation.X, FrontRightSnapPointLocation.Y, 0.0f));
+
+	FVector FrontLeftSnapPointLocation = FrontLeftSnapPoint->GetRelativeTransform().GetLocation();
+	FrontLeftSnapPoint->SetRelativeLocation(FVector(FrontLeftSnapPointLocation.X, FrontLeftSnapPointLocation.Y, 0.0f));
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
