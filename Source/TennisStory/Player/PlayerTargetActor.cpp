@@ -112,6 +112,14 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 		}
 		else
 		{
+			if (MovementTarget)
+			{
+				FVector TranslationVector = MovementTarget->GetActorLocation() - GetActorLocation();
+				TranslationVector.Z = 0.f;
+				TranslationVector.Normalize();
+				MovementVector = TranslationVector;
+			}
+
 			MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
 
 			if (MovementVector != FVector::ZeroVector)
@@ -200,6 +208,7 @@ void APlayerTargetActor::HideTarget()
 	bCurrentlyVisible = false;
 
 	TargetMesh->SetVisibility(false);
+	MovementTarget = nullptr;
 }
 
 void APlayerTargetActor::BeginPlay()

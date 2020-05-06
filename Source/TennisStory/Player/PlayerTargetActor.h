@@ -56,6 +56,10 @@ public:
 
 	void SetTargetingMode(ETargetingMode NewMode) { CurrentTargetingMode = NewMode; }
 
+	bool IsCurrentlyVisible() { return bCurrentlyVisible; }
+
+	void SetMovementTarget(AActor* Target) { MovementTarget = Target; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -79,4 +83,6 @@ protected:
 	FVector ConsumeCurrentInputVector();
 
 	FVector GetOwnerControlRotationVector();
+
+	AActor* MovementTarget;
 };

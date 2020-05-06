@@ -8,6 +8,7 @@
 #include "GameFramework/Controller.h"
 #include "TennisStoryGameState.h"
 #include "Player/PlayerTargetActor.h"
+#include "Player/PlayerMouseTarget.h"
 #include "Player/Components/BallStrikingComponent.h"
 #include "Player/Components/DistanceIndicatorComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
@@ -247,6 +248,11 @@ void ATennisStoryCharacter::FreezePlayerTarget()
 			Server_CommitTargetPosition(TargetActor->GetActorLocation());
 		}
 	}
+
+	if (MouseTarget)
+	{
+		MouseTarget->HideTarget();
+	}
 }
 
 void ATennisStoryCharacter::DisablePlayerTargeting()
@@ -259,6 +265,11 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	if (IsLocallyControlled())
 	{
 		Server_CommitTargetPosition(TargetActor->GetActorLocation());
+	}
+
+	if (MouseTarget)
+	{
+		MouseTarget->HideTarget();
 	}
 }
 
@@ -403,6 +414,9 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 	PlayerInputComponent->BindAxis("MoveTargetForwardPrecise", this, &ATennisStoryCharacter::AddTargetPreciseForwardInput);
 	PlayerInputComponent->BindAxis("MoveTargetRightPrecise", this, &ATennisStoryCharacter::AddTargetPreciseRightInput);
+	
+	PlayerInputComponent->BindAxis("MouseAimForward", this, &ATennisStoryCharacter::AddMouseAimForwardInput);
+	PlayerInputComponent->BindAxis("MouseAimRight", this, &ATennisStoryCharacter::AddMouseAimRightInput);
 
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
 }
@@ -500,6 +514,68 @@ void ATennisStoryCharacter::AddTargetPreciseRightInput(float Value)
 		TargetActor->SetTargetingMode(ETargetingMode::Precise);
 
 		AddTargetRightInput(Value);
+	}
+}
+
+void ATennisStoryCharacter::AddMouseAimForwardInput(float Value)
+{
+	if (Value != 0.f && TargetActor && TargetActor->IsCurrentlyVisible())
+	{
+		if (!MouseTarget)
+		{
+			SpawnMouseTargetActor();
+		}
+
+		ensureMsgf(MouseTarget, TEXT("MouseTarget was null!"));
+
+		if (MouseTarget)
+		{
+			TargetActor->SetTargetingMode(ETargetingMode::Precise);
+			TargetActor->SetMovementTarget(MouseTarget);
+
+			if (!MouseTarget->IsCurrentlyShown())
+			{
+				MouseTarget->SetActorLocation(TargetActor->GetActorLocation());
+				MouseTarget->ShowTarget();
+			}
+
+			MouseTarget->AddForwardInput(Value);
+		}
+	}
+}
+
+void ATennisStoryCharacter::AddMouseAimRightInput(float Value)
+{
+	if (Value != 0.f && TargetActor && TargetActor->IsCurrentlyVisible())
+	{
+		if (!MouseTarget)
+		{
+			SpawnMouseTargetActor();
+		}
+
+		ensureMsgf(MouseTarget, TEXT("MouseTarget was null!"));
+
+		if (MouseTarget)
+		{
+			TargetActor->SetTargetingMode(ETargetingMode::Precise);
+			TargetActor->SetMovementTarget(MouseTarget);
+
+			if (!MouseTarget->IsCurrentlyShown())
+			{
+				MouseTarget->SetActorLocation(TargetActor->GetActorLocation());
+				MouseTarget->ShowTarget();
+			}
+
+			MouseTarget->AddRightInput(Value);
+		}
+	}
+}
+
+void ATennisStoryCharacter::SpawnMouseTargetActor()
+{
+	if (!MouseTarget && MouseTargetClass)
+	{
+		MouseTarget = GetWorld()->SpawnActor<APlayerMouseTarget>(MouseTargetClass, FTransform::Identity);
 	}
 }
 

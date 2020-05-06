@@ -14,6 +14,7 @@
 class ATennisBall;
 class UBoxComponent;
 class UDistanceIndicatorComponent;
+class APlayerMouseTarget;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
 
@@ -176,6 +177,12 @@ protected:
 	void AddTargetPreciseForwardInput(float Value);
 
 	void AddTargetPreciseRightInput(float Value);
+	
+	void AddMouseAimForwardInput(float Value);
+
+	void AddMouseAimRightInput(float Value);
+
+	void SpawnMouseTargetActor();
 
 	UFUNCTION()
 	void HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);
@@ -201,6 +208,12 @@ protected:
 
 	UPROPERTY()
 	APlayerTargetActor* TargetActor;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<APlayerMouseTarget> MouseTargetClass;
+
+	UPROPERTY()
+	APlayerMouseTarget* MouseTarget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
 	UAbilitySystemComponent* AbilitySystemComp;
