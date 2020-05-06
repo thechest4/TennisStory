@@ -398,8 +398,11 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATennisStoryCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATennisStoryCharacter::MoveRight);
 
-	PlayerInputComponent->BindAxis("MoveTargetForward", this, &ATennisStoryCharacter::MoveTargetForward);
-	PlayerInputComponent->BindAxis("MoveTargetRight", this, &ATennisStoryCharacter::MoveTargetRight);
+	PlayerInputComponent->BindAxis("MoveTargetForwardSimple", this, &ATennisStoryCharacter::AddTargetSimpleForwardInput);
+	PlayerInputComponent->BindAxis("MoveTargetRightSimple", this, &ATennisStoryCharacter::AddTargetSimpleRightInput);
+
+	PlayerInputComponent->BindAxis("MoveTargetForwardPrecise", this, &ATennisStoryCharacter::AddTargetPreciseForwardInput);
+	PlayerInputComponent->BindAxis("MoveTargetRightPrecise", this, &ATennisStoryCharacter::AddTargetPreciseRightInput);
 
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
 }
@@ -438,7 +441,7 @@ void ATennisStoryCharacter::MoveRight(float Value)
 	}
 }
 
-void ATennisStoryCharacter::MoveTargetForward(float Value)
+void ATennisStoryCharacter::AddTargetForwardInput(float Value)
 {
 	if (TargetActor && Controller && Value != 0.0f)
 	{
@@ -451,7 +454,7 @@ void ATennisStoryCharacter::MoveTargetForward(float Value)
 	}
 }
 
-void ATennisStoryCharacter::MoveTargetRight(float Value)
+void ATennisStoryCharacter::AddTargetRightInput(float Value)
 {
 	if (TargetActor && Controller && Value != 0.0f)
 	{
@@ -461,6 +464,42 @@ void ATennisStoryCharacter::MoveTargetRight(float Value)
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		TargetActor->AddInputVector(Direction, Value);
+	}
+}
+
+void ATennisStoryCharacter::AddTargetSimpleForwardInput(float Value)
+{
+	if (TargetActor && TargetActor->GetTargetingMode() == ETargetingMode::Simple)
+	{
+		AddTargetForwardInput(Value);
+	}
+}
+
+void ATennisStoryCharacter::AddTargetSimpleRightInput(float Value)
+{
+	if (TargetActor && TargetActor->GetTargetingMode() == ETargetingMode::Simple)
+	{
+		AddTargetRightInput(Value);
+	}
+}
+
+void ATennisStoryCharacter::AddTargetPreciseForwardInput(float Value)
+{
+	if (TargetActor && Value != 0.f)
+	{
+		TargetActor->SetTargetingMode(ETargetingMode::Precise);
+
+		AddTargetForwardInput(Value);
+	}
+}
+
+void ATennisStoryCharacter::AddTargetPreciseRightInput(float Value)
+{
+	if (TargetActor && Value != 0.f)
+	{
+		TargetActor->SetTargetingMode(ETargetingMode::Precise);
+
+		AddTargetRightInput(Value);
 	}
 }
 

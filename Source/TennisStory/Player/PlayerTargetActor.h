@@ -16,6 +16,13 @@ enum class ETargetingContext : uint8
 	Volley
 };
 
+UENUM()
+enum class ETargetingMode : uint8
+{
+	Simple,
+	Precise
+};
+
 UCLASS()
 class TENNISSTORY_API APlayerTargetActor : public AActor
 {
@@ -45,6 +52,10 @@ public:
 		return FVector(0.f, 0.f, 0.1f);
 	}
 
+	ETargetingMode GetTargetingMode() { return CurrentTargetingMode; }
+
+	void SetTargetingMode(ETargetingMode NewMode) { CurrentTargetingMode = NewMode; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -52,18 +63,16 @@ protected:
 
 	bool bCurrentlyVisible;
 	bool bCurrentlyMovable;
-	float TargetingStartedTime;
 	TWeakObjectPtr<AHalfCourt> CurrentTargetCourt;
 	ESnapPoint LastSnapPoint;
+
+	ETargetingMode CurrentTargetingMode;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player Target")
 	UStaticMeshComponent* TargetMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Player Target")
 	float MoveSpeed = 3.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Player Target")
-	float LockedTargetingDuration = 1.0f;
 
 	FVector CurrentInputVector = FVector::ZeroVector;
 

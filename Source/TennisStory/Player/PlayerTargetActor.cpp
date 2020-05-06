@@ -31,7 +31,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 		FVector MovementVector = ConsumeCurrentInputVector();
 		MovementVector.Normalize();
 
-		if (CurrentTargetingContext != ETargetingContext::Service && GetWorld()->GetTimeSeconds() - TargetingStartedTime < LockedTargetingDuration)
+		if (CurrentTargetingContext != ETargetingContext::Service && CurrentTargetingMode == ETargetingMode::Simple)
 		{
 			ESnapPoint SnapPointToAimAt = ESnapPoint::BackMid;
 
@@ -180,12 +180,12 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
-		TargetingStartedTime = GetWorld()->GetTimeSeconds();
 
 		TargetMesh->SetVisibility(bShowTarget);
 
 		CurrentTargetingContext = TargetingContext;
 		CurrentInputVector = FVector::ZeroVector;
+		CurrentTargetingMode = ETargetingMode::Simple;
 	}
 }
 

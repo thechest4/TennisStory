@@ -165,9 +165,17 @@ protected:
 
 	void MoveRight(float Value);
 
-	void MoveTargetForward(float Value);
+	void AddTargetForwardInput(float Value);
 
-	void MoveTargetRight(float Value);
+	void AddTargetRightInput(float Value);
+	
+	void AddTargetSimpleForwardInput(float Value);
+
+	void AddTargetSimpleRightInput(float Value);
+	
+	void AddTargetPreciseForwardInput(float Value);
+
+	void AddTargetPreciseRightInput(float Value);
 
 	UFUNCTION()
 	void HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);
