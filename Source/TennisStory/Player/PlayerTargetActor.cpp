@@ -112,19 +112,42 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 		}
 		else
 		{
-			if (MovementTarget)
-			{
-				FVector TranslationVector = MovementTarget->GetActorLocation() - GetActorLocation();
-				TranslationVector.Z = 0.f;
-				TranslationVector.Normalize();
-				MovementVector = TranslationVector;
-			}
+			FVector NewLocation = FVector::ZeroVector;
 
-			MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
+			if (MovementTarget) //Handle mouse movement/moving towards a movement target
+			{
+				FVector DirectionVector = MovementTarget->GetActorLocation() - GetActorLocation();
+				DirectionVector.Z = 0.f;
+				DirectionVector.Normalize();
+				
+				MovementVector = DirectionVector * MoveSpeed * DeltaSeconds;
+
+				if (MovementVector != FVector::ZeroVector)
+				{
+					float DistanceToTarget = FVector::Dist2D(MovementTarget->GetActorLocation(), GetActorLocation());
+					
+					if (DistanceToTarget < MovementVector.Size())
+					{
+						NewLocation = MovementTarget->GetActorLocation();
+					}
+					else
+					{
+						NewLocation = GetActorLocation() + MovementVector;
+					}
+				}
+			}
+			else //Normal movement calculation
+			{
+				MovementVector = MovementVector * MoveSpeed * DeltaSeconds;
+
+				if (MovementVector != FVector::ZeroVector)
+				{
+					NewLocation = GetActorLocation() + MovementVector;
+				}
+			}
 
 			if (MovementVector != FVector::ZeroVector)
 			{
-				FVector NewLocation = GetActorLocation() + MovementVector;
 				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation, GetCourtBoundsContextForTargetingContext(CurrentTargetingContext));
 				SetActorLocation(NewLocation);
 			}
