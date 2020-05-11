@@ -130,7 +130,7 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	}
 
 	FVector BallLocation = OwnerPtr->GetActorLocation();
-	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.6f;
+	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.8f;
 	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, LastPathHeight * 0.6f);
 
 	OwnerPtr->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false, EBoundsContext::FullCourt);
