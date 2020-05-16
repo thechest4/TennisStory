@@ -16,6 +16,8 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/HalfCourt.h"
+#include "Gameplay/Abilities/SwingAbility.h"
+#include "Gameplay/Abilities/VolleyAbility.h"
 #include "Net/UnrealNetwork.h"
 
 #if WITH_EDITORONLY_DATA
@@ -389,6 +391,16 @@ void ATennisStoryCharacter::CancelAllAbilities()
 void ATennisStoryCharacter::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector Location)
 {
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
+}
+
+bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility)
+{
+	if (AskingAbility->IsA<UVolleyAbility>())
+	{
+		return true;
+	}
+	
+	return false;
 }
 
 void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)

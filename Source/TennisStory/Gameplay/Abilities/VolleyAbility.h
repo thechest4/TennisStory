@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "SwingAbility.generated.h"
+#include "VolleyAbility.generated.h"
 
 class ATennisBall;
 class ATennisStoryCharacter;
 
 UCLASS()
-class TENNISSTORY_API USwingAbility : public UGameplayAbility
+class TENNISSTORY_API UVolleyAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	USwingAbility();
+	UVolleyAbility();
 
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const;
 
@@ -24,7 +24,7 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	UFUNCTION()
-	void HandleSwingMontageBlendOut();
+	void HandleVolleyMontageBlendOut();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -39,7 +39,7 @@ protected:
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
 
-	bool bSwingReleased;
+	bool bVolleyReleased;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 

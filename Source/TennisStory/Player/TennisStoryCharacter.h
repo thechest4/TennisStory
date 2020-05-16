@@ -151,6 +151,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlaySound(USoundBase* Sound, FVector Location);
 
+	bool DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility);
+
 protected:
 	virtual void BeginPlay() override;
 

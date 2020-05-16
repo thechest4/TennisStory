@@ -1,22 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-#include "SwingAbility.h"
+#include "VolleyAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "TennisStoryGameState.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
 
-USwingAbility::USwingAbility()
+UVolleyAbility::UVolleyAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
 
-	bSwingReleased = false;
+	bVolleyReleased = false;
 }
 
-bool USwingAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
+bool UVolleyAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
 {
 	bool bSuperResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
@@ -26,7 +25,7 @@ bool USwingAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 	return !CurrentMontageTask && bSuperResult && bHasOwnerPermission;
 }
 
-void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, OwnerInfo, ActivationInfo, TriggerEventData);
 
@@ -48,7 +47,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	bSwingReleased = false;
+	bVolleyReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
 	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
@@ -63,7 +62,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
-	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
+	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 
 	if (OwnerChar->HasAuthority())
@@ -78,15 +77,17 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	{
 		OwnerChar->StartDistanceVisualizationToBall();
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Volley ability"));
 }
 
-void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 	
 	if (CurrentMontageTask)
 	{
-		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
+		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 		CurrentMontageTask = nullptr;
 	}
 
@@ -106,14 +107,14 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	}
 }
 
-void USwingAbility::HandleSwingMontageBlendOut()
+void UVolleyAbility::HandleVolleyMontageBlendOut()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
-void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	if (bSwingReleased)
+	if (bVolleyReleased)
 	{
 		return;
 	}
@@ -121,7 +122,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	if (CurrentMontageTask)
 	{
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
-		bSwingReleased = true;
+		bVolleyReleased = true;
 	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
@@ -136,7 +137,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	}
 }
 
-bool USwingAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
+bool UVolleyAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
 {
 	FVector BallDirection = TennisBall->GetCurrentDirection();
 	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), OwnerCharacter->GetActorLocation());
@@ -148,3 +149,5 @@ bool USwingAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCh
 	
 	return DotProd >= 0.f;
 }
+
+

@@ -9,12 +9,12 @@
 #include "Player/TennisStoryCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
-UServeAbility::UServeAbility(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-	, bServeReleased(false)
+UServeAbility::UServeAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
+
+	bServeReleased = false;
 }
 
 bool UServeAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
