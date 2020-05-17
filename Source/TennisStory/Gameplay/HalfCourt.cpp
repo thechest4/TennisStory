@@ -478,6 +478,26 @@ void AHalfCourt::GetServiceClampLocations(EServiceSide ServiceSide, FVector& Mid
 	SideCourtLocation = (ServiceSide == EServiceSide::Deuce) ? MidCourtLocation + SideCourtLocation : MidCourtLocation - SideCourtLocation;
 }
 
+bool AHalfCourt::IsLocationInFrontHalfOfCourt(FVector Location)
+{
+	if (!IsLocationInBounds(Location, 0.f, EBoundsContext::FullCourt))
+	{
+		return false;
+	}
+
+	FVector RelativeLocation = Location - GetActorLocation();
+	RelativeLocation.Normalize();
+
+	float DotProd = FVector::DotProduct(RelativeLocation, GetActorForwardVector());
+
+	if (DotProd > 0.f)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void AHalfCourt::BeginPlay()
 {
 	Super::BeginPlay();

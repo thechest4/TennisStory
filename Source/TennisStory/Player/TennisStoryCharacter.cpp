@@ -395,9 +395,32 @@ void ATennisStoryCharacter::Multicast_PlaySound_Implementation(USoundBase* Sound
 
 bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility)
 {
-	if (AskingAbility->IsA<UVolleyAbility>())
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	if (GameState)
 	{
-		return true;
+		TWeakObjectPtr<AHalfCourt> Court = GameState->GetCourtForCharacter(this);
+		if (Court->IsLocationInFrontHalfOfCourt(GetActorLocation()))
+		{
+			if (AskingAbility->IsA<UVolleyAbility>())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if (AskingAbility->IsA<USwingAbility>())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 	
 	return false;
