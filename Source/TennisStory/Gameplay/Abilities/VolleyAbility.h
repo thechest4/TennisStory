@@ -53,4 +53,7 @@ protected:
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 	bool ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+
+	UFUNCTION()
+	void HandleBallHit();
 };

@@ -106,6 +106,8 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt);
 
+		BallHitEvent.Broadcast();
+
 		if (OwnerChar->HasAuthority())
 		{
 			TennisBall->LastPlayerToHit = OwnerChar;

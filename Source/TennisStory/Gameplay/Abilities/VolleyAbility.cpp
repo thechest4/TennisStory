@@ -78,6 +78,11 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	{
 		OwnerChar->StartDistanceVisualizationToBall();
 	}
+
+	if (OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
+	}
 }
 
 void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -107,6 +112,11 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		if (OwnerChar->HasAuthority())
 		{
 			OwnerChar->Multicast_RestoreBaseSpeed();
+		}
+		
+		if (OwnerChar->BallStrikingComp)
+		{
+			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
 		}
 	}
 }
@@ -157,4 +167,28 @@ bool UVolleyAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryC
 	return DotProd >= 0.f;
 }
 
+void UVolleyAbility::HandleBallHit()
+{
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+	if (OwnerChar)
+	{
+		if (OwnerChar->BallStrikingComp)
+		{
+			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
+		}
+
+		if (bVolleyReleased)
+		{
+			return;
+		}
+
+		if (CurrentMontageTask && CurrentVolleyType == EVolleyType::PassiveVolley)
+		{
+			CurrentMontageTask->JumpToSection(TEXT("Release"));
+			bVolleyReleased = true;
+			OwnerChar->DisablePlayerTargeting();
+			OwnerChar->BallStrikingComp->StopBallStriking();
+		}
+	}
+}
 

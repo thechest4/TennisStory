@@ -13,6 +13,8 @@ class ATennisStoryCharacter;
 class ATennisRacquet;
 class APlayerTargetActor;
 
+DECLARE_EVENT(UBallStrikingComponent, FBallHitEvent)
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallStrikingComponent : public UActorComponent
 {
@@ -28,6 +30,8 @@ public:
 	void SetChargeStartTime();
 
 	void SetChargeEndTime();
+
+	FBallHitEvent& OnBallHit() { return BallHitEvent; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -81,6 +85,8 @@ protected:
 	USplineComponent* OwnerSplineComp;
 
 	bool bBallStrikingAllowed;
+
+	FBallHitEvent BallHitEvent;
 
 	friend class ATennisStoryCharacter;
 };
