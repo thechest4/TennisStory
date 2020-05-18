@@ -102,7 +102,7 @@ public:
 		}
 	}
 
-	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint);
+	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint, bool bCompareAimVector = true);
 
 	bool IsLocationInBounds(FVector& Location, float BallRadius, EBoundsContext BoundsContext);
 

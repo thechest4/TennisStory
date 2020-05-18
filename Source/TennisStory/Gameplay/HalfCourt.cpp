@@ -270,7 +270,7 @@ AHalfCourt::AHalfCourt()
 #endif
 }
 
-FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint)
+FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint, bool bCompareAimVector)
 {
 	if (SnapPoint == ESnapPoint::ServiceDeuce || SnapPoint == ESnapPoint::ServiceAd)
 	{
@@ -284,12 +284,52 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 	}
 	else
 	{
+		if (!bCompareAimVector)
+		{
+			switch (SnapPoint)
+			{
+				case ESnapPoint::BackMid:
+				{
+					return BackMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackLeft:
+				{
+					return BackLeftSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::BackRight:
+				{
+					return BackRightSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontMid:
+				{
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontLeft:
+				{
+					return FrontLeftSnapPoint->GetComponentLocation();
+				}
+				case ESnapPoint::FrontRight:
+				{
+					return FrontRightSnapPoint->GetComponentLocation();
+				}
+				default:
+				{
+					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
+
+					checkNoEntry()
+
+					return FrontMidSnapPoint->GetComponentLocation();
+				}
+			}
+		}
+
 		//Figure out if the Control Rotation (AimRightVector) is the same as this court
 		FVector AimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
 		FVector CourtRightVector = GetActorRightVector();
 		float DotProd = FVector::DotProduct(CourtRightVector, AimRightVector);
 
-		//If rotation are the same, return what was requested.  Otherwise return the inverse of the request
+		//If rotation are the same, invert the forward axis but return the right axis as requested
+		//This is essentially assuming that in this case, the player is on the far court
 		if (DotProd > 0.f)
 		{
 			switch (SnapPoint)
@@ -328,7 +368,7 @@ FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint
 				}
 			}
 		}
-		else if (DotProd < 0.f)
+		else if (DotProd < 0.f) //If rotations are different, invert the right axis but respect the forward axis.  This is essentially assuming the player is on the near court
 		{
 			switch (SnapPoint)
 			{

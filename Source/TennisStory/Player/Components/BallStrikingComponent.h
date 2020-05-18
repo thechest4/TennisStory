@@ -80,5 +80,7 @@ protected:
 	UPROPERTY()
 	USplineComponent* OwnerSplineComp;
 
+	bool bBallStrikingAllowed;
+
 	friend class ATennisStoryCharacter;
 };

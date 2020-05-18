@@ -13,6 +13,7 @@ UVolleyAbility::UVolleyAbility()
 	bReplicateInputDirectly = true;
 
 	bVolleyReleased = false;
+	CurrentVolleyType = EVolleyType::PassiveVolley;
 }
 
 bool UVolleyAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
@@ -48,6 +49,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	}
 
 	bVolleyReleased = false;
+	CurrentVolleyType = EVolleyType::PassiveVolley;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
 	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
@@ -67,18 +69,15 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 	if (OwnerChar->HasAuthority())
 	{
-		OwnerChar->BallStrikingComp->SetChargeStartTime();
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
 
 	if (OwnerChar->IsLocallyControlled())
 	{
 		OwnerChar->StartDistanceVisualizationToBall();
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Volley ability"));
 }
 
 void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -94,6 +93,11 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
+		if (OwnerChar->BallStrikingComp)
+		{
+			OwnerChar->BallStrikingComp->StopBallStriking();
+		}
+
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->DisablePlayerTargeting();
@@ -123,6 +127,7 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
 		bVolleyReleased = true;
+		CurrentVolleyType = EVolleyType::ActiveVolley;
 	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
@@ -130,9 +135,11 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		OwnerChar->DisablePlayerTargeting();
 
-		if (OwnerChar->HasAuthority())
+		if (OwnerChar->BallStrikingComp)
 		{
-			OwnerChar->BallStrikingComp->SetChargeEndTime();
+			//This is usually going to be a redundant call, since there will be an AllowBallStriking notify fired when the volley anim enters the passive volley loop
+			//But this handles the case where the player presses and immediately releases the button, causing us to skip the passive volley entirely
+			OwnerChar->BallStrikingComp->AllowBallStriking();
 		}
 	}
 }

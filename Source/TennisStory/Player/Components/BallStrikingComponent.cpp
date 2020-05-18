@@ -14,6 +14,8 @@
 UBallStrikingComponent::UBallStrikingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	bBallStrikingAllowed = false;
 }
 
 void UBallStrikingComponent::BeginPlay()
@@ -30,6 +32,11 @@ void UBallStrikingComponent::BeginPlay()
 
 void UBallStrikingComponent::AllowBallStriking()
 {
+	if (bBallStrikingAllowed)
+	{
+		return;
+	}
+
 	//OwnerChar CAN be null when joining a session, as the animations (and notifies) can be replicated before BeginPlay has been called
 	if (OwnerChar && OwnerChar->HasAuthority())
 	{
@@ -38,12 +45,19 @@ void UBallStrikingComponent::AllowBallStriking()
 		{
 			StrikeZone->OnComponentBeginOverlap.AddDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
 			StrikeZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+			bBallStrikingAllowed = true;
 		}
 	}
 }
 
 void UBallStrikingComponent::StopBallStriking()
 {
+	if (!bBallStrikingAllowed)
+	{
+		return;
+	}
+
 	if (OwnerChar && OwnerChar->HasAuthority())
 	{
 		UBoxComponent* StrikeZone = OwnerChar->GetStrikeZone();
@@ -51,6 +65,8 @@ void UBallStrikingComponent::StopBallStriking()
 		{
 			StrikeZone->OnComponentBeginOverlap.RemoveDynamic(this, &UBallStrikingComponent::HandleRacquetOverlapBegin);
 			StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+			bBallStrikingAllowed = false;
 		}
 	}
 }

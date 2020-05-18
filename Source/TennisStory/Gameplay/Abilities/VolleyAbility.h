@@ -9,6 +9,13 @@
 class ATennisBall;
 class ATennisStoryCharacter;
 
+UENUM()
+enum class EVolleyType : uint8
+{
+	PassiveVolley,
+	ActiveVolley
+};
+
 UCLASS()
 class TENNISSTORY_API UVolleyAbility : public UGameplayAbility
 {
@@ -40,6 +47,8 @@ protected:
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
 
 	bool bVolleyReleased;
+
+	EVolleyType CurrentVolleyType;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 

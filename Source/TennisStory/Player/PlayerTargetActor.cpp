@@ -169,6 +169,10 @@ ESnapPoint APlayerTargetActor::GetStartingSnapPointForTargetingContext(ETargetin
 
 			return (ServiceSide == EServiceSide::Deuce) ? ESnapPoint::ServiceDeuce : ESnapPoint::ServiceAd;
 		}
+		case ETargetingContext::Volley:
+		{
+			return ESnapPoint::FrontMid;
+		}
 		default:
 		case ETargetingContext::GroundStroke:
 		{
@@ -207,7 +211,7 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 		FVector AimVector = GetOwnerControlRotationVector();
 
 		LastSnapPoint = GetStartingSnapPointForTargetingContext(TargetingContext);
-		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, LastSnapPoint) + GetDesiredLocationOffset());
+		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, LastSnapPoint, false) + GetDesiredLocationOffset());
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
