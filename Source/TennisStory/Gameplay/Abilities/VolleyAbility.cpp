@@ -63,7 +63,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
 	}
 
-	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 
@@ -82,6 +82,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
+		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
 	}
 }
 
@@ -117,6 +118,7 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
+			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
 		}
 	}
 }
@@ -124,6 +126,49 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 void UVolleyAbility::HandleVolleyMontageBlendOut()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+float UVolleyAbility::CalculateBallSpeed_Implementation()
+{
+	switch (CurrentVolleyType)
+	{
+		case EVolleyType::PassiveVolley:
+		{
+			return PassiveVolleySpeed;
+		}
+		case EVolleyType::ActiveVolley:
+		{
+			return ActiveVolleySpeed;
+		}
+	}
+
+	checkNoEntry()
+
+	return PassiveVolleySpeed;
+}
+
+UCurveFloat* UVolleyAbility::GetTrajectoryCurve_Implementation()
+{
+	return TrajectoryCurve;
+}
+
+int UVolleyAbility::GetShotQuality_Implementation()
+{
+	switch (CurrentVolleyType)
+	{
+		case EVolleyType::PassiveVolley:
+		{
+			return 0;
+		}
+		case EVolleyType::ActiveVolley:
+		{
+			return 1;
+		}
+	}
+
+	checkNoEntry()
+
+	return 0;
 }
 
 void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

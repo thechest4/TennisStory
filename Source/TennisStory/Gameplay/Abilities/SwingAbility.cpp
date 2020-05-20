@@ -68,7 +68,8 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (OwnerChar->HasAuthority())
 	{
-		OwnerChar->BallStrikingComp->SetChargeStartTime();
+		LastChargeStartTime = GetWorld()->GetTimeSeconds();
+
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
@@ -77,6 +78,11 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	if (OwnerChar->IsLocallyControlled())
 	{
 		OwnerChar->StartDistanceVisualizationToBall();
+	}
+
+	if (OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
 	}
 }
 
@@ -103,12 +109,36 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		{
 			OwnerChar->Multicast_RestoreBaseSpeed();
 		}
+		
+		if (OwnerChar->BallStrikingComp)
+		{
+			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+		}
 	}
 }
 
 void USwingAbility::HandleSwingMontageBlendOut()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+float USwingAbility::CalculateBallSpeed_Implementation()
+{
+	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
+	return FMath::Lerp(MinBallSpeed, MaxBallSpeed, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
+}
+
+UCurveFloat* USwingAbility::GetTrajectoryCurve_Implementation()
+{
+	return TrajectoryCurve;
+}
+
+int USwingAbility::GetShotQuality_Implementation()
+{
+	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
+	float ChargeQuality = ChargeDuration / MaxChargeDuration;
+				
+	return (ChargeQuality > ChargeThresholdForMediumHitSFX) ? 1 : 0;
 }
 
 void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
@@ -131,7 +161,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 
 		if (OwnerChar->HasAuthority())
 		{
-			OwnerChar->BallStrikingComp->SetChargeEndTime();
+			LastChargeEndTime = GetWorld()->GetTimeSeconds();
 		}
 	}
 }

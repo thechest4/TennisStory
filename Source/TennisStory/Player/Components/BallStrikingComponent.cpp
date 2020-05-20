@@ -7,6 +7,7 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
+#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "TennisStoryGameMode.h"
@@ -71,14 +72,11 @@ void UBallStrikingComponent::StopBallStriking()
 	}
 }
 
-void UBallStrikingComponent::SetChargeStartTime()
+void UBallStrikingComponent::SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr)
 {
-	LastChargeStartTime = GetWorld()->GetTimeSeconds();
-}
+	ensureMsgf(!AbilityPtr || (AbilityPtr && AbilityPtr->GetClass()->ImplementsInterface(UGroundstrokeAbilityInterface::StaticClass())), TEXT("Groundstroke ability did not implement GroundstrokeAbilityInterface!"));
 
-void UBallStrikingComponent::SetChargeEndTime()
-{
-	LastChargeEndTime = GetWorld()->GetTimeSeconds();
+	CurrentGroundstrokeAbility.SetObject(AbilityPtr);
 }
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -100,9 +98,17 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			GameMode->DetermineHitLegality(OwnerChar);
 		}
 
-		float BallSpeed = CalculateChargedBallSpeed();
+		UObject* GroundstrokeAbilityObj = CurrentGroundstrokeAbility.GetObject();
 
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(GetTrajectoryCurve(), TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), 200.f, 500.f);
+		ensureMsgf(GroundstrokeAbilityObj, TEXT("Invalid groundstroke ability object - no provided ball speed or trajectory"));
+
+		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
+
+		float MidPointAdditiveHeight = IGroundstrokeAbilityInterface::Execute_GetMidpointAdditiveHeight(GroundstrokeAbilityObj);
+		float TangentLength = IGroundstrokeAbilityInterface::Execute_GetTangentLength(GroundstrokeAbilityObj);
+		
+		UCurveFloat* TrajectoryCurve = IGroundstrokeAbilityInterface::Execute_GetTrajectoryCurve(GroundstrokeAbilityObj);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt);
 
@@ -118,22 +124,13 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
 			}
 
-			ensureMsgf(OrderedHitSFX.Num() == 2, TEXT("UBallStrikingComponent::HandleRacquetOverlapBegin - OrderedHitSFX had the wrong number of items!"));
-			if (OrderedHitSFX.Num() == 2)
-			{
-				float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
-				float ChargeQuality = ChargeDuration / MaxChargeDuration;
-				
-				int SFXIndex = (ChargeQuality > ThresholdForMediumHit) ? 1 : 0;
+			int ShotQuality = IGroundstrokeAbilityInterface::Execute_GetShotQuality(GroundstrokeAbilityObj);
 
+			int SFXIndex = (ShotQuality >= 0 && ShotQuality < OrderedHitSFX.Num()) ? ShotQuality : 0;
+			if (OrderedHitSFX.Num() > 0)
+			{
 				OwnerChar->Multicast_PlaySound(OrderedHitSFX[SFXIndex], TennisBall->GetActorLocation());
 			}
 		}
 	}
-}
-
-float UBallStrikingComponent::CalculateChargedBallSpeed()
-{
-	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
-	return FMath::Lerp(MinBallSpeed, MaxBallSpeed, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
 }

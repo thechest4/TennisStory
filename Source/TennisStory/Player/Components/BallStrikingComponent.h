@@ -9,9 +9,11 @@
 
 class UCurveFloat;
 class USplineComponent;
+class UGameplayAbility;
 class ATennisStoryCharacter;
 class ATennisRacquet;
 class APlayerTargetActor;
+class IGroundstrokeAbilityInterface;
 
 DECLARE_EVENT(UBallStrikingComponent, FBallHitEvent)
 
@@ -27,49 +29,24 @@ public:
 
 	void StopBallStriking();
 
-	void SetChargeStartTime();
-
-	void SetChargeEndTime();
-
 	FBallHitEvent& OnBallHit() { return BallHitEvent; }
+
+	void SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr);
 
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MinBallSpeed = 1000.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxBallSpeed = 3000.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxChargeDuration = 3.0f;
-
-	UCurveFloat* GetTrajectoryCurve()
-	{
-		return TrajectoryCurve;
-	}
-	
-	UPROPERTY(EditDefaultsOnly, Category = Aiming)
-	UCurveFloat* TrajectoryCurve;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
 	UParticleSystem* HitFX;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
-	float ThresholdForMediumHit = 0.3f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
 	TArray<USoundBase*> OrderedHitSFX;
 
-	float CalculateChargedBallSpeed();
-
-	//Charge State
-	float LastChargeStartTime = 0.0f;
-	float LastChargeEndTime = 0.0f;
+	UPROPERTY()
+	TScriptInterface<IGroundstrokeAbilityInterface> CurrentGroundstrokeAbility;
 
 	//Cached Owner Pointers
 	UPROPERTY()

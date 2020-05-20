@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
 #include "VolleyAbility.generated.h"
 
 class ATennisBall;
@@ -17,7 +18,7 @@ enum class EVolleyType : uint8
 };
 
 UCLASS()
-class TENNISSTORY_API UVolleyAbility : public UGameplayAbility
+class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
 {
 	GENERATED_BODY()
 	
@@ -32,16 +33,59 @@ public:
 
 	UFUNCTION()
 	void HandleVolleyMontageBlendOut();
+	
+	//IGroundstrokeAbilityInterface implementation
+	UFUNCTION(BlueprintNativeEvent)
+	float CalculateBallSpeed();
+	virtual float CalculateBallSpeed_Implementation() override;
+	
+	UFUNCTION(BlueprintNativeEvent)
+	float GetMidpointAdditiveHeight();
+	virtual float GetMidpointAdditiveHeight_Implementation() override
+	{
+		return MidpointAdditiveHeight;
+	}
+	
+	UFUNCTION(BlueprintNativeEvent)
+	float GetTangentLength();
+	virtual float GetTangentLength_Implementation() override
+	{
+		return TangentLength;
+	}
+
+	UFUNCTION(BlueprintNativeEvent)
+	UCurveFloat* GetTrajectoryCurve();
+	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	int GetShotQuality();
+	virtual int GetShotQuality_Implementation() override;
+	//IGroundstrokeAbilityInterface end
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	UAnimMontage* ForehandMontage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	UAnimMontage* BackhandMontage;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement Speed")
 	float BaseSpeedDuringAbility = 150.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float PassiveVolleySpeed = 1000.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float ActiveVolleySpeed = 2000.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	UCurveFloat* TrajectoryCurve;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float MidpointAdditiveHeight = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float TangentLength = 0.f;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;

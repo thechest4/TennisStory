@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
+#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
 #include "SwingAbility.generated.h"
 
 class ATennisBall;
 class ATennisStoryCharacter;
 
 UCLASS()
-class TENNISSTORY_API USwingAbility : public UGameplayAbility
+class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
 {
 	GENERATED_BODY()
 	
@@ -25,21 +26,72 @@ public:
 
 	UFUNCTION()
 	void HandleSwingMontageBlendOut();
+	
+	//IGroundstrokeAbilityInterface implementation
+	UFUNCTION(BlueprintNativeEvent)
+	float CalculateBallSpeed();
+	virtual float CalculateBallSpeed_Implementation() override;
+	
+	UFUNCTION(BlueprintNativeEvent)
+	float GetMidpointAdditiveHeight();
+	virtual float GetMidpointAdditiveHeight_Implementation() override
+	{
+		return MidpointAdditiveHeight;
+	}
+	
+	UFUNCTION(BlueprintNativeEvent)
+	float GetTangentLength();
+	virtual float GetTangentLength_Implementation() override
+	{
+		return TangentLength;
+	}
 
+	UFUNCTION(BlueprintNativeEvent)
+	UCurveFloat* GetTrajectoryCurve();
+	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	int GetShotQuality();
+	virtual int GetShotQuality_Implementation() override;
+	//IGroundstrokeAbilityInterface end
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	UAnimMontage* ForehandMontage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	UAnimMontage* BackhandMontage;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Movement Speed")
 	float BaseSpeedDuringAbility = 150.0f;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
 
 	bool bSwingReleased;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	UCurveFloat* TrajectoryCurve;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float MidpointAdditiveHeight = 200.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float TangentLength = 500.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float MinBallSpeed = 1000.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float MaxBallSpeed = 3000.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float MaxChargeDuration = 3.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
+	float ChargeThresholdForMediumHitSFX = 0.3f;
+
+	float LastChargeStartTime = 0.0f;
+	float LastChargeEndTime = 0.0f;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
