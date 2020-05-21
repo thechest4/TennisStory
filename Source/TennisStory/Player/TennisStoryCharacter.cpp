@@ -395,34 +395,44 @@ void ATennisStoryCharacter::Multicast_PlaySound_Implementation(USoundBase* Sound
 
 bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility)
 {
+	EGroundStrokeAbility AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Swing;
+
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (GameState)
 	{
 		TWeakObjectPtr<AHalfCourt> Court = GameState->GetCourtForCharacter(this);
-		if (Court->IsLocationInFrontHalfOfCourt(GetActorLocation()))
+		bool bIsInFrontCourt = Court.IsValid() && Court->IsLocationInFrontHalfOfCourt(GetActorLocation());
+
+		bool bBallIsInPlay = false;
+		bool bOpponentHitBallLast = false;
+		bool bBallHasBounced = false;
+
+		TWeakObjectPtr<ATennisBall> Ball = GameState->GetTennisBall();
+		if (Ball.IsValid())
 		{
-			if (AskingAbility->IsA<UVolleyAbility>())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			bBallIsInPlay = Ball->GetCurrentBallState() == ETennisBallState::PlayState;
+			bOpponentHitBallLast = Ball->LastPlayerToHit != this && !Ball->bWasLastHitAServe;
+			bBallHasBounced = Ball->GetCurrentNumBounces() > 0;
 		}
-		else
+
+		if (bIsInFrontCourt && bBallIsInPlay && bOpponentHitBallLast && !bBallHasBounced)
 		{
-			if (AskingAbility->IsA<USwingAbility>())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Volley;
 		}
 	}
 	
+	switch (AuthorizedGroundstrokeAbility)
+	{
+		case EGroundStrokeAbility::Swing:
+		{
+			return AskingAbility->IsA<USwingAbility>();
+		}
+		case EGroundStrokeAbility::Volley:
+		{
+			return AskingAbility->IsA<UVolleyAbility>();
+		}
+	}
+
 	return false;
 }
 

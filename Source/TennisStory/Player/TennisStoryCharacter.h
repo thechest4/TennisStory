@@ -19,6 +19,13 @@ class APlayerMouseTarget;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
 
 UENUM(BlueprintType)
+enum class EGroundStrokeAbility :uint8
+{
+	Swing,
+	Volley
+};
+
+UENUM(BlueprintType)
 enum class EStrokeType :uint8
 {
 	Forehand,
