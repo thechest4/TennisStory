@@ -419,7 +419,7 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 			if (BallSplineComp.IsValid())
 			{
 				FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
-				const float MinHeightForVolley = 120.f;
+				const float MinHeightForVolley = 100.f;
 				bBallWillBeAboveHeightThreshold = FutureBallLocation.Z >= MinHeightForVolley;
 			}
 		}
