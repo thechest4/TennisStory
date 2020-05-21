@@ -91,6 +91,8 @@ public:
 		return BallMovementComp->NumBounces;
 	}
 
+	TWeakObjectPtr<const USplineComponent> GetSplineComponent() { return BallTrajectorySplineComp; }
+
 protected:
 	virtual void BeginPlay() override;
 
