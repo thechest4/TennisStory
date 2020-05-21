@@ -136,8 +136,9 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	float BounceDistance = FMath::Max(LastPathDistance * 0.8f, 800.f);
 	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * BounceDistance;
 
-	float BounceHeight = FMath::Max(LastPathHeight, 200.f); 
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, BounceHeight * 0.6f, 350.f);
+	float BounceHeight = FMath::Max(LastPathHeight * 0.6f, 100.f); //Min Bounce Height
+	BounceHeight = FMath::Min(BounceHeight, 190.f); //Max Bounce Height - Player StrikeZone is 200 cm tall so we need to impose a limit here to prevent bouncing over it
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, BounceHeight, 350.f);
 
 	float BounceVelocity = FMath::Min(Velocity * 0.7f, 1600.f);
 	OwnerPtr->Multicast_FollowPath(TrajectoryData, BounceVelocity, false, EBoundsContext::FullCourt);
