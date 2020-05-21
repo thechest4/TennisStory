@@ -130,10 +130,17 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	}
 
 	FVector BallLocation = OwnerPtr->GetActorLocation();
-	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * LastPathDistance * 0.8f;
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, LastPathHeight * 0.6f);
 
-	OwnerPtr->Multicast_FollowPath(TrajectoryData, Velocity * 0.7f, false, EBoundsContext::FullCourt);
+	//TODO(achester): Added a bunch of min values here as a temporary way to prevent weird/bad bounces until I get around to refactoring how bounces work
+
+	float BounceDistance = FMath::Max(LastPathDistance * 0.8f, 800.f);
+	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * BounceDistance;
+
+	float BounceHeight = FMath::Max(LastPathHeight, 200.f); 
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, BounceHeight * 0.6f, 350.f);
+
+	float BounceVelocity = FMath::Min(Velocity * 0.7f, 1600.f);
+	OwnerPtr->Multicast_FollowPath(TrajectoryData, BounceVelocity, false, EBoundsContext::FullCourt);
 	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
 	
 	NumBounces++;
