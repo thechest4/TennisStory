@@ -102,7 +102,9 @@ public:
 		}
 	}
 
-	FVector GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint, bool bCompareAimVector = true);
+	FVector GetNextSnapPointLocation(ESnapPoint& CurrentSnapPoint, FVector AimVector, int HorzInput, int VertInput);
+
+	FVector GetNextSnapPointLocation(ESnapPoint SnapPoint);
 
 	bool IsLocationInBounds(FVector& Location, float BallRadius, EBoundsContext BoundsContext);
 
@@ -183,6 +185,12 @@ protected:
 	FVector2D UpperCornerServiceAd;
 
 	void RecalculateCourtLocations();
+
+	TArray<ESnapPoint> NavigableSnapPointArray;
+	int SnapPointArrayRows;
+	int SnapPointArrayCols;
+
+	bool TryGetIndicesForNavigableSnapPoint(ESnapPoint SnapPoint, int& Row, int& Col);
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(VisibleDefaultsOnly)

@@ -71,6 +71,13 @@ AHalfCourt::AHalfCourt()
 	FrontLeftSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, -0.25f * CourtWidth, 0.0f));
 	//Target Snap Points End
 
+	//Hardcoded SnapPoint navigation
+	SnapPointArrayRows = 2;
+	SnapPointArrayCols = 3;
+
+	NavigableSnapPointArray = {	ESnapPoint::FrontLeft,	ESnapPoint::FrontMid,	ESnapPoint::FrontRight,
+								ESnapPoint::BackLeft,	ESnapPoint::BackMid,	ESnapPoint::BackRight };
+
 #if WITH_EDITORONLY_DATA
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
 	if (EditorCourtBounds)
@@ -270,145 +277,104 @@ AHalfCourt::AHalfCourt()
 #endif
 }
 
-FVector AHalfCourt::GetSnapPointLocation(FVector AimVector, ESnapPoint SnapPoint, bool bCompareAimVector)
+FVector AHalfCourt::GetNextSnapPointLocation(ESnapPoint& CurrentSnapPoint, FVector AimVector, int HorzInput, int VertInput)
 {
-	if (SnapPoint == ESnapPoint::ServiceDeuce || SnapPoint == ESnapPoint::ServiceAd)
-	{
-		float XCoord = 0.2f * CourtLength;
-		float YCoord = 0.25f * CourtWidth;
-		YCoord = (SnapPoint == ESnapPoint::ServiceDeuce) ? YCoord : -1.f * YCoord;
+	//Figure out if the Control Rotation (AimRightVector) is the same as this court
+	FVector AimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
+	FVector CourtRightVector = GetActorRightVector();
+	float DotProd = FVector::DotProduct(CourtRightVector, AimRightVector);
 
-		FVector ServiceBoxSnapPoint = GetActorTransform().TransformPosition(FVector(XCoord, YCoord, 0.f));
-		
-		return ServiceBoxSnapPoint;
+	//If rotation are the same, invert the forward axis
+	//This is assuming that the function call is from the player is on the far court
+	if (DotProd > 0.f && VertInput != 0)
+	{
+		VertInput = (VertInput == -1) ? 1 : -1;
 	}
-	else
+	else if (DotProd < 0.f && HorzInput != 0) //If rotations are different, invert the right axis.  This is assuming the player is on the near court
 	{
-		if (!bCompareAimVector)
+		HorzInput = (HorzInput == -1) ? 1 : -1;
+	}
+
+	ESnapPoint NewSnapPoint = CurrentSnapPoint;
+	int CurrentRow, CurrentCol;
+	if (TryGetIndicesForNavigableSnapPoint(NewSnapPoint, CurrentRow, CurrentCol))
+	{
+		//If the input is straight up or straight down, we want to aim at one of the mid snap points... so the logic breaks a little bit
+		if (HorzInput == 0 && VertInput != 0)
 		{
-			switch (SnapPoint)
+			CurrentCol = 1;
+			CurrentRow = (VertInput == 1) ? 1 : 0;
+		}
+		else
+		{
+			if (HorzInput != 0)
 			{
-				case ESnapPoint::BackMid:
-				{
-					return BackMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackLeft:
-				{
-					return BackLeftSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackRight:
-				{
-					return BackRightSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontMid:
-				{
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontLeft:
-				{
-					return FrontLeftSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontRight:
-				{
-					return FrontRightSnapPoint->GetComponentLocation();
-				}
-				default:
-				{
-					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
-
-					checkNoEntry()
-
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
+				CurrentCol = FMath::Clamp(CurrentCol + HorzInput, 0, SnapPointArrayCols - 1);
+			}
+			
+			if (VertInput != 0)
+			{
+				CurrentRow = FMath::Clamp(CurrentRow + VertInput, 0, SnapPointArrayRows - 1);
 			}
 		}
 
-		//Figure out if the Control Rotation (AimRightVector) is the same as this court
-		FVector AimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
-		FVector CourtRightVector = GetActorRightVector();
-		float DotProd = FVector::DotProduct(CourtRightVector, AimRightVector);
+		NewSnapPoint = NavigableSnapPointArray[CurrentRow * SnapPointArrayCols + CurrentCol];
 
-		//If rotation are the same, invert the forward axis but return the right axis as requested
-		//This is essentially assuming that in this case, the player is on the far court
-		if (DotProd > 0.f)
-		{
-			switch (SnapPoint)
-			{
-				case ESnapPoint::BackMid:
-				{
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackLeft:
-				{
-					return FrontLeftSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackRight:
-				{
-					return FrontRightSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontMid:
-				{
-					return BackMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontLeft:
-				{
-					return BackLeftSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontRight:
-				{
-					return BackRightSnapPoint->GetComponentLocation();
-				}
-				default:
-				{
-					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
+		FVector SnapPointLocation = GetNextSnapPointLocation(NewSnapPoint);
 
-					checkNoEntry()
-
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
-			}
-		}
-		else if (DotProd < 0.f) //If rotations are different, invert the right axis but respect the forward axis.  This is essentially assuming the player is on the near court
-		{
-			switch (SnapPoint)
-			{
-				case ESnapPoint::BackMid:
-				{
-					return BackMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackLeft:
-				{
-					return BackRightSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::BackRight:
-				{
-					return BackLeftSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontMid:
-				{
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontLeft:
-				{
-					return FrontRightSnapPoint->GetComponentLocation();
-				}
-				case ESnapPoint::FrontRight:
-				{
-					return FrontLeftSnapPoint->GetComponentLocation();
-				}
-				default:
-				{
-					//All cases should have been handled either in this switch, or in preceding if cases.  We should never end up here
-
-					checkNoEntry()
-
-					return FrontMidSnapPoint->GetComponentLocation();
-				}
-			}
-		}
+		CurrentSnapPoint = NewSnapPoint;
+		return SnapPointLocation;
 	}
 
 	return FVector::ZeroVector;
+}
+
+FVector AHalfCourt::GetNextSnapPointLocation(ESnapPoint SnapPoint)
+{
+	switch (SnapPoint)
+	{
+		case ESnapPoint::ServiceAd:
+		case ESnapPoint::ServiceDeuce:
+		{
+			float XCoord = 0.2f * CourtLength;
+			float YCoord = 0.25f * CourtWidth;
+			YCoord = (SnapPoint == ESnapPoint::ServiceDeuce) ? YCoord : -1.f * YCoord;
+
+			FVector ServiceBoxSnapPointLocation = GetActorTransform().TransformPosition(FVector(XCoord, YCoord, 0.f));
+		
+			return ServiceBoxSnapPointLocation;
+		}
+		case ESnapPoint::FrontLeft:
+		{
+			return FrontLeftSnapPoint->GetComponentLocation();
+		}
+		case ESnapPoint::FrontMid:
+		{
+			return FrontMidSnapPoint->GetComponentLocation();
+		}
+		case ESnapPoint::FrontRight:
+		{
+			return FrontRightSnapPoint->GetComponentLocation();
+		}
+		case ESnapPoint::BackLeft:
+		{
+			return BackLeftSnapPoint->GetComponentLocation();
+		}
+		case ESnapPoint::BackMid:
+		{
+			return BackMidSnapPoint->GetComponentLocation();
+		}
+		case ESnapPoint::BackRight:
+		{
+			return BackRightSnapPoint->GetComponentLocation();
+		}
+		default:
+		{
+			checkNoEntry()
+
+			return FVector::ZeroVector;
+		}
+	}
 }
 
 bool AHalfCourt::IsLocationInBounds(FVector& Location, float BallRadius, EBoundsContext BoundsContext)
@@ -581,6 +547,22 @@ void AHalfCourt::RecalculateCourtLocations()
 	FrontMidSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.0f, 0.0f));
 	FrontRightSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, 0.25f * CourtWidth, 0.0f));
 	FrontLeftSnapPoint->SetRelativeLocation(FVector(0.1f * CourtLength, -0.25f * CourtWidth, 0.0f));
+}
+
+bool AHalfCourt::TryGetIndicesForNavigableSnapPoint(ESnapPoint SnapPoint, int& Row, int& Col)
+{
+	for (int i = 0; i < NavigableSnapPointArray.Num(); i++)
+	{
+		if (NavigableSnapPointArray[i] == SnapPoint)
+		{
+			Row = i / SnapPointArrayCols;
+			Col = i % SnapPointArrayCols;
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 #if WITH_EDITORONLY_DATA

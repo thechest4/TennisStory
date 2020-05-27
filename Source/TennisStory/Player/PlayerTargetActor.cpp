@@ -33,8 +33,6 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 
 		if (CurrentTargetingContext != ETargetingContext::Service && CurrentTargetingMode == ETargetingMode::Simple)
 		{
-			ESnapPoint SnapPointToAimAt = ESnapPoint::BackMid;
-
 			static const float ValueThreshold = 0.5f; //Any stick value greater than the threshold will be treated as a value of 1, all other values will be treated as values of 0
 
 			float ForwardVal = (FMath::Abs(MovementVector.X) > ValueThreshold) ? 1.f : 0.f;
@@ -49,66 +47,10 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 				return;
 			}
 
-			if (ForwardVal > 0.f)
-			{
-				if (RightVal > 0.f)
-				{
-					SnapPointToAimAt = ESnapPoint::BackRight;
-				}
-				else if (RightVal < 0.f)
-				{
-					SnapPointToAimAt = ESnapPoint::BackLeft;
-				}
-				else
-				{
-					SnapPointToAimAt = ESnapPoint::BackMid;
-				}
-			}
-			else if (ForwardVal < 0.f)
-			{
-				if (RightVal > 0.f)
-				{
-					SnapPointToAimAt = ESnapPoint::FrontRight;
-				}
-				else if (RightVal < 0.f)
-				{
-					SnapPointToAimAt = ESnapPoint::FrontLeft;
-				}
-				else
-				{
-					SnapPointToAimAt = ESnapPoint::FrontMid;
-				}
-			}
-			else
-			{
-				if (RightVal > 0.f)
-				{
-					if (LastSnapPoint == ESnapPoint::BackMid || LastSnapPoint == ESnapPoint::BackLeft || LastSnapPoint == ESnapPoint::BackRight)
-					{
-						SnapPointToAimAt = ESnapPoint::BackRight;
-					}
-					else
-					{
-						SnapPointToAimAt = ESnapPoint::FrontRight;
-					}
-				}
-				else if (RightVal < 0.f)
-				{
-					if (LastSnapPoint == ESnapPoint::BackMid || LastSnapPoint == ESnapPoint::BackLeft || LastSnapPoint == ESnapPoint::BackRight)
-					{
-						SnapPointToAimAt = ESnapPoint::BackLeft;
-					}
-					else
-					{
-						SnapPointToAimAt = ESnapPoint::FrontLeft;
-					}
-				}
-			}
-
 			FVector AimVector = GetOwnerControlRotationVector();
 
-			LastSnapPoint = SnapPointToAimAt;
-			SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, SnapPointToAimAt) + GetDesiredLocationOffset());
+			FVector NewTargetLocation = CurrentTargetCourt->GetNextSnapPointLocation(LastSnapPoint, AimVector, static_cast<int>(RightVal), static_cast<int>(ForwardVal));
+			SetActorLocation(NewTargetLocation + GetDesiredLocationOffset());
 		}
 		else
 		{
@@ -211,7 +153,10 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 		FVector AimVector = GetOwnerControlRotationVector();
 
 		LastSnapPoint = GetStartingSnapPointForTargetingContext(TargetingContext);
-		SetActorLocation(CurrentTargetCourt->GetSnapPointLocation(AimVector, LastSnapPoint, false) + GetDesiredLocationOffset());
+
+		FVector SnapPointLocation = CurrentTargetCourt->GetNextSnapPointLocation(LastSnapPoint);
+
+		SetActorLocation(SnapPointLocation + GetDesiredLocationOffset());
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
