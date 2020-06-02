@@ -72,11 +72,6 @@ public:
 
 	void HideTarget();
 
-	FVector GetDesiredLocationOffset() const
-	{
-		return FVector(0.f, 0.f, 0.1f);
-	}
-
 	ETargetingMode GetTargetingMode() { return CurrentTargetingMode; }
 
 	void SetTargetingMode(ETargetingMode NewMode) { CurrentTargetingMode = NewMode; }

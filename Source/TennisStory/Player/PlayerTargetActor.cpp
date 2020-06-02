@@ -13,7 +13,10 @@ APlayerTargetActor::APlayerTargetActor()
 	bReplicates = true;
 	bReplicateMovement = true;
 
-	RootComponent = TargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TargetMesh"));
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
+	TargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TargetMesh"));
+	TargetMesh->SetupAttachment(RootComponent);
 	TargetMesh->SetGenerateOverlapEvents(false);
 	TargetMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
@@ -61,7 +64,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			FVector AimVector = GetOwnerControlRotationVector();
 
 			FVector NewTargetLocation = CurrentTargetCourt->GetNextSnapPointLocation(LastSnapPoint, AimVector, static_cast<int>(RightVal), static_cast<int>(ForwardVal));
-			SetActorLocation(NewTargetLocation + GetDesiredLocationOffset());
+			SetActorLocation(NewTargetLocation);
 		}
 		else
 		{
@@ -186,7 +189,7 @@ void APlayerTargetActor::ShowTargetOnCourt(TWeakObjectPtr<AHalfCourt> CourtToAim
 
 		FVector SnapPointLocation = CurrentTargetCourt->GetNextSnapPointLocation(LastSnapPoint);
 
-		SetActorLocation(SnapPointLocation + GetDesiredLocationOffset());
+		SetActorLocation(SnapPointLocation);
 
 		bCurrentlyVisible = true;
 		bCurrentlyMovable = true;
