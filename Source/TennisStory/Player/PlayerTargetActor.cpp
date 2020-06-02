@@ -9,12 +9,18 @@
 APlayerTargetActor::APlayerTargetActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	bReplicates = true;
+	bReplicateMovement = true;
 
 	RootComponent = TargetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TargetMesh"));
 	TargetMesh->SetGenerateOverlapEvents(false);
 	TargetMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
 	bCurrentlyVisible = false;
+
+	Server_LastMoveTimestamp = 0.f;
+	Server_LastConsumedMoveTimestamp = 0.f;
 }
 
 void APlayerTargetActor::AddInputVector(FVector Direction, float Value)
@@ -26,8 +32,13 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bCurrentlyVisible && bCurrentlyMovable && CurrentTargetingContext != ETargetingContext::None)
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(GetOwner());
+	bool bIsLocallyControlled = OwnerChar && OwnerChar->IsLocallyControlled();
+
+	if (bIsLocallyControlled && bCurrentlyVisible && bCurrentlyMovable && CurrentTargetingContext != ETargetingContext::None)
 	{
+		FVector PrevLocation = GetActorLocation();
+
 		FVector MovementVector = ConsumeCurrentInputVector();
 		MovementVector.Normalize();
 
@@ -92,6 +103,25 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			{
 				CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation, GetCourtBoundsContextForTargetingContext(CurrentTargetingContext));
 				SetActorLocation(NewLocation);
+			}
+		}
+
+		//If we are an autonomous proxy, we need to save this move for replication to the server
+		if (OwnerChar->Role == ENetRole::ROLE_AutonomousProxy)
+		{
+			FVector TranslationVector = GetActorLocation() - PrevLocation;
+
+			static const float SIGNIFICANT_MOVE_THRESHOLD = 0.001f;
+
+			//Don't bother saving the move if we didn't go anywhere
+			if (TranslationVector.Size() >= SIGNIFICANT_MOVE_THRESHOLD)
+			{
+				Client_SavedMoves.Add(FTargetSavedMove(TranslationVector, GetWorld()->GetTimeSeconds()));
+			}
+			
+			if (Client_SavedMoves.Num() > 0)
+			{
+				Server_Move(Client_SavedMoves);
 			}
 		}
 	}
@@ -205,4 +235,51 @@ FVector APlayerTargetActor::GetOwnerControlRotationVector()
 	FVector OwnerControlRotationVector = (OwnerController) ? OwnerController->GetControlRotation().Vector() : FVector::ZeroVector;
 
 	return OwnerControlRotationVector;
+}
+
+bool APlayerTargetActor::Server_Move_Validate(const TArray<FTargetSavedMove>& SavedMoves)
+{
+	return true;
+}
+
+void APlayerTargetActor::Server_Move_Implementation(const TArray<FTargetSavedMove>& SavedMoves)
+{
+	FVector NetTranslationVector = FVector::ZeroVector;
+
+	for (int i = 0; i < SavedMoves.Num(); i++)
+	{
+		//Check that the move is more recent than the last move we have consumed, to prevent applying moves multiple times due to network issues
+		if (SavedMoves[i].MoveTimestamp > Server_LastConsumedMoveTimestamp)
+		{
+			NetTranslationVector += SavedMoves[i].TranslationVector;
+
+			//If this is the last SavedMove we received and it's not out of date, record its timestamp - it is the last consumed saved move
+			if (i == SavedMoves.Num() - 1)
+			{
+				Server_LastConsumedMoveTimestamp = SavedMoves[i].MoveTimestamp;
+			}
+		}
+	}
+	
+	//Figure out the farthest legal move we could have made in the time since our last move, and clamp to that 
+	const float MaxPossibleMoveSize = (GetWorld()->GetTimeSeconds() - Server_LastMoveTimestamp) * GetMoveSpeed();
+	FVector ClampedTranslationVector = NetTranslationVector.GetClampedToMaxSize(MaxPossibleMoveSize);
+
+	SetActorLocation(GetActorLocation() + ClampedTranslationVector);
+
+	Client_PruneSavedMoves(Server_LastConsumedMoveTimestamp);
+}
+
+void APlayerTargetActor::Client_PruneSavedMoves_Implementation(float LastConsumedMoveTimestamp)
+{
+	int NumMovesToRemove = 0;
+	for (int i = 0; i < Client_SavedMoves.Num(); i++)
+	{
+		if (Client_SavedMoves[i].MoveTimestamp <= LastConsumedMoveTimestamp)
+		{
+			NumMovesToRemove++;
+		}
+	}
+
+	Client_SavedMoves.RemoveAt(0, NumMovesToRemove);
 }

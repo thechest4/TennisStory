@@ -23,6 +23,31 @@ enum class ETargetingMode : uint8
 	Precise
 };
 
+USTRUCT()
+struct FTargetSavedMove
+{
+	GENERATED_BODY()
+
+public:
+	FTargetSavedMove()
+	{
+		TranslationVector = FVector::ZeroVector;
+		MoveTimestamp = 0.f;
+	}
+	
+	FTargetSavedMove(FVector Translation, float Timestamp)
+	{
+		TranslationVector = Translation;
+		MoveTimestamp = Timestamp;
+	}
+
+	UPROPERTY()
+	FVector TranslationVector;
+	
+	UPROPERTY()
+	float MoveTimestamp;
+};
+
 UCLASS()
 class TENNISSTORY_API APlayerTargetActor : public AActor
 {
@@ -85,4 +110,17 @@ protected:
 	FVector GetOwnerControlRotationVector();
 
 	AActor* MovementTarget;
+
+	//Target movement replication
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void Server_Move(const TArray<FTargetSavedMove>& SavedMoves);
+
+	UFUNCTION(Client, Unreliable)
+	void Client_PruneSavedMoves(float LastConsumedMoveTimestamp);
+
+	TArray<FTargetSavedMove> Client_SavedMoves; //Moves saved by an autonomous proxy to send to the server.  Held until the server confirms which moves were consumed
+
+	float Server_LastMoveTimestamp; //The last time the server performed a move, in server time.  Used for validating moves
+	float Server_LastConsumedMoveTimestamp; //The timestamp of the last move that was consumed.  Returned to the client so that it can prune the SavedMoves array, but also used by the server to avoid repeating moves
+	//End Target movement replication
 };

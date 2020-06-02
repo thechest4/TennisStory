@@ -122,6 +122,7 @@ void ATennisStoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ATennisStoryCharacter, bIsLocationClamped);
 	DOREPLIFETIME(ATennisStoryCharacter, ClampLocation1);
 	DOREPLIFETIME(ATennisStoryCharacter, ClampLocation2);
+	DOREPLIFETIME(ATennisStoryCharacter, TargetActor);
 }
 
 void ATennisStoryCharacter::BeginPlay()
@@ -178,7 +179,7 @@ void ATennisStoryCharacter::PostInitializeComponents()
 		RacquetActor->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, RacquetAttachBone);
 	}
 
-	if (TargetActorClass)
+	if (TargetActorClass && HasAuthority())
 	{
 		FActorSpawnParameters SpawnParams = FActorSpawnParameters();
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -229,13 +230,6 @@ void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingCon
 	if (TargetActor && GameState && Controller)
 	{
 		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForCharacter(this), IsLocallyControlled(), TargetingContext);
-
-		//NOTE(achester): Since the target hasn't had a chance to move, this will just force the target into the center snap point.  
-		//Basically a fallback in case another position isn't committed
-		if (IsLocallyControlled())
-		{
-			Server_CommitTargetPosition(TargetActor->GetActorLocation());
-		}
 	}
 }
 
@@ -244,11 +238,6 @@ void ATennisStoryCharacter::FreezePlayerTarget()
 	if (TargetActor)
 	{
 		TargetActor->DisableTargetMovement();
-		
-		if (IsLocallyControlled())
-		{
-			Server_CommitTargetPosition(TargetActor->GetActorLocation());
-		}
 	}
 
 	if (MouseTarget)
@@ -262,11 +251,6 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	if (TargetActor)
 	{
 		TargetActor->HideTarget();
-	}
-		
-	if (IsLocallyControlled())
-	{
-		Server_CommitTargetPosition(TargetActor->GetActorLocation());
 	}
 
 	if (MouseTarget)
@@ -650,26 +634,5 @@ void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, F
 		{
 			SetActorLocation(ClampedLocation);
 		}
-	}
-}
-
-bool ATennisStoryCharacter::Server_CommitTargetPosition_Validate(FVector WorldLocation)
-{
-	return TargetActor != nullptr;
-}
-
-void ATennisStoryCharacter::Server_CommitTargetPosition_Implementation(FVector WorldLocation)
-{
-	if (!IsLocallyControlled())
-	{	
-		TargetActor->SetActorLocation(WorldLocation);
-	}
-
-	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-	TWeakObjectPtr<ATennisBall> TennisBall = (GameState) ? GameState->GetTennisBall() : nullptr;
-	if (!TennisBall.IsValid())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("ATennisStoryCharacter::Server_CommitTargetPosition_Implementation - ATennisStoryGameState::GetTennisBall returned null!"));
-		return;
 	}
 }

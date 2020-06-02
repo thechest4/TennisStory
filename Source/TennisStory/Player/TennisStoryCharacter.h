@@ -196,9 +196,6 @@ protected:
 	UFUNCTION()
 	void HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_CommitTargetPosition(FVector WorldLocation);
-
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
@@ -215,7 +212,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APlayerTargetActor> TargetActorClass;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	APlayerTargetActor* TargetActor;
 
 	UPROPERTY(EditAnywhere)
