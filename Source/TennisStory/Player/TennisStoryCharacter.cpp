@@ -221,6 +221,11 @@ void ATennisStoryCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		RacquetActor->Destroy();
 	}
 
+	if (TargetActor)
+	{
+		TargetActor->Destroy();
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
