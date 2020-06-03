@@ -43,14 +43,14 @@ public:
 	float GetMidpointAdditiveHeight();
 	virtual float GetMidpointAdditiveHeight_Implementation() override
 	{
-		return MidpointAdditiveHeight;
+		return (bIsHighVolley) ? MidpointAdditiveHeight_High : MidpointAdditiveHeight_Low;
 	}
 	
 	UFUNCTION(BlueprintNativeEvent)
 	float GetTangentLength();
 	virtual float GetTangentLength_Implementation() override
 	{
-		return TangentLength;
+		return (bIsHighVolley) ? TangentLength_High : TangentLength_Low;
 	}
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -63,34 +63,57 @@ public:
 	//IGroundstrokeAbilityInterface end
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Animations")
-	UAnimMontage* ForehandMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Animations | High Volley")
+	UAnimMontage* ForehandMontage_High;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animations | Low Volley")
+	UAnimMontage* ForehandMontage_Low;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Animations")
-	UAnimMontage* BackhandMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Animations | High Volley")
+	UAnimMontage* BackhandMontage_High;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animations | Low Volley")
+	UAnimMontage* BackhandMontage_Low;
 	
 	UPROPERTY(EditAnywhere, Category = "Movement Speed")
 	float BaseSpeedDuringAbility = 150.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
-	float PassiveVolleySpeed = 1000.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed | High Volley")
+	float PassiveVolleySpeed_High = 1000.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
-	float ActiveVolleySpeed = 2000.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed | High Volley")
+	float ActiveVolleySpeed_High = 2000.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	UCurveFloat* TrajectoryCurve;
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed | Low Volley")
+	float PassiveVolleySpeed_Low = 800.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float MidpointAdditiveHeight = 0.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed | Low Volley")
+	float ActiveVolleySpeed_Low = 1500.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float TangentLength = 0.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
+	UCurveFloat* TrajectoryCurve_High;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
+	float MidpointAdditiveHeight_High = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
+	float TangentLength_High = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
+	UCurveFloat* TrajectoryCurve_Low;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
+	float MidpointAdditiveHeight_Low = 120.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
+	float TangentLength_Low = 150.f;
 
 	UPROPERTY()
 	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
 
 	bool bVolleyReleased;
+
+	bool bIsHighVolley;
 
 	EVolleyType CurrentVolleyType;
 

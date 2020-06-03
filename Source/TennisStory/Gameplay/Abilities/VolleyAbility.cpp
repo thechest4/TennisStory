@@ -13,6 +13,7 @@ UVolleyAbility::UVolleyAbility()
 	bReplicateInputDirectly = true;
 
 	bVolleyReleased = false;
+	bIsHighVolley = false;
 	CurrentVolleyType = EVolleyType::PassiveVolley;
 }
 
@@ -50,17 +51,45 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 	bVolleyReleased = false;
 	CurrentVolleyType = EVolleyType::PassiveVolley;
-	UAnimMontage* MontageToPlay = ForehandMontage;
+	UAnimMontage* MontageToPlay = ForehandMontage_High;
 
 	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
+	
+	bIsHighVolley = false;
+	TWeakObjectPtr<const USplineComponent> BallSplineComp = TennisBall->GetSplineComponent();
+	if (BallSplineComp.IsValid())
+	{
+		FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(OwnerChar->GetActorLocation(), ESplineCoordinateSpace::World);
+		const float MinHeightForHighVolley = 100.f;
+		bIsHighVolley = FutureBallLocation.Z >= MinHeightForHighVolley;
+	}
+
 	if (!bIsForehand)
 	{
-		MontageToPlay = BackhandMontage;
-		OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
+		if (bIsHighVolley)
+		{
+			MontageToPlay = BackhandMontage_High;
+			OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
+		}
+		else
+		{
+			MontageToPlay = BackhandMontage_Low;
+			OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
+		}
+		
 	}
 	else
 	{
-		OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
+		if (bIsHighVolley)
+		{
+			MontageToPlay = ForehandMontage_High;
+			OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
+		}
+		else
+		{
+			MontageToPlay = ForehandMontage_Low;
+			OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
+		}
 	}
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
@@ -134,22 +163,22 @@ float UVolleyAbility::CalculateBallSpeed_Implementation()
 	{
 		case EVolleyType::PassiveVolley:
 		{
-			return PassiveVolleySpeed;
+			return (bIsHighVolley) ? PassiveVolleySpeed_High : PassiveVolleySpeed_Low;
 		}
 		case EVolleyType::ActiveVolley:
 		{
-			return ActiveVolleySpeed;
+			return (bIsHighVolley) ? ActiveVolleySpeed_High : ActiveVolleySpeed_Low;
 		}
 	}
 
 	checkNoEntry()
 
-	return PassiveVolleySpeed;
+	return PassiveVolleySpeed_High;
 }
 
 UCurveFloat* UVolleyAbility::GetTrajectoryCurve_Implementation()
 {
-	return TrajectoryCurve;
+	return (bIsHighVolley) ? TrajectoryCurve_High : TrajectoryCurve_Low;
 }
 
 int UVolleyAbility::GetShotQuality_Implementation()

@@ -402,18 +402,9 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 		{
 			bBallIsInPlay = Ball->GetCurrentBallState() == ETennisBallState::PlayState;
 			bOpponentHitBallLast = Ball->LastPlayerToHit != this && !Ball->bWasLastHitAServe;
-			bBallHasBounced = Ball->GetCurrentNumBounces() > 0;
-
-			TWeakObjectPtr<const USplineComponent> BallSplineComp = Ball->GetSplineComponent();
-			if (BallSplineComp.IsValid())
-			{
-				FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
-				const float MinHeightForVolley = 100.f;
-				bBallWillBeAboveHeightThreshold = FutureBallLocation.Z >= MinHeightForVolley;
-			}
 		}
 
-		if (bIsInFrontCourt && bBallIsInPlay && bOpponentHitBallLast && !bBallHasBounced && bBallWillBeAboveHeightThreshold)
+		if (bIsInFrontCourt && bBallIsInPlay && bOpponentHitBallLast)
 		{
 			AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Volley;
 		}
