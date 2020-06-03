@@ -29,7 +29,9 @@ UENUM(BlueprintType)
 enum class EStrokeType :uint8
 {
 	Forehand,
-	Backhand
+	Backhand,
+	Forehand_High,
+	Backhand_High
 };
 
 UENUM(BlueprintType)
@@ -243,16 +245,26 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
 	USceneComponent* StrikeZoneLocation_Forehand;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Forehand_High;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
 	USceneComponent* StrikeZoneLocation_Backhand;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Backhand_High;
+	
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
 	UBillboardComponent* StrikeZoneIcon_Forehand;
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Forehand_High;
 
 	UPROPERTY()
 	UBillboardComponent* StrikeZoneIcon_Backhand;
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Backhand_High;
 #endif
 
 	//Team Color

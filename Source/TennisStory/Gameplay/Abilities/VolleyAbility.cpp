@@ -69,7 +69,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		if (bIsHighVolley)
 		{
 			MontageToPlay = BackhandMontage_High;
-			OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
+			OwnerChar->PositionStrikeZone(EStrokeType::Backhand_High);
 		}
 		else
 		{
@@ -83,7 +83,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		if (bIsHighVolley)
 		{
 			MontageToPlay = ForehandMontage_High;
-			OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
+			OwnerChar->PositionStrikeZone(EStrokeType::Forehand_High);
 		}
 		else
 		{
