@@ -268,7 +268,11 @@ void APlayerTargetActor::Server_Move_Implementation(const TArray<FTargetSavedMov
 	const float MaxPossibleMoveSize = (GetWorld()->GetTimeSeconds() - Server_LastMoveTimestamp) * GetMoveSpeed();
 	FVector ClampedTranslationVector = NetTranslationVector.GetClampedToMaxSize(MaxPossibleMoveSize);
 
-	SetActorLocation(GetActorLocation() + ClampedTranslationVector);
+	FVector NewLocation = GetActorLocation() + ClampedTranslationVector;
+
+	CurrentTargetCourt->ClampLocationToCourtBounds(NewLocation, GetCourtBoundsContextForTargetingContext(CurrentTargetingContext));
+	
+	SetActorLocation(NewLocation);
 
 	Client_PruneSavedMoves(Server_LastConsumedMoveTimestamp);
 }
