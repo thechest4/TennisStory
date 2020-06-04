@@ -190,7 +190,7 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 		
 		if (DynamicBallMat)
 		{
-			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 1.f);
+			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 0.f);
 		}
 	}
 }
@@ -206,7 +206,7 @@ void ATennisBall::OnRep_BallState()
 
 		if (DynamicBallMat)
 		{
-			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 1.f);
+			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 0.f);
 		}
 
 		if (DistanceIndicatorComp->IsVisualizingDistance())
