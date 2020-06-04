@@ -141,7 +141,7 @@ void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitRe
 	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(BounceTrajectoryCurve, BallLocation, BounceEndLocation, BounceHeight, 350.f);
 
 	float BounceVelocity = FMath::Min(Velocity * 0.7f, 1600.f);
-	OwnerPtr->Multicast_FollowPath(TrajectoryData, BounceVelocity, false, EBoundsContext::FullCourt);
+	OwnerPtr->Multicast_FollowPath(TrajectoryData, BounceVelocity, false, EBoundsContext::FullCourt, nullptr);
 	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
 	
 	NumBounces++;

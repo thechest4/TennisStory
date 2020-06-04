@@ -10,6 +10,7 @@
 #include "TennisBall.generated.h"
 
 class ATennisStoryCharacter;
+class UDistanceIndicatorComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBallOutOfBoundsEvent, EBoundsContext, FVector)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
@@ -53,7 +54,7 @@ public:
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext);
+	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnBounceParticleEffect(FVector Location);
@@ -124,6 +125,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
 	UParticleSystemComponent* BallTrailParticleEffect;
+	
+	UPROPERTY(VisibleDefaultsOnly)
+	UStaticMeshComponent* DistanceIndicatorRing;
+
+	UPROPERTY(VisibleAnywhere)
+	UDistanceIndicatorComponent* DistanceIndicatorComp;
+
+	UPROPERTY(Transient)
+	UMaterialInstanceDynamic* DynamicBallMat;
+
+	UFUNCTION()
+	void HandleDistanceIndicatorTargetReached();
 
 private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;

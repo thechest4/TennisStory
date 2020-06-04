@@ -266,6 +266,8 @@ public:
 
 	void GetSetScores(int SetNum, TArray<int>& OutScores);
 
+	const FTeamData GetTeamById(int TeamId);
+
 	const FTeamData GetTeamForPlayer(ATennisStoryPlayerController* Player);
 
 	const int GetTeamIdForPlayer(ATennisStoryPlayerController* Player);

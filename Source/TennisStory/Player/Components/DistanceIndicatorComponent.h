@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "DistanceIndicatorComponent.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FTargetReachedEvent);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UDistanceIndicatorComponent : public UActorComponent
 {
@@ -17,9 +19,13 @@ public:
 	UPROPERTY(Transient)
 	USceneComponent* VisualComp;
 
+	bool IsVisualizingDistance() { return bIsVisualizingDistance; }
+
 	void StartVisualizingDistance(TWeakObjectPtr<AActor> ActorToTrack);
 
 	void StopVisualizingDistance();
+
+	FTargetReachedEvent& OnTargetReached() { return TargetReachedEvent; }
 
 protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -42,4 +48,6 @@ protected:
 	float CurrentAlpha;
 	float StartingDistance;
 	float DistanceDifference;
+
+	FTargetReachedEvent TargetReachedEvent;
 };

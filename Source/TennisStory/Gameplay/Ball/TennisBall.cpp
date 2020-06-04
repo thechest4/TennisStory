@@ -11,6 +11,7 @@
 #include "Player/Components/BallStrikingComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Player/Components/DistanceIndicatorComponent.h"
 
 ATennisBall::FOnBallSpawnedEvent ATennisBall::BallSpawnedEvent;
 
@@ -42,6 +43,15 @@ ATennisBall::ATennisBall()
 	BallTrailParticleEffect->SetupAttachment(RootComponent);
 
 	bTrailAlwaysOn = false;
+	
+	DistanceIndicatorRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DistanceIndicatorRingMesh"));
+	DistanceIndicatorRing->SetupAttachment(RootComponent);
+	DistanceIndicatorRing->SetCollisionProfileName(TEXT("NoCollision"));
+	DistanceIndicatorRing->SetHiddenInGame(true);
+	DistanceIndicatorRing->bAbsoluteRotation = true;
+	DistanceIndicatorRing->bAbsoluteScale = true;
+
+	DistanceIndicatorComp = CreateDefaultSubobject<UDistanceIndicatorComponent>(TEXT("DistanceIndicatorComp"));
 }
 
 void ATennisBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -65,6 +75,10 @@ void ATennisBall::BeginPlay()
 	{
 		BallTrailParticleEffect->SetActive(false);
 	}
+
+	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
+	DistanceIndicatorComp->OnTargetReached().AddUObject(this, &ATennisBall::HandleDistanceIndicatorTargetReached);
+	DynamicBallMat = BallMesh->CreateDynamicMaterialInstance(0);
 }
 
 bool ATennisBall::IsInServiceState()
@@ -140,7 +154,7 @@ void ATennisBall::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector 
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall)
 {
 	if (!BallTrailParticleEffect->IsActive() && !bTrailAlwaysOn)
 	{
@@ -154,6 +168,31 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 	{
 		Multicast_SpawnBounceLocationParticleEffect(TrajectoryData.TrajectoryEndLocation);
 	}
+
+	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	if (TSGameState && bFromHit && PlayerWhoHitBall)
+	{
+		int LastPlayerToHitTeamId = TSGameState->GetTeamIdForCharacter(PlayerWhoHitBall);
+
+		int ReceivingTeamId = (LastPlayerToHitTeamId) ? 0 : 1;
+
+		FTeamData ReceivingTeamData = TSGameState->GetTeamById(ReceivingTeamId);
+
+		//TODO(achester): Refactor for doubles
+		if (ReceivingTeamData.AssignedCharacters.Num() > 0 && ReceivingTeamData.AssignedCharacters[0]->IsLocallyControlled())
+		{
+			DistanceIndicatorComp->StartVisualizingDistance(ReceivingTeamData.AssignedCharacters[0]);
+		}
+		else
+		{
+			DistanceIndicatorComp->StopVisualizingDistance();
+		}
+		
+		if (DynamicBallMat)
+		{
+			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 1.f);
+		}
+	}
 }
 
 void ATennisBall::OnRep_BallState()
@@ -163,6 +202,16 @@ void ATennisBall::OnRep_BallState()
 		if (!bTrailAlwaysOn)
 		{
 			BallTrailParticleEffect->SetActive(false);
+		}
+
+		if (DynamicBallMat)
+		{
+			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 1.f);
+		}
+
+		if (DistanceIndicatorComp->IsVisualizingDistance())
+		{
+			DistanceIndicatorComp->StopVisualizingDistance();
 		}
 	}
 }
@@ -179,5 +228,13 @@ void ATennisBall::ApplyBallState()
 
 			break;
 		}
+	}
+}
+
+void ATennisBall::HandleDistanceIndicatorTargetReached()
+{
+	if (DynamicBallMat)
+	{
+		DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 30.f);
 	}
 }

@@ -337,12 +337,12 @@ FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrokeType Stroke
 
 void ATennisStoryCharacter::StartDistanceVisualizationToBall()
 {
-	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	/*ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	TWeakObjectPtr<ATennisBall> TennisBall = (GameState) ? GameState->GetTennisBall() : nullptr;
 	if (TennisBall.IsValid())
 	{
 		DistanceIndicatorComp->StartVisualizingDistance(TennisBall);
-	}
+	}*/
 }
 
 void ATennisStoryCharacter::StopDistanceVisualization()

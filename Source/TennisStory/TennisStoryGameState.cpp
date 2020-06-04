@@ -64,6 +64,18 @@ void ATennisStoryGameState::GetSetScores(int SetNum, TArray<int>& OutScores)
 	}
 }
 
+const FTeamData ATennisStoryGameState::GetTeamById(int TeamId)
+{
+	if (TeamId >= 0 && TeamId < TeamData.Num())
+	{
+		return TeamData[TeamId];
+	}
+
+	checkNoEntry()
+
+	return FTeamData();
+}
+
 const FTeamData ATennisStoryGameState::GetTeamForPlayer(ATennisStoryPlayerController* Player)
 {
 	if (!TeamData.Num())

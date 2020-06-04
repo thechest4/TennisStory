@@ -21,6 +21,8 @@ void UDistanceIndicatorComponent::StartVisualizingDistance(TWeakObjectPtr<AActor
 	if (argActorToTrack.IsValid() && VisualComp)
 	{
 		ActorToTrack = argActorToTrack;
+
+		//Desired distance is the distance at which the alpha will be 0, MinDistanceForVisualization is the minimum distance we need to start with for visualization to activate
 		StartingDistance = FVector::Dist(GetOwner()->GetActorLocation(), ActorToTrack->GetActorLocation());
 
 		if (StartingDistance <= DesiredDistance)
@@ -28,6 +30,7 @@ void UDistanceIndicatorComponent::StartVisualizingDistance(TWeakObjectPtr<AActor
 			return;
 		}
 
+		//DistanceDifference is the initial distance from our location, compensating for the desired distance (We don't want to get TO the tracked actor location, we want to get desireddistance cm away)
 		DistanceDifference = StartingDistance - DesiredDistance;
 
 		if (DistanceDifference < MinDistanceForVisualization)
@@ -44,9 +47,13 @@ void UDistanceIndicatorComponent::StartVisualizingDistance(TWeakObjectPtr<AActor
 
 void UDistanceIndicatorComponent::StopVisualizingDistance()
 {
-		ActorToTrack.Reset();
-		bIsVisualizingDistance = false;
+	ActorToTrack.Reset();
+	bIsVisualizingDistance = false;
+
+	if (VisualComp)
+	{
 		VisualComp->SetHiddenInGame(true);
+	}
 }
 
 void UDistanceIndicatorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -56,17 +63,11 @@ void UDistanceIndicatorComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	if (bIsVisualizingDistance && ActorToTrack.IsValid())
 	{
 		float CurrentDistance = FVector::Dist(GetOwner()->GetActorLocation(), ActorToTrack->GetActorLocation());
-		float NewAlpha = FMath::Clamp(CurrentDistance / DistanceDifference, 0.f, 1.f);
-
-		//We don't want to switch directions, so if that starts happening just stop the visualization
-		if (NewAlpha > CurrentAlpha)
-		{
-			StopVisualizingDistance();
-			return;
-		}
+		float NewAlpha = FMath::Clamp((CurrentDistance - DesiredDistance) / DistanceDifference, 0.f, 1.f);
 
 		if (NewAlpha <= 0.f)
 		{
+			TargetReachedEvent.Broadcast();
 			StopVisualizingDistance();
 			return;
 		}

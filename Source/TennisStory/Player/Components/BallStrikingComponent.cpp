@@ -101,19 +101,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		UObject* GroundstrokeAbilityObj = CurrentGroundstrokeAbility.GetObject();
 
 		ensureMsgf(GroundstrokeAbilityObj, TEXT("Invalid groundstroke ability object - no provided ball speed or trajectory"));
-
-		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
-
-		float MidPointAdditiveHeight = IGroundstrokeAbilityInterface::Execute_GetMidpointAdditiveHeight(GroundstrokeAbilityObj);
-		float TangentLength = IGroundstrokeAbilityInterface::Execute_GetTangentLength(GroundstrokeAbilityObj);
 		
-		UCurveFloat* TrajectoryCurve = IGroundstrokeAbilityInterface::Execute_GetTrajectoryCurve(GroundstrokeAbilityObj);
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
-
-		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt);
-
-		BallHitEvent.Broadcast();
-
 		if (OwnerChar->HasAuthority())
 		{
 			TennisBall->LastPlayerToHit = OwnerChar;
@@ -132,5 +120,17 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 				OwnerChar->Multicast_PlaySound(OrderedHitSFX[SFXIndex], TennisBall->GetActorLocation());
 			}
 		}
+
+		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
+
+		float MidPointAdditiveHeight = IGroundstrokeAbilityInterface::Execute_GetMidpointAdditiveHeight(GroundstrokeAbilityObj);
+		float TangentLength = IGroundstrokeAbilityInterface::Execute_GetTangentLength(GroundstrokeAbilityObj);
+		
+		UCurveFloat* TrajectoryCurve = IGroundstrokeAbilityInterface::Execute_GetTrajectoryCurve(GroundstrokeAbilityObj);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
+
+		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt, OwnerChar);
+
+		BallHitEvent.Broadcast();
 	}
 }
