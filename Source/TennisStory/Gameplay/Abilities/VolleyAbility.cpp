@@ -211,20 +211,6 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
 		bVolleyReleased = true;
-		CurrentVolleyType = EVolleyType::ActiveVolley;
-	}
-
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
-	if (OwnerChar)
-	{
-		OwnerChar->DisablePlayerTargeting();
-
-		if (OwnerChar->BallStrikingComp)
-		{
-			//This is usually going to be a redundant call, since there will be an AllowBallStriking notify fired when the volley anim enters the passive volley loop
-			//But this handles the case where the player presses and immediately releases the button, causing us to skip the passive volley entirely
-			OwnerChar->BallStrikingComp->AllowBallStriking();
-		}
 	}
 }
 
@@ -251,15 +237,8 @@ void UVolleyAbility::HandleBallHit()
 			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
 		}
 
-		if (bVolleyReleased)
+		if (CurrentMontageTask)
 		{
-			return;
-		}
-
-		if (CurrentMontageTask && CurrentVolleyType == EVolleyType::PassiveVolley)
-		{
-			CurrentMontageTask->JumpToSection(TEXT("Release"));
-			bVolleyReleased = true;
 			OwnerChar->DisablePlayerTargeting();
 			OwnerChar->BallStrikingComp->StopBallStriking();
 		}

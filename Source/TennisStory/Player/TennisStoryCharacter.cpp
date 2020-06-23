@@ -434,19 +434,7 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 		TWeakObjectPtr<AHalfCourt> Court = GameState->GetCourtForCharacter(this);
 		bool bIsInFrontCourt = Court.IsValid() && Court->IsLocationInFrontHalfOfCourt(GetActorLocation());
 
-		bool bBallIsInPlay = false;
-		bool bOpponentHitBallLast = false;
-		bool bBallHasBounced = false;
-		bool bBallWillBeAboveHeightThreshold = false;
-
-		TWeakObjectPtr<ATennisBall> Ball = GameState->GetTennisBall();
-		if (Ball.IsValid())
-		{
-			bBallIsInPlay = Ball->GetCurrentBallState() == ETennisBallState::PlayState;
-			bOpponentHitBallLast = Ball->LastPlayerToHit != this && !Ball->bWasLastHitAServe;
-		}
-
-		if (bIsInFrontCourt && bBallIsInPlay && bOpponentHitBallLast)
+		if (bIsInFrontCourt)
 		{
 			AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Volley;
 		}
