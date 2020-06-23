@@ -2,6 +2,7 @@
 
 #include "VolleyAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
+#include "Gameplay/Abilities/Tasks/AbilityTask_Tick.h"
 #include "TennisStoryGameState.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
@@ -95,6 +96,10 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
+	
+	CurrentTickingTask = UAbilityTask_Tick::CreateTask(this, FName(TEXT("Volley Context Check Task")));
+	CurrentTickingTask->OnTaskTick().AddUObject(this, &UVolleyAbility::HandleTaskTick);
+	CurrentTickingTask->ReadyForActivation();
 
 	if (OwnerChar->HasAuthority())
 	{
@@ -212,6 +217,19 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 		CurrentMontageTask->JumpToSection(TEXT("Swing"));
 		bVolleyReleased = true;
 	}
+
+	if (CurrentTickingTask)
+	{
+		CurrentTickingTask->ExternalCancel();
+		CurrentTickingTask->OnTaskTick().RemoveAll(this);
+		CurrentTickingTask = nullptr;
+	}
+	
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+	if (OwnerChar)
+	{
+		OwnerChar->DisablePlayerTargeting();
+	}
 }
 
 bool UVolleyAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
@@ -243,5 +261,10 @@ void UVolleyAbility::HandleBallHit()
 			OwnerChar->BallStrikingComp->StopBallStriking();
 		}
 	}
+}
+
+void UVolleyAbility::HandleTaskTick()
+{
+	GEngine->AddOnScreenDebugMessage(0, 0.01f, FColor::Green, TEXT("VolleyAbility::HandleTaskTick"));
 }
 

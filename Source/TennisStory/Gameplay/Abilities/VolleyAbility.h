@@ -9,6 +9,8 @@
 
 class ATennisBall;
 class ATennisStoryCharacter;
+class UTS_AbilityTask_PlayMontageAndWait;
+class UAbilityTask_Tick;
 
 UENUM()
 enum class EVolleyType : uint8
@@ -109,7 +111,10 @@ protected:
 	float TangentLength_Low = 150.f;
 
 	UPROPERTY()
-	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+	UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+
+	UPROPERTY()
+	UAbilityTask_Tick* CurrentTickingTask;
 
 	bool bVolleyReleased;
 
@@ -123,4 +128,7 @@ protected:
 
 	UFUNCTION()
 	void HandleBallHit();
+
+	UFUNCTION()
+	void HandleTaskTick();
 };
