@@ -45,14 +45,14 @@ public:
 	float GetMidpointAdditiveHeight();
 	virtual float GetMidpointAdditiveHeight_Implementation() override
 	{
-		return (bIsHighVolley) ? MidpointAdditiveHeight_High : MidpointAdditiveHeight_Low;
+		return (bCurrentShotIsHigh) ? MidpointAdditiveHeight_High : MidpointAdditiveHeight_Low;
 	}
 	
 	UFUNCTION(BlueprintNativeEvent)
 	float GetTangentLength();
 	virtual float GetTangentLength_Implementation() override
 	{
-		return (bIsHighVolley) ? TangentLength_High : TangentLength_Low;
+		return (bCurrentShotIsHigh) ? TangentLength_High : TangentLength_Low;
 	}
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -117,14 +117,19 @@ protected:
 	UAbilityTask_Tick* CurrentTickingTask;
 
 	bool bVolleyReleased;
-
-	bool bIsHighVolley;
+	bool bCurrentShotIsForehand;
+	bool bCurrentShotIsHigh;
 
 	EVolleyType CurrentVolleyType;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
-	bool ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+	//returns true if Context has changed
+	bool UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+
+	UAnimMontage* GetVolleyMontage();
+
+	void SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter);
 
 	UFUNCTION()
 	void HandleBallHit();

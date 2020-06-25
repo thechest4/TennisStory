@@ -162,6 +162,8 @@ public:
 
 	bool DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility);
 
+	bool ShouldPerformForehand(ATennisBall* TennisBall);
+
 protected:
 	virtual void BeginPlay() override;
 

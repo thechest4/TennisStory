@@ -14,7 +14,8 @@ UVolleyAbility::UVolleyAbility()
 	bReplicateInputDirectly = true;
 
 	bVolleyReleased = false;
-	bIsHighVolley = false;
+	bCurrentShotIsForehand = false;
+	bCurrentShotIsHigh = false;
 	CurrentVolleyType = EVolleyType::PassiveVolley;
 }
 
@@ -52,46 +53,10 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 	bVolleyReleased = false;
 	CurrentVolleyType = EVolleyType::PassiveVolley;
-	UAnimMontage* MontageToPlay = ForehandMontage_High;
 
-	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
-	
-	bIsHighVolley = false;
-	TWeakObjectPtr<const USplineComponent> BallSplineComp = TennisBall->GetSplineComponent();
-	if (BallSplineComp.IsValid())
-	{
-		FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(OwnerChar->GetActorLocation(), ESplineCoordinateSpace::World);
-		const float MinHeightForHighVolley = 100.f;
-		bIsHighVolley = FutureBallLocation.Z >= MinHeightForHighVolley;
-	}
-
-	if (!bIsForehand)
-	{
-		if (bIsHighVolley)
-		{
-			MontageToPlay = BackhandMontage_High;
-			OwnerChar->PositionStrikeZone(EStrokeType::Backhand_High);
-		}
-		else
-		{
-			MontageToPlay = BackhandMontage_Low;
-			OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
-		}
-		
-	}
-	else
-	{
-		if (bIsHighVolley)
-		{
-			MontageToPlay = ForehandMontage_High;
-			OwnerChar->PositionStrikeZone(EStrokeType::Forehand_High);
-		}
-		else
-		{
-			MontageToPlay = ForehandMontage_Low;
-			OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
-		}
-	}
+	UpdateShotContext(TennisBall, OwnerChar);
+	UAnimMontage* MontageToPlay = GetVolleyMontage();
+	SetStrikeZonePosition(OwnerChar);
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
@@ -168,11 +133,11 @@ float UVolleyAbility::CalculateBallSpeed_Implementation()
 	{
 		case EVolleyType::PassiveVolley:
 		{
-			return (bIsHighVolley) ? PassiveVolleySpeed_High : PassiveVolleySpeed_Low;
+			return (bCurrentShotIsHigh) ? PassiveVolleySpeed_High : PassiveVolleySpeed_Low;
 		}
 		case EVolleyType::ActiveVolley:
 		{
-			return (bIsHighVolley) ? ActiveVolleySpeed_High : ActiveVolleySpeed_Low;
+			return (bCurrentShotIsHigh) ? ActiveVolleySpeed_High : ActiveVolleySpeed_Low;
 		}
 	}
 
@@ -183,7 +148,7 @@ float UVolleyAbility::CalculateBallSpeed_Implementation()
 
 UCurveFloat* UVolleyAbility::GetTrajectoryCurve_Implementation()
 {
-	return (bIsHighVolley) ? TrajectoryCurve_High : TrajectoryCurve_Low;
+	return (bCurrentShotIsHigh) ? TrajectoryCurve_High : TrajectoryCurve_Low;
 }
 
 int UVolleyAbility::GetShotQuality_Implementation()
@@ -232,17 +197,66 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 	}
 }
 
-bool UVolleyAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
+bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
 {
-	FVector BallDirection = TennisBall->GetCurrentDirection();
-	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), OwnerCharacter->GetActorLocation());
+	bool bPrevShotForehand = bCurrentShotIsForehand;
+	bool bPrevShotHigh = bCurrentShotIsHigh;
 
-	FVector ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+	bCurrentShotIsForehand = OwnerCharacter->ShouldPerformForehand(TennisBall);
+	bCurrentShotIsHigh = false;
+	TWeakObjectPtr<const USplineComponent> BallSplineComp = TennisBall->GetSplineComponent();
+	if (BallSplineComp.IsValid())
+	{
+		FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(OwnerCharacter->GetActorLocation(), ESplineCoordinateSpace::World);
+		const float MinHeightForHighVolley = 100.f;
+		bCurrentShotIsHigh = FutureBallLocation.Z >= MinHeightForHighVolley;
+	}
 
-	FVector DirToBallProjection = ProjectedBallLocation - OwnerCharacter->GetActorLocation();
-	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), OwnerCharacter->GetAimRightVector());
-	
-	return DotProd >= 0.f;
+	return bCurrentShotIsForehand != bPrevShotForehand || bCurrentShotIsHigh != bPrevShotHigh;
+}
+
+UAnimMontage* UVolleyAbility::GetVolleyMontage()
+{
+	if (bCurrentShotIsForehand && bCurrentShotIsHigh)
+	{
+		return ForehandMontage_High;
+	}
+	else if (bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	{
+		return ForehandMontage_Low;
+	}
+	else if (!bCurrentShotIsForehand && bCurrentShotIsHigh)
+	{
+		return BackhandMontage_High;
+	}
+	else if (!bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	{
+		return BackhandMontage_Low;
+	}
+
+	checkNoEntry()
+
+	return ForehandMontage_High;
+}
+
+void UVolleyAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
+{
+	if (bCurrentShotIsForehand && bCurrentShotIsHigh)
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand_High);
+	}
+	else if (bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand);
+	}
+	else if (!bCurrentShotIsForehand && bCurrentShotIsHigh)
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand_High);
+	}
+	else if (!bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand);
+	}
 }
 
 void UVolleyAbility::HandleBallHit()
@@ -265,6 +279,30 @@ void UVolleyAbility::HandleBallHit()
 
 void UVolleyAbility::HandleTaskTick()
 {
-	GEngine->AddOnScreenDebugMessage(0, 0.01f, FColor::Green, TEXT("VolleyAbility::HandleTaskTick"));
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+	
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
+
+	ensureMsgf(OwnerChar && TennisBall, TEXT("OwnerChar or TennisBall was null"));
+
+	if (!OwnerChar || !TennisBall)
+	{
+		return;
+	}
+
+	bool bShotContextChanged = UpdateShotContext(TennisBall, OwnerChar);
+
+	if (bShotContextChanged)
+	{
+		CurrentMontageTask->OnBlendOut.RemoveAll(this);
+		
+		UAnimMontage* MontageToPlay = GetVolleyMontage();
+		SetStrikeZonePosition(OwnerChar);
+
+		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+		CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
+		CurrentMontageTask->ReadyForActivation();
+	}
 }
 

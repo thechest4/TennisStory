@@ -455,6 +455,19 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 	return false;
 }
 
+bool ATennisStoryCharacter::ShouldPerformForehand(ATennisBall* TennisBall)
+{
+	FVector BallDirection = TennisBall->GetCurrentDirection();
+	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), GetActorLocation());
+
+	FVector ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+
+	FVector DirToBallProjection = ProjectedBallLocation - GetActorLocation();
+	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), GetAimRightVector());
+	
+	return DotProd >= 0.f;
+}
+
 void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = ModifiedBaseSpeed;

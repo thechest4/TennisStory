@@ -9,6 +9,8 @@
 
 class ATennisBall;
 class ATennisStoryCharacter;
+class UTS_AbilityTask_PlayMontageAndWait;
+class UAbilityTask_Tick;
 
 UCLASS()
 class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
@@ -65,7 +67,10 @@ protected:
 	float BaseSpeedDuringAbility = 150.0f;
 
 	UPROPERTY()
-	class UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+	UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
+	
+	UPROPERTY()
+	UAbilityTask_Tick* CurrentTickingTask;
 
 	bool bSwingReleased;
 	
@@ -95,5 +100,15 @@ protected:
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
-	bool ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+	bool bCurrentShotIsForehand;
+
+	//returns true if Context has changed
+	bool UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
+
+	UAnimMontage* GetSwingMontage();
+
+	void SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter);
+
+	UFUNCTION()
+	void HandleTaskTick();
 };

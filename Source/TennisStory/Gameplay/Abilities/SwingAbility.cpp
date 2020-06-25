@@ -3,6 +3,7 @@
 
 #include "SwingAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
+#include "Gameplay/Abilities/Tasks/AbilityTask_Tick.h"
 #include "TennisStoryGameState.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
@@ -13,6 +14,7 @@ USwingAbility::USwingAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
 
+	bCurrentShotIsForehand = false;
 	bSwingReleased = false;
 }
 
@@ -51,20 +53,17 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
-	bool bIsForehand = ShouldChooseForehand(TennisBall, OwnerChar);
-	if (!bIsForehand)
-	{
-		MontageToPlay = BackhandMontage;
-		OwnerChar->PositionStrikeZone(EStrokeType::Backhand);
-	}
-	else
-	{
-		OwnerChar->PositionStrikeZone(EStrokeType::Forehand);
-	}
+	UpdateShotContext(TennisBall, OwnerChar);
+	MontageToPlay = GetSwingMontage();
+	SetStrikeZonePosition(OwnerChar);
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
+	
+	CurrentTickingTask = UAbilityTask_Tick::CreateTask(this, FName(TEXT("Swing Context Check Task")));
+	CurrentTickingTask->OnTaskTick().AddUObject(this, &USwingAbility::HandleTaskTick);
+	CurrentTickingTask->ReadyForActivation();
 
 	if (OwnerChar->HasAuthority())
 	{
@@ -154,6 +153,13 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 		bSwingReleased = true;
 	}
 
+	if (CurrentTickingTask)
+	{
+		CurrentTickingTask->ExternalCancel();
+		CurrentTickingTask->OnTaskTick().RemoveAll(this);
+		CurrentTickingTask = nullptr;
+	}
+
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
@@ -166,15 +172,57 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 	}
 }
 
-bool USwingAbility::ShouldChooseForehand(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
+bool USwingAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
 {
-	FVector BallDirection = TennisBall->GetCurrentDirection();
-	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), OwnerCharacter->GetActorLocation());
+	bool bPrevShotForehand = bCurrentShotIsForehand;
 
-	FVector ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+	bCurrentShotIsForehand = OwnerCharacter->ShouldPerformForehand(TennisBall);
 
-	FVector DirToBallProjection = ProjectedBallLocation - OwnerCharacter->GetActorLocation();
-	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), OwnerCharacter->GetAimRightVector());
+	return bCurrentShotIsForehand != bPrevShotForehand;
+}
+
+UAnimMontage* USwingAbility::GetSwingMontage()
+{
+	return (bCurrentShotIsForehand) ? ForehandMontage : BackhandMontage;
+}
+
+void USwingAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
+{
+	if (bCurrentShotIsForehand)
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand);
+	}
+	else
+	{
+		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand);
+	}
+}
+
+void USwingAbility::HandleTaskTick()
+{
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	
-	return DotProd >= 0.f;
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
+
+	ensureMsgf(OwnerChar && TennisBall, TEXT("OwnerChar or TennisBall was null"));
+
+	if (!OwnerChar || !TennisBall)
+	{
+		return;
+	}
+
+	bool bShotContextChanged = UpdateShotContext(TennisBall, OwnerChar);
+
+	if (bShotContextChanged)
+	{
+		CurrentMontageTask->OnBlendOut.RemoveAll(this);
+		
+		UAnimMontage* MontageToPlay = GetSwingMontage();
+		SetStrikeZonePosition(OwnerChar);
+
+		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+		CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
+		CurrentMontageTask->ReadyForActivation();
+	}
 }
