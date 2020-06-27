@@ -10,7 +10,6 @@
 #include "Player/PlayerTargetActor.h"
 #include "Player/PlayerMouseTarget.h"
 #include "Player/Components/BallStrikingComponent.h"
-#include "Player/Components/DistanceIndicatorComponent.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Gameplay/TennisRacquet.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
@@ -73,13 +72,6 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	
 	StrikeZoneLocation_Backhand_High = CreateDefaultSubobject<USceneComponent>(TEXT("Backhand High Strike Zone Location"));
 	StrikeZoneLocation_Backhand_High->SetupAttachment(RootComponent);
-
-	DistanceIndicatorRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DistanceIndicatorRingMesh"));
-	DistanceIndicatorRing->SetupAttachment(RootComponent);
-	DistanceIndicatorRing->SetCollisionProfileName(TEXT("NoCollision"));
-	DistanceIndicatorRing->SetHiddenInGame(true);
-
-	DistanceIndicatorComp = CreateDefaultSubobject<UDistanceIndicatorComponent>(TEXT("DistanceIndicatorComp"));
 	
 #if WITH_EDITORONLY_DATA
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisRacquetSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
@@ -185,8 +177,6 @@ void ATennisStoryCharacter::BeginPlay()
 	{
 		ServerDesiredRotation = GetActorRotation().Quaternion();
 	}
-
-	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
 
 	OnCharacterMovementUpdated.AddDynamic(this, &ATennisStoryCharacter::HandleCharacterMovementUpdated);
 }
@@ -333,21 +323,6 @@ FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrokeType Stroke
 			return StrikeZoneLocation_Forehand_High->GetRelativeTransform().GetLocation();
 		}
 	}
-}
-
-void ATennisStoryCharacter::StartDistanceVisualizationToBall()
-{
-	/*ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-	TWeakObjectPtr<ATennisBall> TennisBall = (GameState) ? GameState->GetTennisBall() : nullptr;
-	if (TennisBall.IsValid())
-	{
-		DistanceIndicatorComp->StartVisualizingDistance(TennisBall);
-	}*/
-}
-
-void ATennisStoryCharacter::StopDistanceVisualization()
-{
-	DistanceIndicatorComp->StopVisualizingDistance();
 }
 
 void ATennisStoryCharacter::Multicast_EnterServiceState_Implementation()

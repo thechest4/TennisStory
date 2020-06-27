@@ -74,11 +74,6 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
 
-	if (OwnerChar->IsLocallyControlled())
-	{
-		OwnerChar->StartDistanceVisualizationToBall();
-	}
-
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
@@ -101,7 +96,6 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->DisablePlayerTargeting();
-			OwnerChar->StopDistanceVisualization();
 		}
 
 		if (OwnerChar->HasAuthority())

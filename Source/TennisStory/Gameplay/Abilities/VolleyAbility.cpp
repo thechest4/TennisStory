@@ -73,11 +73,6 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
 
-	if (OwnerChar->IsLocallyControlled())
-	{
-		OwnerChar->StartDistanceVisualizationToBall();
-	}
-
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
@@ -106,7 +101,6 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->DisablePlayerTargeting();
-			OwnerChar->StopDistanceVisualization();
 		}
 
 		if (OwnerChar->HasAuthority())

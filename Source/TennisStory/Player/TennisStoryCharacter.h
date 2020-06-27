@@ -111,10 +111,6 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetActorTransform(FTransform NewTransform);
-
-	void StartDistanceVisualizationToBall();
-
-	void StopDistanceVisualization();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_EnterServiceState();
@@ -279,12 +275,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Team Color")
 	TArray<UMaterialInterface*> TeamColorMaterials;
-
-	UPROPERTY(VisibleDefaultsOnly)
-	UStaticMeshComponent* DistanceIndicatorRing;
-
-	UPROPERTY(VisibleAnywhere)
-	UDistanceIndicatorComponent* DistanceIndicatorComp;
 
 	UPROPERTY(Replicated)
 	bool bHasBallAttached;
