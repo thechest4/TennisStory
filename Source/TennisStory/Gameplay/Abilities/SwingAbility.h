@@ -110,5 +110,5 @@ protected:
 	void SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter);
 
 	UFUNCTION()
-	void HandleTaskTick();
+	void HandleTaskTick(float DeltaTime);
 };

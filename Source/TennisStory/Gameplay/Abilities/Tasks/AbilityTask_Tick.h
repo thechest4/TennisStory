@@ -6,7 +6,7 @@
 #include "Abilities/Tasks/AbilityTask.h"
 #include "AbilityTask_Tick.generated.h"
 
-DECLARE_EVENT(UAbilityTask_Tick, FTaskTickEvent)
+DECLARE_EVENT_OneParam(UAbilityTask_Tick, FTaskTickEvent, float)
 
 //Simple task that exposes a tick delegate
 UCLASS()

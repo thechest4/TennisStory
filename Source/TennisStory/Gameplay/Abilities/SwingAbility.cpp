@@ -198,7 +198,7 @@ void USwingAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
 	}
 }
 
-void USwingAbility::HandleTaskTick()
+void USwingAbility::HandleTaskTick(float DeltaTime)
 {
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	

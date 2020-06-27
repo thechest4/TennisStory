@@ -277,7 +277,7 @@ void UVolleyAbility::HandleBallHit()
 	}
 }
 
-void UVolleyAbility::HandleTaskTick()
+void UVolleyAbility::HandleTaskTick(float DeltaTime)
 {
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	

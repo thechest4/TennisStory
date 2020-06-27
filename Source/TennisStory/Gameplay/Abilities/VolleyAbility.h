@@ -135,5 +135,5 @@ protected:
 	void HandleBallHit();
 
 	UFUNCTION()
-	void HandleTaskTick();
+	void HandleTaskTick(float DeltaTime);
 };

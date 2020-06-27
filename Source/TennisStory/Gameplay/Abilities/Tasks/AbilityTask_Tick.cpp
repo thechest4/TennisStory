@@ -16,5 +16,5 @@ void UAbilityTask_Tick::TickTask(float DeltaTime)
 {
 	Super::TickTask(DeltaTime);
 
-	TaskTickEvent.Broadcast();
+	TaskTickEvent.Broadcast(DeltaTime);
 }
