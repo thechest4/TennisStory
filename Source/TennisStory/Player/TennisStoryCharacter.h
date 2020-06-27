@@ -38,6 +38,7 @@ UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
 	Swing UMETA(DisplayName = "Swing"),
+	Dive UMETA(DisplayName = "Dive")
 };
 
 USTRUCT(BlueprintType)

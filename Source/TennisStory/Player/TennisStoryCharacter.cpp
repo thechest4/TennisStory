@@ -173,7 +173,7 @@ void ATennisStoryCharacter::BeginPlay()
 		{
 			for (FGrantedAbilityInfo& AbilityInfo : AbilitiesToGive)
 			{
-				AbilityInfo.AbilitySpecHandle = AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), (int)AbilityInfo.AbilityInput, 0));
+				AbilityInfo.AbilitySpecHandle = AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityInfo.AbilityClass.GetDefaultObject(), 0, static_cast<int>(AbilityInfo.AbilityInput)));
 			}
 		}
 	}
