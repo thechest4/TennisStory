@@ -73,6 +73,9 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	StrikeZoneLocation_Backhand_High = CreateDefaultSubobject<USceneComponent>(TEXT("Backhand High Strike Zone Location"));
 	StrikeZoneLocation_Backhand_High->SetupAttachment(RootComponent);
 	
+	StrikeZoneLocation_Dive = CreateDefaultSubobject<USceneComponent>(TEXT("Dive Strike Zone Location"));
+	StrikeZoneLocation_Dive->SetupAttachment(RootComponent);
+	
 #if WITH_EDITORONLY_DATA
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisRacquetSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
 	
@@ -131,6 +134,20 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 		if (TennisRacquetSprite.Succeeded())
 		{
 			StrikeZoneIcon_Backhand_High->SetSprite(TennisRacquetSprite.Object);
+		}
+	}
+	
+	StrikeZoneIcon_Dive = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Strike Zone Icon Dive"));
+	if (StrikeZoneIcon_Dive)
+	{
+		StrikeZoneIcon_Dive->SetupAttachment(StrikeZoneLocation_Dive);
+		StrikeZoneIcon_Dive->SetHiddenInGame(true);
+		StrikeZoneIcon_Dive->SetRelativeLocation(FVector::ZeroVector);
+		StrikeZoneIcon_Dive->SetEditorScale(IconEditorScale);
+
+		if (TennisRacquetSprite.Succeeded())
+		{
+			StrikeZoneIcon_Dive->SetSprite(TennisRacquetSprite.Object);
 		}
 	}
 #endif
@@ -322,6 +339,10 @@ FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrokeType Stroke
 		{
 			return StrikeZoneLocation_Forehand_High->GetRelativeTransform().GetLocation();
 		}
+		case EStrokeType::Dive:
+		{
+			return StrikeZoneLocation_Dive->GetRelativeTransform().GetLocation();
+		}
 	}
 }
 
@@ -458,8 +479,8 @@ void ATennisStoryCharacter::Multicast_RestoreBaseSpeed_Implementation()
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAxis("MoveForward", this, &ATennisStoryCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ATennisStoryCharacter::MoveRight);
+	PlayerInputComponent->BindAxis(AXISNAME_MOVEFORWARD, this, &ATennisStoryCharacter::MoveForward);
+	PlayerInputComponent->BindAxis(AXISNAME_MOVERIGHT, this, &ATennisStoryCharacter::MoveRight);
 
 	PlayerInputComponent->BindAxis("MoveTargetForwardSimple", this, &ATennisStoryCharacter::AddTargetSimpleForwardInput);
 	PlayerInputComponent->BindAxis("MoveTargetRightSimple", this, &ATennisStoryCharacter::AddTargetSimpleRightInput);
@@ -650,3 +671,6 @@ void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, F
 		}
 	}
 }
+
+const FName ATennisStoryCharacter::AXISNAME_MOVEFORWARD = "MoveForward";
+const FName ATennisStoryCharacter::AXISNAME_MOVERIGHT = "MoveRight";

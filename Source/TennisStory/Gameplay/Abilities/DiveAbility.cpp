@@ -8,6 +8,9 @@
 UDiveAbility::UDiveAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+
+	CurrentDiveDirection = FVector::ZeroVector;
+	DiveSpeed = 100.f;
 }
 
 bool UDiveAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
@@ -27,12 +30,36 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		return;
 	}
 
+	OwnerAnimInstance = (OwnerChar->GetMesh()) ? OwnerChar->GetMesh()->GetAnimInstance() : nullptr;
+	if (!OwnerAnimInstance.IsValid())
+	{
+		return;
+	}
+
 	if (!CommitAbility(Handle, OwnerInfo, ActivationInfo))
 	{
 		return;
 	}
 
-	//Position Strike Zone
+	//Get dive direction
+	float InputY = OwnerChar->GetInputAxisValue(ATennisStoryCharacter::AXISNAME_MOVEFORWARD); 
+	float InputX = OwnerChar->GetInputAxisValue(ATennisStoryCharacter::AXISNAME_MOVERIGHT);
+
+	const FRotator OwnerControlRotation = OwnerChar->Controller->GetControlRotation();
+	const FRotator YawRotation(0, OwnerControlRotation.Yaw, 0);
+	
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	
+	CurrentDiveDirection = (ForwardDirection * InputY + RightDirection * InputX).GetSafeNormal();
+
+	//If no input detected just go with the actor's forward vector
+	if (CurrentDiveDirection == FVector::ZeroVector)
+	{
+		CurrentDiveDirection = OwnerChar->GetActorForwardVector();
+	}
+
+	OwnerChar->PositionStrikeZone(EStrokeType::Dive);
 
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayDiveMontage"), DiveMontage, 1.0f);
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UDiveAbility::HandleDiveMontageBlendOut);
@@ -42,12 +69,10 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	CurrentTickingTask->OnTaskTick().AddUObject(this, &UDiveAbility::HandleTaskTick);
 	CurrentTickingTask->ReadyForActivation();
 
-	/*if (OwnerChar->HasAuthority())
+	if (OwnerChar->HasAuthority())
 	{
-		LastChargeStartTime = GetWorld()->GetTimeSeconds();
-
-		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
-	}*/
+		OwnerChar->Multicast_LockMovement();
+	}
 
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
 
@@ -66,6 +91,13 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &UDiveAbility::HandleDiveMontageBlendOut);
 		CurrentMontageTask = nullptr;
 	}
+	
+	if (CurrentTickingTask)
+	{
+		CurrentTickingTask->ExternalCancel();
+		CurrentTickingTask->OnTaskTick().RemoveAll(this);
+		CurrentTickingTask = nullptr;
+	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
@@ -75,10 +107,10 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 			OwnerChar->DisablePlayerTargeting();
 		}
 
-		/*if (OwnerChar->HasAuthority())
+		if (OwnerChar->HasAuthority())
 		{
-			OwnerChar->Multicast_RestoreBaseSpeed();
-		}*/
+			OwnerChar->Multicast_UnlockMovement();
+		}
 		
 		if (OwnerChar->BallStrikingComp)
 		{
@@ -94,5 +126,13 @@ void UDiveAbility::HandleDiveMontageBlendOut()
 
 void UDiveAbility::HandleTaskTick(float DeltaTime)
 {
-	//Update movement during roll
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+
+	if (OwnerChar && CurrentDiveDirection.Size() > 0.f)
+	{
+		float SpeedCurveVal = OwnerAnimInstance->GetCurveValue("DiveSpeedCurve");
+		FVector Translation = CurrentDiveDirection * DiveSpeed * SpeedCurveVal * DeltaTime;
+
+		OwnerChar->AddActorWorldOffset(Translation, true);
+	}
 }

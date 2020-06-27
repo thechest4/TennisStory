@@ -31,7 +31,8 @@ enum class EStrokeType :uint8
 	Forehand,
 	Backhand,
 	Forehand_High,
-	Backhand_High
+	Backhand_High,
+	Dive
 };
 
 UENUM(BlueprintType)
@@ -161,6 +162,9 @@ public:
 
 	bool ShouldPerformForehand(ATennisBall* TennisBall);
 
+	static const FName AXISNAME_MOVEFORWARD;
+	static const FName AXISNAME_MOVERIGHT;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -254,6 +258,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
 	USceneComponent* StrikeZoneLocation_Backhand_High;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Dive;
+	
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
 	UBillboardComponent* StrikeZoneIcon_Forehand;
@@ -264,6 +271,9 @@ protected:
 	UBillboardComponent* StrikeZoneIcon_Backhand;
 	UPROPERTY()
 	UBillboardComponent* StrikeZoneIcon_Backhand_High;
+	
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Dive;
 #endif
 
 	//Team Color

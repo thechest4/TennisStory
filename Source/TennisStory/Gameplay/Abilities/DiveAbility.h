@@ -32,15 +32,13 @@ public:
 	float CalculateBallSpeed();
 	virtual float CalculateBallSpeed_Implementation() override
 	{
-		return 0.f;
+		return BallSpeed;
 	}
 	
 	UFUNCTION(BlueprintNativeEvent)
 	float GetMidpointAdditiveHeight();
 	virtual float GetMidpointAdditiveHeight_Implementation() override
 	{
-		float MidpointAdditiveHeight = 0.f;
-
 		return MidpointAdditiveHeight;
 	}
 	
@@ -48,8 +46,6 @@ public:
 	float GetTangentLength();
 	virtual float GetTangentLength_Implementation() override
 	{
-		float TangentLength = 0.f;
-
 		return TangentLength;
 	}
 
@@ -57,7 +53,7 @@ public:
 	UCurveFloat* GetTrajectoryCurve();
 	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override
 	{
-		return nullptr;
+		return TrajectoryCurve;
 	}
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -80,4 +76,25 @@ protected:
 	
 	UFUNCTION()
 	void HandleTaskTick(float DeltaTime);
+
+	FVector CurrentDiveDirection;
+
+	UPROPERTY()
+	TWeakObjectPtr<UAnimInstance> OwnerAnimInstance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dive Parameters")
+	float DiveSpeed; //The base speed
+	
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	UCurveFloat* TrajectoryCurve;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float MidpointAdditiveHeight = 150.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
+	float TangentLength = 500.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
+	float BallSpeed = 1000.0f;
 };
