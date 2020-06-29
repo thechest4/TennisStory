@@ -10,6 +10,39 @@
 class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
+USTRUCT()
+struct FDiveAbilityTargetData : public FGameplayAbilityTargetData
+{
+	GENERATED_BODY()
+
+public:
+	FDiveAbilityTargetData()
+		: DiveInputVector(FVector_NetQuantize::ZeroVector)
+	{
+	}
+	
+	virtual UScriptStruct* GetScriptStruct() const override
+	{
+		return FDiveAbilityTargetData::StaticStruct();
+	}
+
+	virtual FVector GetEndPoint() const override { return DiveInputVector; }
+
+	UPROPERTY()
+	FVector_NetQuantize DiveInputVector;
+
+	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess);
+};
+
+template<>
+struct TStructOpsTypeTraits<FDiveAbilityTargetData> : public TStructOpsTypeTraitsBase2<FDiveAbilityTargetData>
+{
+	enum
+	{
+		WithNetSerializer = true	// For now this is REQUIRED for FGameplayAbilityTargetDataHandle net serialization to work
+	};
+};
+
 UCLASS()
 class TENNISSTORY_API UDiveAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
 {
@@ -23,7 +56,7 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	
+
 	UFUNCTION()
 	void HandleDiveMontageBlendOut();
 	
@@ -76,7 +109,7 @@ protected:
 	
 	UFUNCTION()
 	void HandleTaskTick(float DeltaTime);
-
+	
 	FVector CurrentDiveDirection;
 
 	UPROPERTY()
@@ -84,7 +117,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Dive Parameters")
 	float DiveSpeed; //The base speed
-	
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
 	UCurveFloat* TrajectoryCurve;

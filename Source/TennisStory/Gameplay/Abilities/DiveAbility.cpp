@@ -40,18 +40,24 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		return;
 	}
+	
+	//Get dive direction from TargetData
+	FVector2D InputVector = FVector2D::ZeroVector;
 
-	//Get dive direction
-	float InputY = OwnerChar->GetInputAxisValue(ATennisStoryCharacter::AXISNAME_MOVEFORWARD); 
-	float InputX = OwnerChar->GetInputAxisValue(ATennisStoryCharacter::AXISNAME_MOVERIGHT);
+	const FGameplayAbilityTargetData* TargetData = (TriggerEventData) ? TriggerEventData->TargetData.Get(0) : nullptr;
+	if (TargetData)
+	{
+		InputVector = FVector2D(TargetData->GetEndPoint());
+	}
 
+	//Calculate a worldspace direction from InputVector
 	const FRotator OwnerControlRotation = OwnerChar->Controller->GetControlRotation();
 	const FRotator YawRotation(0, OwnerControlRotation.Yaw, 0);
 	
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 	
-	CurrentDiveDirection = (ForwardDirection * InputY + RightDirection * InputX).GetSafeNormal();
+	CurrentDiveDirection = (ForwardDirection * InputVector.Y + RightDirection * InputVector.X).GetSafeNormal();
 
 	//If no input detected just go with the actor's forward vector
 	if (CurrentDiveDirection == FVector::ZeroVector)
@@ -135,4 +141,11 @@ void UDiveAbility::HandleTaskTick(float DeltaTime)
 
 		OwnerChar->AddActorWorldOffset(Translation, true);
 	}
+}
+
+bool FDiveAbilityTargetData::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+{
+	DiveInputVector.NetSerialize(Ar, Map, bOutSuccess);
+
+	return true;
 }

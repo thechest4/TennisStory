@@ -38,6 +38,7 @@ enum class EStrokeType :uint8
 UENUM(BlueprintType)
 enum class EAbilityInput : uint8
 {
+	None UMETA(DisplayName = "None"),
 	Swing UMETA(DisplayName = "Swing"),
 	Dive UMETA(DisplayName = "Dive")
 };
@@ -301,6 +302,8 @@ protected:
 	
 	UPROPERTY(Replicated)
 	FVector ClampLocation2;
+	
+	void PerformDive();
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

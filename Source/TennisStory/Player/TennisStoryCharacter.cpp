@@ -17,7 +17,9 @@
 #include "Gameplay/HalfCourt.h"
 #include "Gameplay/Abilities/SwingAbility.h"
 #include "Gameplay/Abilities/VolleyAbility.h"
+#include "Gameplay/Abilities/DiveAbility.h"
 #include "Net/UnrealNetwork.h"
+#include <AbilitySystemBlueprintLibrary.h>
 
 #if WITH_EDITORONLY_DATA
 #include "Components/BillboardComponent.h"
@@ -491,6 +493,8 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("MouseAimForward", this, &ATennisStoryCharacter::AddMouseAimForwardInput);
 	PlayerInputComponent->BindAxis("MouseAimRight", this, &ATennisStoryCharacter::AddMouseAimRightInput);
 
+	PlayerInputComponent->BindAction("Dive", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::PerformDive);
+
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
 }
 
@@ -650,6 +654,23 @@ void ATennisStoryCharacter::SpawnMouseTargetActor()
 	{
 		MouseTarget = GetWorld()->SpawnActor<APlayerMouseTarget>(MouseTargetClass, FTransform::Identity);
 	}
+}
+
+void ATennisStoryCharacter::PerformDive()
+{
+	//NOTE(achester): this function is only ever called by the owning client since it responds directly to input
+
+	FVector2D DiveInputVector = FVector2D(GetInputAxisValue(AXISNAME_MOVERIGHT), GetInputAxisValue(AXISNAME_MOVEFORWARD));
+
+	//Since we don't have a direct way to pass a payload into ActivateAbility, instead we use the GameplayEventData to send targeting data (which is just our input vector)
+	FGameplayEventData DiveEventData = FGameplayEventData();
+	DiveEventData.TargetData = FGameplayAbilityTargetDataHandle();
+
+	FDiveAbilityTargetData* DiveTargetData = new FDiveAbilityTargetData();
+	DiveTargetData->DiveInputVector = FVector_NetQuantize(DiveInputVector.X, DiveInputVector.Y, 0.f);
+	DiveEventData.TargetData.Add(DiveTargetData);
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag(TEXT("Player.Event.Dive")), DiveEventData);
 }
 
 void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity)
