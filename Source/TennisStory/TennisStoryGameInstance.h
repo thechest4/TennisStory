@@ -26,6 +26,8 @@ public:
 		return CurrentOnlinePlayType;
 	}
 
+	virtual void Init() override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Instance")
 	EOnlinePlayType CurrentOnlinePlayType;
