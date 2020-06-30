@@ -16,7 +16,7 @@ UBallMovementComponent::UBallMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	bReplicates = true;
+	SetIsReplicatedByDefault(true);
 
 	Velocity = 0.f;
 	NumBounces = 0;

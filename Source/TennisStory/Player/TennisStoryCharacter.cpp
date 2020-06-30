@@ -203,7 +203,7 @@ void ATennisStoryCharacter::BeginPlay()
 void ATennisStoryCharacter::Tick(float DeltaSeconds)
 {
 	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
-	if (Role == ROLE_AutonomousProxy && !GetActorRotation().Quaternion().Equals(ServerDesiredRotation))
+	if (GetLocalRole() == ROLE_AutonomousProxy && !GetActorRotation().Quaternion().Equals(ServerDesiredRotation))
 	{
 		SetActorRotation(ServerDesiredRotation);
 	}

@@ -82,7 +82,7 @@ AHalfCourt::AHalfCourt()
 	EditorCourtBounds = CreateEditorOnlyDefaultSubobject<UBoxComponent>(TEXT("EditorCourtBounds"));
 	if (EditorCourtBounds)
 	{
-		EditorCourtBounds->bVisible = true;
+		EditorCourtBounds->SetVisibility(true);
 		EditorCourtBounds->bHiddenInGame = false;
 		EditorCourtBounds->SetGenerateOverlapEvents(false);
 		EditorCourtBounds->SetCollisionProfileName(TEXT("NoCollision"));

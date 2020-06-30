@@ -19,8 +19,8 @@ ATennisBall::ATennisBall()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	
-	bReplicates = true;
-	bReplicateMovement = true;
+	SetReplicates(true);
+	SetReplicateMovement(true);
 
 	CurrentBallState = ETennisBallState::ServiceState;
 
@@ -48,8 +48,7 @@ ATennisBall::ATennisBall()
 	DistanceIndicatorRing->SetupAttachment(RootComponent);
 	DistanceIndicatorRing->SetCollisionProfileName(TEXT("NoCollision"));
 	DistanceIndicatorRing->SetHiddenInGame(true);
-	DistanceIndicatorRing->bAbsoluteRotation = true;
-	DistanceIndicatorRing->bAbsoluteScale = true;
+	DistanceIndicatorRing->SetAbsolute(false, true, true);
 
 	DistanceIndicatorComp = CreateDefaultSubobject<UDistanceIndicatorComponent>(TEXT("DistanceIndicatorComp"));
 }
@@ -119,7 +118,7 @@ void ATennisBall::InterruptServiceToss()
 void ATennisBall::Multicast_InterruptServiceToss_Implementation()
 {
 	//Handles service hits for the simulated proxy
-	if (Role == ROLE_SimulatedProxy)
+	if (GetLocalRole() == ROLE_SimulatedProxy)
 	{
 		InterruptServiceToss();
 	}

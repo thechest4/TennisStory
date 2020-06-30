@@ -10,8 +10,8 @@ APlayerTargetActor::APlayerTargetActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
-	bReplicates = true;
-	bReplicateMovement = true;
+	SetReplicates(true);
+	SetReplicateMovement(true);
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
@@ -110,7 +110,7 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 		}
 
 		//If we are an autonomous proxy, we need to save this move for replication to the server
-		if (OwnerChar->Role == ENetRole::ROLE_AutonomousProxy)
+		if (OwnerChar->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
 		{
 			FVector TranslationVector = GetActorLocation() - PrevLocation;
 

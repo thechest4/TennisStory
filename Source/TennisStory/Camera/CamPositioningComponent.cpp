@@ -13,7 +13,7 @@
 UCamPositioningComponent::UCamPositioningComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	bReplicates = true;
+	SetIsReplicatedByDefault(true);
 }
 
 void UCamPositioningComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -233,7 +233,7 @@ void UCamPositioningComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 			FVector CamForward = OwnerPtr->GetActorForwardVector();
 			float SmallestMargin = LeftMargin / ScreenWidth;
 
-			for (int i = 0; i < ARRAY_COUNT(Margins); i++)
+			for (int i = 0; i < UE_ARRAY_COUNT(Margins); i++)
 			{
 				if (Margins[i] < SmallestMargin)
 				{
