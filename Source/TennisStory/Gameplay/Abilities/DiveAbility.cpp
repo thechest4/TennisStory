@@ -3,14 +3,13 @@
 #include "DiveAbility.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Tasks/TS_AbilityTask_PlayMontageAndWait.h"
-#include "Tasks/AbilityTask_Tick.h"
+#include "Tasks/AbilityTask_ApplyDiveRootMotion.h"
 
 UDiveAbility::UDiveAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	CurrentDiveDirection = FVector::ZeroVector;
-	DiveSpeed = 100.f;
+	DiveDistance = 650.f;
 }
 
 bool UDiveAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
@@ -57,12 +56,12 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 	
-	CurrentDiveDirection = (ForwardDirection * InputVector.Y + RightDirection * InputVector.X).GetSafeNormal();
+	FVector DiveDirection = (ForwardDirection * InputVector.Y + RightDirection * InputVector.X).GetSafeNormal();
 
 	//If no input detected just go with the actor's forward vector
-	if (CurrentDiveDirection == FVector::ZeroVector)
+	if (DiveDirection == FVector::ZeroVector)
 	{
-		CurrentDiveDirection = OwnerChar->GetActorForwardVector();
+		DiveDirection = OwnerChar->GetActorForwardVector();
 	}
 
 	OwnerChar->PositionStrikeZone(EStrokeType::Dive);
@@ -70,14 +69,11 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayDiveMontage"), DiveMontage, 1.0f);
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UDiveAbility::HandleDiveMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
-	
-	CurrentTickingTask = UAbilityTask_Tick::CreateTask(this, FName(TEXT("Dive Ability Tick")));
-	CurrentTickingTask->OnTaskTick().AddUObject(this, &UDiveAbility::HandleTaskTick);
-	CurrentTickingTask->ReadyForActivation();
 
-	if (OwnerChar->HasAuthority())
+	if (DivePositionCurve)
 	{
-		OwnerChar->Multicast_LockMovement();
+		CurrentRootMotionTask = UAbilityTask_ApplyDiveRootMotion::CreateTask(this, FName(TEXT("Dive Root Motion Task")), DiveDirection, DiveDistance, DiveMontage->CalculateSequenceLength() - DiveMontage->GetDefaultBlendOutTime(), DivePositionCurve);
+		CurrentRootMotionTask->ReadyForActivation();
 	}
 
 	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
@@ -97,12 +93,11 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		CurrentMontageTask->OnBlendOut.RemoveDynamic(this, &UDiveAbility::HandleDiveMontageBlendOut);
 		CurrentMontageTask = nullptr;
 	}
-	
-	if (CurrentTickingTask)
+
+	if (CurrentRootMotionTask)
 	{
-		CurrentTickingTask->ExternalCancel();
-		CurrentTickingTask->OnTaskTick().RemoveAll(this);
-		CurrentTickingTask = nullptr;
+		CurrentRootMotionTask->Finish();
+		CurrentRootMotionTask = nullptr;
 	}
 
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
@@ -111,11 +106,6 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->DisablePlayerTargeting();
-		}
-
-		if (OwnerChar->HasAuthority())
-		{
-			OwnerChar->Multicast_UnlockMovement();
 		}
 		
 		if (OwnerChar->BallStrikingComp)
@@ -130,22 +120,100 @@ void UDiveAbility::HandleDiveMontageBlendOut()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
-void UDiveAbility::HandleTaskTick(float DeltaTime)
-{
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
-
-	if (OwnerChar && CurrentDiveDirection.Size() > 0.f)
-	{
-		float SpeedCurveVal = OwnerAnimInstance->GetCurveValue("DiveSpeedCurve");
-		FVector Translation = CurrentDiveDirection * DiveSpeed * SpeedCurveVal * DeltaTime;
-
-		OwnerChar->AddActorWorldOffset(Translation, true);
-	}
-}
-
 bool FDiveAbilityTargetData::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 {
 	DiveInputVector.NetSerialize(Ar, Map, bOutSuccess);
 
 	return true;
+}
+
+FRootMotionSource_DiveMotion::FRootMotionSource_DiveMotion()
+	: DiveDirection(ForceInitToZero)
+	, DiveDistance(0.f)
+	, PositionCurve(nullptr)
+{
+
+}
+
+FRootMotionSource* FRootMotionSource_DiveMotion::Clone() const
+{
+	FRootMotionSource_DiveMotion* CopyPtr = new FRootMotionSource_DiveMotion(*this);
+	return CopyPtr;
+}
+
+bool FRootMotionSource_DiveMotion::Matches(const FRootMotionSource* Other) const
+{
+	if (!FRootMotionSource::Matches(Other))
+	{
+		return false;
+	}
+
+	//We can safely downcast because we called the Matches function so we know they are the same type
+	const FRootMotionSource_DiveMotion* OtherCast = static_cast<const FRootMotionSource_DiveMotion*>(Other);
+
+	return DiveDirection == OtherCast->DiveDirection &&
+		DiveDistance == OtherCast->DiveDistance &&
+		Duration == OtherCast->Duration &&
+		PositionCurve == OtherCast->PositionCurve;
+}
+
+void FRootMotionSource_DiveMotion::PrepareRootMotion(float SimulationTime, float MovementTickTime, const ACharacter& Character, const UCharacterMovementComponent& MoveComponent)
+{
+	RootMotionParams.Clear();
+	
+	if (Duration > SMALL_NUMBER && MovementTickTime > SMALL_NUMBER && SimulationTime > SMALL_NUMBER)
+	{
+		float CurrentRelativeTime = GetTime() / Duration;
+		float TargetRelativeTime = (GetTime() + SimulationTime) / Duration;
+
+		float CurrentRelativeDiveDistance = 0.f;
+		float TargetRelativeDiveDistance = 0.f;
+
+		if (PositionCurve)
+		{
+			CurrentRelativeDiveDistance = PositionCurve->GetFloatValue(CurrentRelativeTime);
+			TargetRelativeDiveDistance = PositionCurve->GetFloatValue(TargetRelativeTime);
+		}
+
+		FVector CurrentDivePosition = DiveDirection * CurrentRelativeDiveDistance * DiveDistance;
+		FVector TargetDivePosition = DiveDirection * TargetRelativeDiveDistance * DiveDistance;
+
+		//I believe this calculates a velocity by solving the equation Displacement = Speed * Time for Speed
+		FVector Force = (TargetDivePosition - CurrentDivePosition) / MovementTickTime;
+
+		FTransform MotionTransform(Force);
+		RootMotionParams.Set(MotionTransform);
+	}
+
+	SetTime(GetTime() + SimulationTime);
+}
+
+bool FRootMotionSource_DiveMotion::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+{
+	if (!FRootMotionSource::NetSerialize(Ar, Map, bOutSuccess))
+	{
+		return false;
+	}
+
+	Ar << DiveDirection;
+	Ar << DiveDistance;
+	Ar << PositionCurve;
+
+	bOutSuccess = true;
+	return true;
+}
+
+UScriptStruct* FRootMotionSource_DiveMotion::GetScriptStruct() const
+{
+	return FRootMotionSource_DiveMotion::StaticStruct();
+}
+
+FString FRootMotionSource_DiveMotion::ToSimpleString() const
+{
+	return FString::Printf(TEXT("[ID:%u]FRootMotionSource_DiveMotion %s"), LocalID, *InstanceName.GetPlainNameString());
+}
+
+void FRootMotionSource_DiveMotion::AddReferencedObjects(class FReferenceCollector& Collector)
+{
+	FRootMotionSource::AddReferencedObjects(Collector);
 }

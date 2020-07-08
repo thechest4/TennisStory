@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "GameFramework/RootMotionSource.h"
 #include "DiveAbility.generated.h"
 
 class UTS_AbilityTask_PlayMontageAndWait;
-class UAbilityTask_Tick;
+class UAbilityTask_ApplyDiveRootMotion;
 
 USTRUCT()
 struct FDiveAbilityTargetData : public FGameplayAbilityTargetData
@@ -40,6 +41,53 @@ struct TStructOpsTypeTraits<FDiveAbilityTargetData> : public TStructOpsTypeTrait
 	enum
 	{
 		WithNetSerializer = true	// For now this is REQUIRED for FGameplayAbilityTargetDataHandle net serialization to work
+	};
+};
+
+USTRUCT()
+struct FRootMotionSource_DiveMotion : public FRootMotionSource
+{
+	GENERATED_BODY()
+
+public:
+	FRootMotionSource_DiveMotion();
+
+	UPROPERTY()
+	FVector DiveDirection;
+
+	UPROPERTY()
+	float DiveDistance;
+
+	UPROPERTY()
+	UCurveFloat* PositionCurve;
+
+	virtual FRootMotionSource* Clone() const override;
+
+	virtual bool Matches(const FRootMotionSource* Other) const override;
+
+	virtual void PrepareRootMotion(
+		float SimulationTime, 
+		float MovementTickTime,
+		const ACharacter& Character, 
+		const UCharacterMovementComponent& MoveComponent
+		) override;
+
+	virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override;
+
+	virtual UScriptStruct* GetScriptStruct() const override;
+
+	virtual FString ToSimpleString() const override;
+
+	virtual void AddReferencedObjects(class FReferenceCollector& Collector) override;
+};
+
+template<>
+struct TStructOpsTypeTraits<FRootMotionSource_DiveMotion> : public TStructOpsTypeTraitsBase2<FRootMotionSource_DiveMotion>
+{
+	enum
+	{
+		WithNetSerializer = true,
+		WithCopy = true
 	};
 };
 
@@ -103,20 +151,18 @@ protected:
 
 	UPROPERTY()
 	UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;
-	
+
 	UPROPERTY()
-	UAbilityTask_Tick* CurrentTickingTask;
-	
-	UFUNCTION()
-	void HandleTaskTick(float DeltaTime);
-	
-	FVector CurrentDiveDirection;
+	UAbilityTask_ApplyDiveRootMotion* CurrentRootMotionTask;
 
 	UPROPERTY()
 	TWeakObjectPtr<UAnimInstance> OwnerAnimInstance;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Dive Parameters")
+	UCurveFloat* DivePositionCurve;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Dive Parameters")
-	float DiveSpeed; //The base speed
+	float DiveDistance;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
 	UCurveFloat* TrajectoryCurve;
