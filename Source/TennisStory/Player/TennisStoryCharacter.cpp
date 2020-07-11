@@ -50,6 +50,7 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	bIsLocationClamped = false;
 	ClampLocation1 = FVector(-1.f, -1.f, -1.f);
 	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
+	bEnableRotationFix = false;
 
 	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
@@ -203,7 +204,7 @@ void ATennisStoryCharacter::BeginPlay()
 void ATennisStoryCharacter::Tick(float DeltaSeconds)
 {
 	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
-	if (GetLocalRole() == ROLE_AutonomousProxy && !GetActorRotation().Quaternion().Equals(ServerDesiredRotation))
+	if (GetLocalRole() == ROLE_AutonomousProxy && !GetActorRotation().Quaternion().Equals(ServerDesiredRotation) && bEnableRotationFix)
 	{
 		SetActorRotation(ServerDesiredRotation);
 	}

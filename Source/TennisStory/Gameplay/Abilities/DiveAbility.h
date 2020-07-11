@@ -175,4 +175,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
 	float BallSpeed = 1000.0f;
+
+	FRotator CachedPrevRotation;
 };

@@ -66,6 +66,14 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 	OwnerChar->PositionStrikeZone(EStrokeType::Dive);
 
+	CachedPrevRotation = OwnerChar->GetActorRotation();
+	OwnerChar->SetActorRotation(DiveDirection.ToOrientationRotator());
+
+	if (OwnerChar->GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		OwnerChar->bEnableRotationFix = false;
+	}
+
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayDiveMontage"), DiveMontage, 1.0f);
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UDiveAbility::HandleDiveMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
@@ -111,6 +119,13 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+		}
+
+		OwnerChar->SetActorRotation(CachedPrevRotation);
+		
+		if (OwnerChar->GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			OwnerChar->bEnableRotationFix = true;
 		}
 	}
 }

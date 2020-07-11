@@ -111,6 +111,8 @@ public:
 	UPROPERTY(Transient, Replicated)
 	FQuat ServerDesiredRotation;
 	
+	bool bEnableRotationFix; //Controls the rotation fix for the autonomous proxy
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetActorTransform(FTransform NewTransform);
 	
