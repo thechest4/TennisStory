@@ -8,6 +8,14 @@
 
 class UHighlightableStaticMeshComponent;
 
+UENUM()
+enum class EMouseMoveType : uint8
+{
+	None,
+	XY,
+	Z
+};
+
 UCLASS()
 class TENNISSTORY_API ADebugPawn : public APawn
 {
@@ -31,4 +39,16 @@ protected:
 
 	UPROPERTY()
 	UHighlightableStaticMeshComponent* CurrentHighlightMesh;
+
+	EMouseMoveType CurrentMouseMoveType;
+
+	bool bLockCurrentHighlightMesh;
+
+	void StartXYMove();
+
+	void StopXYMove();
+
+	void StartZMove();
+
+	void StopZMove();
 };
