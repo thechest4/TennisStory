@@ -7,13 +7,23 @@
 #include "DebugPawn.generated.h"
 
 class UHighlightableStaticMeshComponent;
+class UCameraComponent;
 
 UENUM()
-enum class EMouseMoveType : uint8
+enum class EHighlightInteractionType : uint8
 {
 	None,
 	XY,
 	Z
+};
+
+UENUM()
+enum class EMouseDragType : uint8
+{
+	None,
+	Camera,
+	HighlightXY,
+	HighlightZ
 };
 
 UCLASS()
@@ -31,8 +41,17 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Mouse Selection")
+	UPROPERTY(EditAnywhere, Category = "DebugPawn")
 	UMaterialInterface* HighlightMat;
+
+	UPROPERTY(EditAnywhere, Category = "DebugPawn")
+	float CameraRotationSpeed = 5.f;
+	
+	UPROPERTY(EditAnywhere, Category = "DebugPawn")
+	float CameraMoveSpeed = 700.f;
+	
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* CameraComp;
 
 	UPROPERTY()
 	APlayerController* PC;
@@ -40,15 +59,19 @@ protected:
 	UPROPERTY()
 	UHighlightableStaticMeshComponent* CurrentHighlightMesh;
 
-	EMouseMoveType CurrentMouseMoveType;
+	EMouseDragType CurrentMouseDragType;
 
 	bool bLockCurrentHighlightMesh;
 
-	void StartXYMove();
+	void StartLeftMouseDrag();
 
-	void StopXYMove();
+	void StopLeftMouseDrag();
 
-	void StartZMove();
+	void StartRightMouseDrag();
 
-	void StopZMove();
+	void StopRightMouseDrag();
+
+	void MoveForward(float Value);
+	
+	void MoveRight(float Value);
 };

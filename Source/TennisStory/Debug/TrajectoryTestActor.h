@@ -19,19 +19,13 @@ public:
 
 	virtual void BeginPlay() override;
 
-	void RequestMoveComponent(UHighlightableStaticMeshComponent* CompToMove, EMouseMoveType MoveType, FVector RightVector, float XDelta, float YDelta);
-
 protected:
 	UPROPERTY(EditAnywhere, Category = "Parameters")
 	float MoveSpeed = 5.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UHighlightableStaticMeshComponent* TrajectorySourceComp;
-
-	TArray<EMouseMoveType> AllowedMoveTypes_TrajectorySource;
 	
 	UPROPERTY(VisibleAnywhere)
 	UHighlightableStaticMeshComponent* TrajectoryEndComp;
-	
-	TArray<EMouseMoveType> AllowedMoveTypes_TrajectoryEnd;
 };
