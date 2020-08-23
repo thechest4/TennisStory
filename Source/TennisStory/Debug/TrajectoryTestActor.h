@@ -8,6 +8,8 @@
 #include "TrajectoryTestActor.generated.h"
 
 class UHighlightableStaticMeshComponent;
+class USplineComponent;
+class USplineMeshComponent;
 
 UCLASS()
 class TENNISSTORY_API ATrajectoryTestActor : public AActor
@@ -19,13 +21,36 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Parameters")
 	float MoveSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameters")
+	UCurveFloat* TrajectoryCurve;
+
+	UPROPERTY(EditAnywhere, Category = "Parameters")
+	UStaticMesh* SplineMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	UHighlightableStaticMeshComponent* TrajectorySourceComp;
 	
 	UPROPERTY(VisibleAnywhere)
 	UHighlightableStaticMeshComponent* TrajectoryEndComp;
+	
+	UPROPERTY(VisibleAnywhere)
+	USplineComponent* TrajectorySplineComp;
+
+	void UpdateTrajectory();
+
+	void UpdateSplineMesh();
+
+	TArray<USplineMeshComponent*> SplineMeshComps;
+
+	UPROPERTY(Transient)
+	FVector SourcePrevPos;
+
+	UPROPERTY(Transient)
+	FVector EndPrevPos;
 };
