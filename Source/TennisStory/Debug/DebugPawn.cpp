@@ -39,6 +39,8 @@ void ADebugPawn::StartLeftMouseDrag()
 		{
 			CurrentMouseDragType = EMouseDragType::HighlightXY;
 			bLockCurrentHighlightMesh = true;
+
+			CalculateSelectionOffset();
 		}
 		else
 		{
@@ -64,6 +66,8 @@ void ADebugPawn::StartRightMouseDrag()
 		{
 			CurrentMouseDragType = EMouseDragType::HighlightZ;
 			bLockCurrentHighlightMesh = true;
+
+			CalculateSelectionOffset();
 		}
 		else
 		{
@@ -89,6 +93,21 @@ void ADebugPawn::MoveForward(float Value)
 void ADebugPawn::MoveRight(float Value)
 {
 	AddActorWorldOffset(GetActorRightVector() * Value * CameraMoveSpeed * GetWorld()->GetDeltaSeconds());
+}
+
+void ADebugPawn::CalculateSelectionOffset()
+{
+	if (CurrentHighlightMesh)
+	{
+		FVector2D MeshScreenPos;
+		UGameplayStatics::ProjectWorldToScreen(PC, CurrentHighlightMesh->GetComponentLocation(), MeshScreenPos);
+
+		float MouseX, MouseY;
+		PC->GetMousePosition(MouseX, MouseY);
+		FVector2D MousePos = FVector2D(MouseX, MouseY);
+
+		CursorSelectionOffset = MeshScreenPos - MousePos;
+	}
 }
 
 void ADebugPawn::BeginPlay()
@@ -142,8 +161,12 @@ void ADebugPawn::Tick(float DeltaTime)
 		{
 			FVector CamToHighlight = CurrentHighlightMesh->GetComponentLocation() - GetActorLocation();
 
+			float MouseX, MouseY;
+			PC->GetMousePosition(MouseX, MouseY);
+			FVector2D MousePos = FVector2D(MouseX, MouseY);
+
 			FVector MouseWorldPos, MouseDir;
-			PC->DeprojectMousePositionToWorld(MouseWorldPos, MouseDir);
+			UGameplayStatics::DeprojectScreenToWorld(PC, MousePos + CursorSelectionOffset, MouseWorldPos, MouseDir);
 
 			FVector MouseToHighlight = CurrentHighlightMesh->GetComponentLocation() - MouseWorldPos;
 

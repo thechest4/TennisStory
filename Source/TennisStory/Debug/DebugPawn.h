@@ -63,6 +63,9 @@ protected:
 
 	bool bLockCurrentHighlightMesh;
 
+	UPROPERTY(Transient)
+	FVector2D CursorSelectionOffset;
+
 	void StartLeftMouseDrag();
 
 	void StopLeftMouseDrag();
@@ -74,4 +77,6 @@ protected:
 	void MoveForward(float Value);
 	
 	void MoveRight(float Value);
+
+	void CalculateSelectionOffset();
 };
