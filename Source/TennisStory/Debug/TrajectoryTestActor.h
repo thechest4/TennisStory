@@ -38,6 +38,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetTrajParamsNew(FTrajectoryParams_New TrajParams);
 
+	UFUNCTION(BlueprintCallable)
+	void SetMeshLocations(FVector SourceLocation, FVector EndLocation);
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Parameters")
 	float MoveSpeed = 5.f;

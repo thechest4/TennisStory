@@ -158,3 +158,9 @@ void ATrajectoryTestActor::SetTrajParamsNew(FTrajectoryParams_New TrajParams)
 	TrajParams_New = TrajParams;
 	UpdateTrajectory();
 }
+
+void ATrajectoryTestActor::SetMeshLocations(FVector SourceLocation, FVector EndLocation)
+{
+	TrajectorySourceComp->SetWorldLocation(SourceLocation);
+	TrajectoryEndComp->SetWorldLocation(FVector(EndLocation.X, EndLocation.Y, 1.f));
+}
