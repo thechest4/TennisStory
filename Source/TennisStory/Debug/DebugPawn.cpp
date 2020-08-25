@@ -23,6 +23,8 @@ void ADebugPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 	PlayerInputComponent->BindAction(TEXT("MouseMoveXY"), IE_Pressed, this, &ADebugPawn::StartLeftMouseDrag);
 	PlayerInputComponent->BindAction(TEXT("MouseMoveXY"), IE_Released, this, &ADebugPawn::StopLeftMouseDrag);
+	
+	PlayerInputComponent->BindAction(TEXT("MouseMoveXY"), IE_DoubleClick, this, &ADebugPawn::ShowContextMenu);
 
 	PlayerInputComponent->BindAction(TEXT("MouseMoveZ"), IE_Pressed, this, &ADebugPawn::StartRightMouseDrag);
 	PlayerInputComponent->BindAction(TEXT("MouseMoveZ"), IE_Released, this, &ADebugPawn::StopRightMouseDrag);
@@ -45,6 +47,8 @@ void ADebugPawn::StartLeftMouseDrag()
 		else
 		{
 			CurrentMouseDragType = EMouseDragType::Camera;
+			
+			HideContextMenu();
 		}
 	}
 }
@@ -73,6 +77,8 @@ void ADebugPawn::StartRightMouseDrag()
 		{
 			CurrentMouseDragType = EMouseDragType::Camera;
 		}
+
+		HideContextMenu();
 	}
 }
 
@@ -88,11 +94,43 @@ void ADebugPawn::StopRightMouseDrag()
 void ADebugPawn::MoveForward(float Value)
 {
 	AddActorWorldOffset(GetActorForwardVector() * Value * CameraMoveSpeed * GetWorld()->GetDeltaSeconds());
+
+	if (Value)
+	{
+		HideContextMenu();
+	}
 }
 
 void ADebugPawn::MoveRight(float Value)
 {
 	AddActorWorldOffset(GetActorRightVector() * Value * CameraMoveSpeed * GetWorld()->GetDeltaSeconds());
+	
+	if (Value)
+	{
+		HideContextMenu();
+	}
+}
+
+void ADebugPawn::ShowContextMenu()
+{
+	if (CurrentHighlightMesh)
+	{
+		CurrentContextMenuActor = Cast<ATrajectoryTestActor>(CurrentHighlightMesh->GetOwner());
+
+		if (CurrentContextMenuActor.IsValid())
+		{
+			CurrentContextMenuActor->ShowContextMenu();
+		}
+	}
+}
+
+void ADebugPawn::HideContextMenu()
+{
+	if (CurrentContextMenuActor.IsValid())
+	{
+		CurrentContextMenuActor->HideContextMenu();
+		CurrentContextMenuActor = nullptr;
+	}
 }
 
 void ADebugPawn::CalculateSelectionOffset()

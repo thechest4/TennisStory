@@ -4,6 +4,7 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
+#include "Components/WidgetComponent.h"
 
 ATrajectoryTestActor::ATrajectoryTestActor()
 {
@@ -22,6 +23,10 @@ ATrajectoryTestActor::ATrajectoryTestActor()
 	TrajectorySplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("TrajectorySplineComp"));
 	TrajectorySplineComp->SetupAttachment(RootComponent);
 	TrajectorySplineComp->SetAbsolute(true, true, true);
+
+	ContextMenuComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Context Menu Component"));
+	ContextMenuComp->SetupAttachment(TrajectorySourceComp);
+	ContextMenuComp->SetWidgetSpace(EWidgetSpace::Screen);
 }
 
 void ATrajectoryTestActor::BeginPlay()
@@ -32,6 +37,13 @@ void ATrajectoryTestActor::BeginPlay()
 	
 	SourcePrevPos = TrajectorySourceComp->GetComponentLocation();
 	EndPrevPos = TrajectoryEndComp->GetComponentLocation();
+
+	UTrajActorContextMenu* ContextMenu = Cast<UTrajActorContextMenu>(ContextMenuComp->GetUserWidgetObject());
+	if (ContextMenu)
+	{
+		ContextMenu->SetVisibility(ESlateVisibility::Hidden);
+		ContextMenu->SetTrajActorRef(this);
+	}
 }
 
 void ATrajectoryTestActor::Tick(float DeltaSeconds)
@@ -54,7 +66,24 @@ void ATrajectoryTestActor::UpdateTrajectory()
 {
 	if (TrajectoryCurve)
 	{
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryCurve, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
+		FBallTrajectoryData TrajectoryData;
+		
+		switch (TrajAlgorithm)
+		{
+			default:
+			case ETrajectoryAlgorithm::Old:
+			{
+				TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams_Old, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
+				break;
+			}
+			case ETrajectoryAlgorithm::New:
+			{
+				TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams_New, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
+				break;
+			}
+		}
+
+
 		UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 
 		UpdateSplineMesh();
@@ -92,4 +121,40 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 									   TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World), 
 									   TrajectorySplineComp->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
 	}
+}
+
+void ATrajectoryTestActor::ShowContextMenu()
+{
+	UUserWidget* UserWidget = ContextMenuComp->GetUserWidgetObject();
+	if (UserWidget)
+	{
+		UserWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+}
+
+void ATrajectoryTestActor::HideContextMenu()
+{
+	UUserWidget* UserWidget = ContextMenuComp->GetUserWidgetObject();
+	if (UserWidget)
+	{
+		UserWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void ATrajectoryTestActor::SetCurrentTrajAlgorithm(ETrajectoryAlgorithm NewAlgo)
+{
+	TrajAlgorithm = NewAlgo;
+	UpdateTrajectory();
+}
+
+void ATrajectoryTestActor::SetTrajParamsOld(FTrajectoryParams_Old TrajParams)
+{
+	TrajParams_Old = TrajParams;
+	UpdateTrajectory();
+}
+
+void ATrajectoryTestActor::SetTrajParamsNew(FTrajectoryParams_New TrajParams)
+{
+	TrajParams_New = TrajParams;
+	UpdateTrajectory();
 }

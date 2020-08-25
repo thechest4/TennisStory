@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Debug/DebugPawn.h"
+#include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "TrajectoryTestActor.generated.h"
 
 class UHighlightableStaticMeshComponent;
 class USplineComponent;
 class USplineMeshComponent;
+class UWidgetComponent;
 
 UCLASS()
 class TENNISSTORY_API ATrajectoryTestActor : public AActor
@@ -22,6 +24,19 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	void ShowContextMenu();
+
+	void HideContextMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentTrajAlgorithm(ETrajectoryAlgorithm NewAlgo);
+
+	UFUNCTION(BlueprintCallable)
+	void SetTrajParamsOld(FTrajectoryParams_Old TrajParams);
+	
+	UFUNCTION(BlueprintCallable)
+	void SetTrajParamsNew(FTrajectoryParams_New TrajParams);
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Parameters")
@@ -42,6 +57,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USplineComponent* TrajectorySplineComp;
 
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* ContextMenuComp;
+
 	void UpdateTrajectory();
 
 	void UpdateSplineMesh();
@@ -53,4 +71,8 @@ protected:
 
 	UPROPERTY(Transient)
 	FVector EndPrevPos;
+
+	ETrajectoryAlgorithm TrajAlgorithm;
+	FTrajectoryParams_Old TrajParams_Old;
+	FTrajectoryParams_New TrajParams_New;
 };

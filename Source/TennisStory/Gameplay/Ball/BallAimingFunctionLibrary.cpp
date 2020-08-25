@@ -51,6 +51,16 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFlo
 	return TrajectoryData;
 }
 
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation)
+{
+	return GenerateTrajectoryData(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
+}
+
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_New TrajParams_New, FVector StartLocation, FVector EndLocation)
+{
+	return GenerateTrajectoryData(TrajParams_New.TrajectoryCurve, StartLocation, EndLocation);
+}
+
 void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
 {
 	if (!SplineComp)

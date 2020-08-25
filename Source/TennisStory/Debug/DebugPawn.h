@@ -8,6 +8,7 @@
 
 class UHighlightableStaticMeshComponent;
 class UCameraComponent;
+class ATrajectoryTestActor;
 
 UENUM()
 enum class EHighlightInteractionType : uint8
@@ -59,6 +60,8 @@ protected:
 	UPROPERTY()
 	UHighlightableStaticMeshComponent* CurrentHighlightMesh;
 
+	TWeakObjectPtr<ATrajectoryTestActor> CurrentContextMenuActor;
+
 	EMouseDragType CurrentMouseDragType;
 
 	bool bLockCurrentHighlightMesh;
@@ -77,6 +80,10 @@ protected:
 	void MoveForward(float Value);
 	
 	void MoveRight(float Value);
+
+	void ShowContextMenu();
+
+	void HideContextMenu();
 
 	void CalculateSelectionOffset();
 };

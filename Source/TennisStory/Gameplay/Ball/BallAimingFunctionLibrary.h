@@ -4,9 +4,43 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <Engine/DataTable.h>
 #include "BallAimingFunctionLibrary.generated.h"
 
 class USplineComponent;
+
+UENUM()
+enum class ETrajectoryAlgorithm : uint8
+{
+	Old,
+	New
+};
+
+USTRUCT(BlueprintType)
+struct FTrajectoryParams_New : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* TrajectoryCurve; 
+};
+
+USTRUCT(BlueprintType)
+struct FTrajectoryParams_Old : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* TrajectoryCurve; 
+	
+	UPROPERTY(EditAnywhere)
+	float ApexHeight = 200.f; 
+	
+	UPROPERTY(EditAnywhere)
+	float TangentLength = 500.f;
+};
 
 USTRUCT()
 struct FBallTrajectoryPoint
@@ -60,6 +94,10 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_New TrajParams_New, FVector StartLocation, FVector EndLocation);
+
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation);
+
 	static FBallTrajectoryData GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
 	
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
