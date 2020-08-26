@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "../Debug/CursorMovable.h"
-#include "HighlightableStaticMeshComponent.generated.h"
+#include "HighlightableSkelMeshComponent.generated.h"
 
 UCLASS()
-class TENNISSTORY_API UHighlightableStaticMeshComponent : public UStaticMeshComponent, public ICursorMovable
+class TENNISSTORY_API UHighlightableSkelMeshComponent : public USkeletalMeshComponent, public ICursorMovable
 {
 	GENERATED_BODY()
 	

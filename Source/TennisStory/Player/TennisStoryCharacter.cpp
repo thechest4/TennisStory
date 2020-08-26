@@ -30,7 +30,8 @@ ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawne
 
 const FName ATennisStoryCharacter::BallAttachBone = TEXT("hand_l");
 
-ATennisStoryCharacter::ATennisStoryCharacter()
+ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -52,31 +53,31 @@ ATennisStoryCharacter::ATennisStoryCharacter()
 	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
 	bEnableRotationFix = false;
 
-	AbilitySystemComp = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
+	AbilitySystemComp = CreateOptionalDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
-	BallStrikingComp = CreateDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
+	BallStrikingComp = CreateOptionalDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
 
-	BallAimingSplineComp = CreateDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+	BallAimingSplineComp = CreateOptionalDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
 
-	StrikeZone = CreateDefaultSubobject<UBoxComponent>(TEXT("StrikeZone"));
+	StrikeZone = CreateOptionalDefaultSubobject<UBoxComponent>(TEXT("StrikeZone"));
 	StrikeZone->SetupAttachment(RootComponent);
 	StrikeZone->SetBoxExtent(FVector(100.f, 100.f, 100.f));
 	StrikeZone->SetCollisionProfileName(TEXT("TennisRacquet"));
 	StrikeZone->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	StrikeZoneLocation_Forehand = CreateDefaultSubobject<USceneComponent>(TEXT("Forehand Strike Zone Location"));
+	StrikeZoneLocation_Forehand = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Forehand Strike Zone Location"));
 	StrikeZoneLocation_Forehand->SetupAttachment(RootComponent);
 
-	StrikeZoneLocation_Forehand_High = CreateDefaultSubobject<USceneComponent>(TEXT("Forehand High Strike Zone Location"));
+	StrikeZoneLocation_Forehand_High = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Forehand High Strike Zone Location"));
 	StrikeZoneLocation_Forehand_High->SetupAttachment(RootComponent);
 	
-	StrikeZoneLocation_Backhand = CreateDefaultSubobject<USceneComponent>(TEXT("Backhand Strike Zone Location"));
+	StrikeZoneLocation_Backhand = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Backhand Strike Zone Location"));
 	StrikeZoneLocation_Backhand->SetupAttachment(RootComponent);
 	
-	StrikeZoneLocation_Backhand_High = CreateDefaultSubobject<USceneComponent>(TEXT("Backhand High Strike Zone Location"));
+	StrikeZoneLocation_Backhand_High = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Backhand High Strike Zone Location"));
 	StrikeZoneLocation_Backhand_High->SetupAttachment(RootComponent);
 	
-	StrikeZoneLocation_Dive = CreateDefaultSubobject<USceneComponent>(TEXT("Dive Strike Zone Location"));
+	StrikeZoneLocation_Dive = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Dive Strike Zone Location"));
 	StrikeZoneLocation_Dive->SetupAttachment(RootComponent);
 	
 #if WITH_EDITORONLY_DATA

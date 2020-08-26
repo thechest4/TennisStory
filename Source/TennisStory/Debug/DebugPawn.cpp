@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DebugPawn.h"
-#include "Components/HighlightableStaticMeshComponent.h"
 #include "Debug/TrajectoryTestActor.h"
 
 #define TraceType_MouseSelect TraceTypeQuery3
@@ -10,7 +9,7 @@ ADebugPawn::ADebugPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	CurrentHighlightMesh = nullptr;
+	CurrentCursorMovable = nullptr;
 	CurrentMouseDragType = EMouseDragType::None;
 	bLockCurrentHighlightMesh = false;
 
@@ -37,7 +36,7 @@ void ADebugPawn::StartLeftMouseDrag()
 {
 	if (CurrentMouseDragType == EMouseDragType::None)
 	{
-		if (CurrentHighlightMesh)
+		if (CurrentCursorMovable)
 		{
 			CurrentMouseDragType = EMouseDragType::HighlightXY;
 			bLockCurrentHighlightMesh = true;
@@ -66,7 +65,7 @@ void ADebugPawn::StartRightMouseDrag()
 {
 	if (CurrentMouseDragType == EMouseDragType::None)
 	{
-		if (CurrentHighlightMesh)
+		if (CurrentCursorMovable)
 		{
 			CurrentMouseDragType = EMouseDragType::HighlightZ;
 			bLockCurrentHighlightMesh = true;
@@ -113,11 +112,11 @@ void ADebugPawn::MoveRight(float Value)
 
 void ADebugPawn::ShowContextMenu()
 {
-	if (CurrentHighlightMesh)
+	UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(CurrentCursorMovable);
+	if (CurrentCursorMovable && PrimComp)
 	{
-		CurrentContextMenuActor = Cast<ATrajectoryTestActor>(CurrentHighlightMesh->GetOwner());
-
-		if (CurrentContextMenuActor.IsValid())
+		CurrentContextMenuActor = Cast<IHasContextMenu>(PrimComp->GetOwner());
+		if (CurrentContextMenuActor)
 		{
 			CurrentContextMenuActor->ShowContextMenu();
 		}
@@ -126,7 +125,7 @@ void ADebugPawn::ShowContextMenu()
 
 void ADebugPawn::HideContextMenu()
 {
-	if (CurrentContextMenuActor.IsValid())
+	if (CurrentContextMenuActor)
 	{
 		CurrentContextMenuActor->HideContextMenu();
 		CurrentContextMenuActor = nullptr;
@@ -135,10 +134,11 @@ void ADebugPawn::HideContextMenu()
 
 void ADebugPawn::CalculateSelectionOffset()
 {
-	if (CurrentHighlightMesh)
+	UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(CurrentCursorMovable);
+	if (CurrentCursorMovable && PrimComp)
 	{
 		FVector2D MeshScreenPos;
-		UGameplayStatics::ProjectWorldToScreen(PC, CurrentHighlightMesh->GetComponentLocation(), MeshScreenPos);
+		UGameplayStatics::ProjectWorldToScreen(PC, PrimComp->GetComponentLocation(), MeshScreenPos);
 
 		float MouseX, MouseY;
 		PC->GetMousePosition(MouseX, MouseY);
@@ -168,76 +168,73 @@ void ADebugPawn::Tick(float DeltaTime)
 
 	if (!bLockCurrentHighlightMesh)
 	{
-		UHighlightableStaticMeshComponent* HighlightMesh = Cast<UHighlightableStaticMeshComponent>(OutHit.Component);
-		if (HighlightMesh)
+		ICursorMovable* CursorMovable = Cast<ICursorMovable>(OutHit.Component);
+		if (CursorMovable)
 		{
-			if (CurrentHighlightMesh && HighlightMesh != CurrentHighlightMesh)
+			if (CurrentCursorMovable && CursorMovable != CurrentCursorMovable)
 			{
-				CurrentHighlightMesh->EndHighlight();
+				CurrentCursorMovable->EndHighlight();
 			}
 
-			if (HighlightMesh != CurrentHighlightMesh)
+			if (CursorMovable != CurrentCursorMovable)
 			{
-				CurrentHighlightMesh = HighlightMesh;
-				CurrentHighlightMesh->StartHighlight(HighlightMat);
+				CurrentCursorMovable = CursorMovable;
+				CurrentCursorMovable->StartHighlight(HighlightMat);
 			}
 		}
-		else if (CurrentHighlightMesh)
+		else if (CurrentCursorMovable)
 		{
-			CurrentHighlightMesh->EndHighlight();
-			CurrentHighlightMesh = nullptr;
+			CurrentCursorMovable->EndHighlight();
+			CurrentCursorMovable = nullptr;
 		}
 	}
 
 	float MouseXDelta, MouseYDelta;
 	PC->GetInputMouseDelta(MouseXDelta, MouseYDelta);
-
-	if ((CurrentMouseDragType == EMouseDragType::HighlightXY || CurrentMouseDragType == EMouseDragType::HighlightZ) && CurrentHighlightMesh)
+	
+	UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(CurrentCursorMovable);
+	if ((CurrentMouseDragType == EMouseDragType::HighlightXY || CurrentMouseDragType == EMouseDragType::HighlightZ) && CurrentCursorMovable && PrimComp)
 	{
-		ATrajectoryTestActor* TrajectoryTestActor = Cast<ATrajectoryTestActor>(CurrentHighlightMesh->GetOwner());
-		if (TrajectoryTestActor)
+		FVector CamToHighlight = PrimComp->GetComponentLocation() - GetActorLocation();
+
+		float MouseX, MouseY;
+		PC->GetMousePosition(MouseX, MouseY);
+		FVector2D MousePos = FVector2D(MouseX, MouseY);
+
+		FVector MouseWorldPos, MouseDir;
+		UGameplayStatics::DeprojectScreenToWorld(PC, MousePos + CursorSelectionOffset, MouseWorldPos, MouseDir);
+
+		FVector MouseToHighlight = PrimComp->GetComponentLocation() - MouseWorldPos;
+
+		//Calculate desired mouse location using trig
+		float CosAngle = FVector::DotProduct(MouseToHighlight.GetSafeNormal(), MouseDir);
+		float DistanceAlongDir = MouseToHighlight.Size() * CosAngle;
+		FVector NewLoc = MouseWorldPos + MouseDir * DistanceAlongDir;
+
+		//Represent new location as an offset vector
+		FVector Offset = NewLoc - PrimComp->GetComponentLocation();
+
+		if (CurrentMouseDragType == EMouseDragType::HighlightXY && CurrentCursorMovable->IsMoveTypeAllowed(ECursorMoveType::XY))
 		{
-			FVector CamToHighlight = CurrentHighlightMesh->GetComponentLocation() - GetActorLocation();
-
-			float MouseX, MouseY;
-			PC->GetMousePosition(MouseX, MouseY);
-			FVector2D MousePos = FVector2D(MouseX, MouseY);
-
-			FVector MouseWorldPos, MouseDir;
-			UGameplayStatics::DeprojectScreenToWorld(PC, MousePos + CursorSelectionOffset, MouseWorldPos, MouseDir);
-
-			FVector MouseToHighlight = CurrentHighlightMesh->GetComponentLocation() - MouseWorldPos;
-
-			//Calculate desired mouse location using trig
-			float CosAngle = FVector::DotProduct(MouseToHighlight.GetSafeNormal(), MouseDir);
-			float DistanceAlongDir = MouseToHighlight.Size() * CosAngle;
-			FVector NewLoc = MouseWorldPos + MouseDir * DistanceAlongDir;
-
-			//Represent new location as an offset vector
-			FVector Offset = NewLoc - CurrentHighlightMesh->GetComponentLocation();
-
-			if (CurrentMouseDragType == EMouseDragType::HighlightXY)
-			{
-				//Get the scalar projection onto the right vector of the camera
-				float RightTranslationLength = FVector::DotProduct(Offset, GetActorRightVector());
-				FVector RightTranslation = GetActorRightVector() * RightTranslationLength;
+			//Get the scalar projection onto the right vector of the camera
+			float RightTranslationLength = FVector::DotProduct(Offset, GetActorRightVector());
+			FVector RightTranslation = GetActorRightVector() * RightTranslationLength;
 			
-				//Get the scalar projection onto the up vector of the camera but apply it to the forward vector using camera right and world up
-				FVector ForwardDir = FVector::CrossProduct(GetActorRightVector(), FVector::UpVector);
-				float ForwardTranslationLength = FVector::DotProduct(Offset, GetActorUpVector());
-				FVector ForwardTranslation = ForwardDir * ForwardTranslationLength;
+			//Get the scalar projection onto the up vector of the camera but apply it to the forward vector using camera right and world up
+			FVector ForwardDir = FVector::CrossProduct(GetActorRightVector(), FVector::UpVector);
+			float ForwardTranslationLength = FVector::DotProduct(Offset, GetActorUpVector());
+			FVector ForwardTranslation = ForwardDir * ForwardTranslationLength;
 
-				CurrentHighlightMesh->AddWorldOffset(RightTranslation);
-				CurrentHighlightMesh->AddWorldOffset(ForwardTranslation);
-			}
-			else if (CurrentMouseDragType == EMouseDragType::HighlightZ)
-			{
-				//Get the scalar projection onto the world up vector
-				float UpTranslationLength = FVector::DotProduct(Offset, FVector::UpVector);
-				FVector UpTranslation = FVector::UpVector * UpTranslationLength;
+			PrimComp->AddWorldOffset(RightTranslation);
+			PrimComp->AddWorldOffset(ForwardTranslation);
+		}
+		else if (CurrentMouseDragType == EMouseDragType::HighlightZ && CurrentCursorMovable->IsMoveTypeAllowed(ECursorMoveType::Z))
+		{
+			//Get the scalar projection onto the world up vector
+			float UpTranslationLength = FVector::DotProduct(Offset, FVector::UpVector);
+			FVector UpTranslation = FVector::UpVector * UpTranslationLength;
 
-				CurrentHighlightMesh->AddWorldOffset(UpTranslation);
-			}
+			PrimComp->AddWorldOffset(UpTranslation);
 		}
 	}
 	else if (CurrentMouseDragType == EMouseDragType::Camera)

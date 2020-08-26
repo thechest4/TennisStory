@@ -68,7 +68,7 @@ public:
 
 	FOnPlayerHitServeEvent& OnPlayerHitServe(){ return PlayerHitServeEvent; }
 
-	ATennisStoryCharacter();
+	ATennisStoryCharacter(const FObjectInitializer& ObjectInitializer);
 
 	class UAbilitySystemComponent* GetAbilitySystemComponent() const override
 	{

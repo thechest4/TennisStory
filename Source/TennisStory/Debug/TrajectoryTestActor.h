@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Debug/DebugPawn.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
+#include "HasContextMenu.h"
 #include "TrajectoryTestActor.generated.h"
 
 class UHighlightableStaticMeshComponent;
@@ -14,7 +15,7 @@ class USplineMeshComponent;
 class UWidgetComponent;
 
 UCLASS()
-class TENNISSTORY_API ATrajectoryTestActor : public AActor
+class TENNISSTORY_API ATrajectoryTestActor : public AActor, public IHasContextMenu
 {
 	GENERATED_BODY()
 	
@@ -25,9 +26,9 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	void ShowContextMenu();
+	virtual void ShowContextMenu() override;
 
-	void HideContextMenu();
+	virtual void HideContextMenu() override;
 
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentTrajAlgorithm(ETrajectoryAlgorithm NewAlgo);

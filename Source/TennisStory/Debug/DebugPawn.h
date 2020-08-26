@@ -6,17 +6,10 @@
 #include "GameFramework/Pawn.h"
 #include "DebugPawn.generated.h"
 
-class UHighlightableStaticMeshComponent;
 class UCameraComponent;
 class ATrajectoryTestActor;
-
-UENUM()
-enum class EHighlightInteractionType : uint8
-{
-	None,
-	XY,
-	Z
-};
+class ICursorMovable;
+class IHasContextMenu;
 
 UENUM()
 enum class EMouseDragType : uint8
@@ -57,10 +50,9 @@ protected:
 	UPROPERTY()
 	APlayerController* PC;
 
-	UPROPERTY()
-	UHighlightableStaticMeshComponent* CurrentHighlightMesh;
+	ICursorMovable* CurrentCursorMovable;
 
-	TWeakObjectPtr<ATrajectoryTestActor> CurrentContextMenuActor;
+	IHasContextMenu* CurrentContextMenuActor;
 
 	EMouseDragType CurrentMouseDragType;
 

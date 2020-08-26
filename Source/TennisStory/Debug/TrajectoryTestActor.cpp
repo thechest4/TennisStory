@@ -44,6 +44,12 @@ void ATrajectoryTestActor::BeginPlay()
 		ContextMenu->SetVisibility(ESlateVisibility::Hidden);
 		ContextMenu->SetTrajActorRef(this);
 	}
+
+	TArray<ECursorMoveType> SourceMoveTypes = { ECursorMoveType::XY, ECursorMoveType::Z };
+	TrajectorySourceComp->SetAllowedMoveTypes(SourceMoveTypes);
+	
+	TArray<ECursorMoveType> EndMoveTypes = { ECursorMoveType::XY};
+	TrajectoryEndComp->SetAllowedMoveTypes(EndMoveTypes);
 }
 
 void ATrajectoryTestActor::Tick(float DeltaSeconds)
