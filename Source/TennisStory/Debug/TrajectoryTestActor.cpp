@@ -96,7 +96,6 @@ void ATrajectoryTestActor::UpdateTrajectory()
 	}
 }
 
-PRAGMA_DISABLE_OPTIMIZATION
 void ATrajectoryTestActor::UpdateSplineMesh()
 {
 	if (!SplineMesh)
@@ -128,7 +127,7 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 		case ETrajectoryAlgorithm::New:
 		{
 			SplineMeshComps = &SplineMeshComps_New;
-			NumSegments = 10;
+			NumSegments = TrajectorySplineComp->GetNumberOfSplinePoints();
 			break;
 		}
 	}
@@ -165,8 +164,8 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 			}
 			case ETrajectoryAlgorithm::New:
 			{
-				float StartTime = static_cast<float>(i) / 10;
-				float EndTime = static_cast<float>(i + 1) / 10;
+				float StartTime = static_cast<float>(i) / NumSegments;
+				float EndTime = static_cast<float>(i + 1) / NumSegments;
 		
 				SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtTime(StartTime, ESplineCoordinateSpace::World), 
 											   TrajectorySplineComp->GetTangentAtTime(StartTime, ESplineCoordinateSpace::World),
@@ -178,7 +177,6 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 		}
 	}
 }
-PRAGMA_ENABLE_OPTIMIZATION
 
 void ATrajectoryTestActor::ShowContextMenu()
 {
