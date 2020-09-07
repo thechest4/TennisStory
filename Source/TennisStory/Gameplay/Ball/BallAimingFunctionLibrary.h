@@ -77,6 +77,9 @@ public:
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
 	UPROPERTY()
+	bool bSetTangents;
+
+	UPROPERTY()
 	float ApexHeight;
 
 	UPROPERTY()
@@ -98,8 +101,10 @@ public:
 
 	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation);
 
-	static FBallTrajectoryData GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
-	
+	static FBallTrajectoryData GenerateTrajectoryData_Old(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
+
+	static FBallTrajectoryData GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation);
+
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
 	static void DebugVisualizeSplineComp(USplineComponent* SplineComp);

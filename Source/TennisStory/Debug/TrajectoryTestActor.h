@@ -68,7 +68,9 @@ protected:
 
 	void UpdateSplineMesh();
 
-	TArray<USplineMeshComponent*> SplineMeshComps;
+	TArray<USplineMeshComponent*> SplineMeshComps_Old;
+	
+	TArray<USplineMeshComponent*> SplineMeshComps_New;
 
 	UPROPERTY(Transient)
 	FVector SourcePrevPos;

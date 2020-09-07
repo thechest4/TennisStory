@@ -143,7 +143,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			GameMode->DetermineHitLegality(Player);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 

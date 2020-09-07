@@ -9,7 +9,7 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight, float TangentLength)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight, float TangentLength)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
@@ -48,12 +48,49 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFlo
 	
 	TrajectoryData.TrajectoryEndLocation = EndLocation;
 
+	TrajectoryData.bSetTangents = true;
+
+	return TrajectoryData;
+}
+
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation)
+{
+	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
+
+	FVector DirectPath = EndLocation - StartLocation;
+	DirectPath.Z = 0;
+	
+	FVector TrajectoryDirection = DirectPath.GetSafeNormal();
+
+	float DirectLength = DirectPath.Size();
+
+	if (TrajectoryCurve)
+	{
+		FRichCurve CurveData = TrajectoryCurve->FloatCurve;
+		
+		const float ExpectedCurveDuration = 1.f;
+		const int NumSegments = 10;
+		for (int i = 0; i <= NumSegments; i++)
+		{
+			float CurveAlpha = static_cast<float>(i) / NumSegments;
+
+			float CurveVal = CurveData.Eval(CurveAlpha * ExpectedCurveDuration);
+
+			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * DirectLength;
+			TrajectoryPoint.Z = CurveVal * StartLocation.Z;
+
+			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint, FVector::ZeroVector);
+		}
+	}
+
+	TrajectoryData.bSetTangents = false;
+
 	return TrajectoryData;
 }
 
 FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation)
 {
-	return GenerateTrajectoryData(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
+	return GenerateTrajectoryData_Old(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
 }
 
 FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_New TrajParams_New, FVector StartLocation, FVector EndLocation)
@@ -73,7 +110,11 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 	for (int i = 0; i < TrajectoryData.TrajectoryPoints.Num(); i++)
 	{
 		SplineComp->AddSplinePointAtIndex(TrajectoryData.TrajectoryPoints[i].Location, i, ESplineCoordinateSpace::World, false);
-		SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+
+		if (TrajectoryData.bSetTangents)
+		{
+			SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+		}
 	}
 
 	SplineComp->UpdateSpline();

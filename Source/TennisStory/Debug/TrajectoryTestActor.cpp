@@ -96,6 +96,7 @@ void ATrajectoryTestActor::UpdateTrajectory()
 	}
 }
 
+PRAGMA_DISABLE_OPTIMIZATION
 void ATrajectoryTestActor::UpdateSplineMesh()
 {
 	if (!SplineMesh)
@@ -103,9 +104,38 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 		return;
 	}
 
-	bool bCreateSplineMeshComps = SplineMeshComps.Num() == 0;
+	for (int i = 0; i < SplineMeshComps_Old.Num(); i++)
+	{
+		SplineMeshComps_Old[i]->SetHiddenInGame(true);
+	}
+	
+	for (int i = 0; i < SplineMeshComps_New.Num(); i++)
+	{
+		SplineMeshComps_New[i]->SetHiddenInGame(true);
+	}
 
-	for (int i = 0; i < TrajectorySplineComp->GetNumberOfSplinePoints() - 1; i++)
+	TArray<USplineMeshComponent*>* SplineMeshComps = nullptr;
+	int NumSegments = 0;
+
+	switch (TrajAlgorithm)
+	{
+		case ETrajectoryAlgorithm::Old:
+		{
+			SplineMeshComps = &SplineMeshComps_Old;
+			NumSegments = TrajectorySplineComp->GetNumberOfSplinePoints();
+			break;
+		}
+		case ETrajectoryAlgorithm::New:
+		{
+			SplineMeshComps = &SplineMeshComps_New;
+			NumSegments = 10;
+			break;
+		}
+	}
+
+	bool bCreateSplineMeshComps = (SplineMeshComps) ? SplineMeshComps->Num() == 0 : false;
+
+	for (int i = 0; i < NumSegments; i++)
 	{
 		USplineMeshComponent* SplineMeshComp;
 		if (bCreateSplineMeshComps)
@@ -115,19 +145,40 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 			SplineMeshComp->SetMobility(EComponentMobility::Movable);
 			SplineMeshComp->SetStaticMesh(SplineMesh);
 
-			SplineMeshComps.Add(SplineMeshComp);
+			SplineMeshComps->Add(SplineMeshComp);
 		}
 		else
 		{
-			SplineMeshComp = SplineMeshComps[i];
+			SplineMeshComp = (*SplineMeshComps)[i];
+			SplineMeshComp->SetHiddenInGame(false);
 		}
 
-		SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), 
+		switch (TrajAlgorithm)
+		{
+			case ETrajectoryAlgorithm::Old:
+			{
+				SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), 
 									   TrajectorySplineComp->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::World),
 									   TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World), 
 									   TrajectorySplineComp->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
+				break;
+			}
+			case ETrajectoryAlgorithm::New:
+			{
+				float StartTime = static_cast<float>(i) / 10;
+				float EndTime = static_cast<float>(i + 1) / 10;
+		
+				SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtTime(StartTime, ESplineCoordinateSpace::World), 
+											   TrajectorySplineComp->GetTangentAtTime(StartTime, ESplineCoordinateSpace::World),
+											   TrajectorySplineComp->GetLocationAtTime(EndTime, ESplineCoordinateSpace::World), 
+											   TrajectorySplineComp->GetTangentAtTime(EndTime, ESplineCoordinateSpace::World));
+
+				break;
+			}
+		}
 	}
 }
+PRAGMA_ENABLE_OPTIMIZATION
 
 void ATrajectoryTestActor::ShowContextMenu()
 {

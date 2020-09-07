@@ -127,7 +127,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		float TangentLength = IGroundstrokeAbilityInterface::Execute_GetTangentLength(GroundstrokeAbilityObj);
 		
 		UCurveFloat* TrajectoryCurve = IGroundstrokeAbilityInterface::Execute_GetTrajectoryCurve(GroundstrokeAbilityObj);
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt, OwnerChar);
 
