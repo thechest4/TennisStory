@@ -24,6 +24,12 @@ struct FTrajectoryParams_New : public FTableRowBase
 public:
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* TrajectoryCurve; 
+
+	UPROPERTY(EditAnywhere)
+	float MinNetClearance = 10.f;
+
+	UPROPERTY(EditAnywhere)
+	int MaxAdjustmentIndex = 85;
 };
 
 USTRUCT(BlueprintType)
@@ -97,13 +103,11 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
-	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_New TrajParams_New, FVector StartLocation, FVector EndLocation);
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_New TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
 
 	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation);
 
 	static FBallTrajectoryData GenerateTrajectoryData_Old(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
-
-	static FBallTrajectoryData GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 

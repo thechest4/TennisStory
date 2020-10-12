@@ -32,3 +32,8 @@ void UTrajActorContextMenu::SetTrajActorRef(ATrajectoryTestActor* TrajActor)
 		}
 	}
 }
+
+ETrajectoryAlgorithm UTrajActorContextMenu::GetSelectedTrajectoryAlgorithm_Implementation()
+{
+	return ETrajectoryAlgorithm::New;
+}

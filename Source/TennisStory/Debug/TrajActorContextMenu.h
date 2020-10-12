@@ -17,6 +17,9 @@ class TENNISSTORY_API UTrajActorContextMenu : public UUserWidget
 public:
 	void SetTrajActorRef(ATrajectoryTestActor* TrajActor);
 
+	UFUNCTION(BlueprintNativeEvent)
+	ETrajectoryAlgorithm GetSelectedTrajectoryAlgorithm();
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	ATrajectoryTestActor* TrajActorRef;

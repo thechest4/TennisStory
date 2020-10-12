@@ -43,6 +43,7 @@ void ATrajectoryTestActor::BeginPlay()
 	{
 		ContextMenu->SetVisibility(ESlateVisibility::Hidden);
 		ContextMenu->SetTrajActorRef(this);
+		SetCurrentTrajAlgorithm(ContextMenu->GetSelectedTrajectoryAlgorithm());
 	}
 
 	TArray<ECursorMoveType> SourceMoveTypes = { ECursorMoveType::XY, ECursorMoveType::Z };
@@ -84,7 +85,7 @@ void ATrajectoryTestActor::UpdateTrajectory()
 			}
 			case ETrajectoryAlgorithm::New:
 			{
-				TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams_New, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
+				TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams_New, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation(), this);
 				break;
 			}
 		}

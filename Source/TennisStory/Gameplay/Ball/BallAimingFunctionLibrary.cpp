@@ -3,6 +3,8 @@
 #include "BallAimingFunctionLibrary.h"
 #include "Components/SplineComponent.h"
 
+#include "DrawDebugHelpers.h"
+
 void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector PointTangent)
 {
 	FBallTrajectoryPoint TrajectoryPoint = FBallTrajectoryPoint(PointLocation, PointTangent);
@@ -53,49 +55,128 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(UCurv
 	return TrajectoryData;
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation)
+{
+	return GenerateTrajectoryData_Old(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
+}
+
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_New TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
 	FVector DirectPath = EndLocation - StartLocation;
 	DirectPath.Z = 0;
-	
+
 	FVector TrajectoryDirection = DirectPath.GetSafeNormal();
 
 	float DirectLength = DirectPath.Size();
 
-	if (TrajectoryCurve)
+	if (TrajParams.TrajectoryCurve)
 	{
-		FRichCurve CurveData = TrajectoryCurve->FloatCurve;
-		
-		const float ExpectedCurveDuration = 1.f;
-		const int NumSegments = 10;
+		FRichCurve CurveData = TrajParams.TrajectoryCurve->FloatCurve;
+
+		//TODO(achester): can these for loops over NumSegments be combined into 1 loop to make this more efficient?  Don't want this to start taking too long but want to keep NumSegments as high as possible
+
+		static const float ExpectedCurveDuration = 1.f;
+		static const int NumSegments = 100;
 		for (int i = 0; i <= NumSegments; i++)
 		{
 			float CurveAlpha = static_cast<float>(i) / NumSegments;
 
 			float CurveVal = CurveData.Eval(CurveAlpha * ExpectedCurveDuration);
 
+			static const float MAX_HEIGHT = 200.f; //TODO(achester): Maybe there's a way to dynamically get this by checking the height of the character strike zone?
+
 			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * DirectLength;
-			TrajectoryPoint.Z = CurveVal * StartLocation.Z;
+			TrajectoryPoint.Z = FMath::Min(CurveVal * StartLocation.Z, MAX_HEIGHT);
 
 			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint, FVector::ZeroVector);
 		}
+
+		static const float NetXPosition = 0.f; //TODO(achester): even though this likely will always be 0, it would be better to query this from the net actor to be safe
+		static const float NetHeight = 112.f; //TODO(achester): find a way to populate this with some query so that if the net changes it will automatically update
+
+		int AdjustmentPointIndex = -1;
+
+		//NOTE(achester): This detection might be insufficient once shots that aren't straight lines are introduced (curving shots) 
+		for (int i = 0; i < NumSegments; i++)
+		{
+			static const float SegmentLength = (static_cast<float>(1) / NumSegments) * DirectLength;
+
+			if (i == TrajParams.MaxAdjustmentIndex)
+			{
+				AdjustmentPointIndex = TrajParams.MaxAdjustmentIndex;
+
+				GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Blue, FString::Printf(TEXT("Using Max Adjustment Index: %d"), AdjustmentPointIndex));
+
+				break;
+			}
+			else if (FMath::Abs(TrajectoryData.TrajectoryPoints[i].Location.X - NetXPosition) <= SegmentLength)
+			{
+				/*if (WorldContextActor)
+				{
+					DrawDebugSphere(WorldContextActor->GetWorld(), TrajectoryData.TrajectoryPoints[i].Location, 3.f, 20.f, FColor::Red, false, 10.f);
+				}*/
+
+				AdjustmentPointIndex = i;
+				GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Blue, FString::Printf(TEXT("Adjustment Index: %d"), AdjustmentPointIndex));
+
+				break;
+			}
+		}
+
+		bool bNeedsAdjustment = false;
+		float AdjustmentHeight = NetHeight;
+
+		if (TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z < NetHeight + TrajParams.MinNetClearance)
+		{
+			bNeedsAdjustment = true;
+			AdjustmentHeight = NetHeight + TrajParams.MinNetClearance;
+		}
+			
+		if (AdjustmentPointIndex >= 0 && bNeedsAdjustment)
+		{
+			float AdjustmentProportion = AdjustmentHeight / TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z;
+			TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z = AdjustmentHeight;
+
+			float InterpolatedProportion = 1.f;
+			//Iterate through all segments and apply adjustment
+			for (int i = 0; i <= NumSegments; i++)
+			{
+				if (i < AdjustmentPointIndex)
+				{
+					InterpolatedProportion = FMath::InterpEaseOut(1.f, AdjustmentProportion, static_cast<float>(i) / AdjustmentPointIndex, 2.f);
+					TrajectoryData.TrajectoryPoints[i].Location.Z = InterpolatedProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
+				}
+				else if (i > AdjustmentPointIndex)
+				{
+					TrajectoryData.TrajectoryPoints[i].Location.Z = AdjustmentProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
+				}
+			}
+		}
+
+		//Iterate through all trajectory points to set tangent vectors
+		//for (int i = 0; i < NumSegments; i++)
+		//{
+		//	FVector DirToNextPoint = TrajectoryData.TrajectoryPoints[i + 1].Location - TrajectoryData.TrajectoryPoints[i].Location;
+
+		//	FVector TangentVec = DirToNextPoint;
+
+		//	//NOTE(achester): Unsure if this is needed or even makes much difference, computes the tangent vector as an average of the entrance/leave directions
+		//	//if (i > 0)
+		//	//{
+		//	//	FVector DirFromPrevPoint = TrajectoryData.TrajectoryPoints[i].Location - TrajectoryData.TrajectoryPoints[i - 1].Location;
+
+		//	//	TangentVec = (DirFromPrevPoint + DirToNextPoint) * 0.5f; //Average enter/leave directions to get tangent
+		//	//}
+
+		//	TrajectoryData.TrajectoryPoints[i].Tangent = TangentVec;
+		//}
+		//
+		//TrajectoryData.bSetTangents = true;
 	}
 
-	TrajectoryData.bSetTangents = false;
-
 	return TrajectoryData;
-}
-
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation)
-{
-	return GenerateTrajectoryData_Old(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
-}
-
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_New TrajParams_New, FVector StartLocation, FVector EndLocation)
-{
-	return GenerateTrajectoryData(TrajParams_New.TrajectoryCurve, StartLocation, EndLocation);
 }
 
 void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
@@ -114,6 +195,8 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 		if (TrajectoryData.bSetTangents)
 		{
 			SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+
+			//SplineComp->SetTangentsAtSplinePoint(i, (i > 0) ? TrajectoryData.TrajectoryPoints[i - 1].Tangent : FVector::ZeroVector, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
 		}
 	}
 
