@@ -77,6 +77,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 		//TODO(achester): can these for loops over NumSegments be combined into 1 loop to make this more efficient?  Don't want this to start taking too long but want to keep NumSegments as high as possible
 
+		static const float MAX_HEIGHT = 200.f; //TODO(achester): Maybe there's a way to dynamically get this by checking the height of the character strike zone?
+		static const float BALL_RADIUS = 10.f; //TODO(achester): Maybe there's a better way to get this value that is directly linked to the ball actor?
+
 		static const float ExpectedCurveDuration = 1.f;
 		static const int NumSegments = 100;
 		for (int i = 0; i <= NumSegments; i++)
@@ -85,10 +88,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 			float CurveVal = CurveData.Eval(CurveAlpha * ExpectedCurveDuration);
 
-			static const float MAX_HEIGHT = 200.f; //TODO(achester): Maybe there's a way to dynamically get this by checking the height of the character strike zone?
-
 			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * DirectLength;
-			TrajectoryPoint.Z = FMath::Min(CurveVal * StartLocation.Z, MAX_HEIGHT);
+			//TrajectoryPoint.Z = FMath::Min(CurveVal * StartLocation.Z + (static_cast<float>(i) / NumSegments) * BALL_RADIUS, MAX_HEIGHT);
+			TrajectoryPoint.Z = CurveVal * StartLocation.Z + (static_cast<float>(i) / NumSegments) * BALL_RADIUS;
 
 			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint, FVector::ZeroVector);
 		}
@@ -139,6 +141,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			float AdjustmentProportion = AdjustmentHeight / TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z;
 			TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z = AdjustmentHeight;
 
+			UE_LOG(LogTemp, Warning, TEXT("StartingAdjustment: %f"), AdjustmentProportion);
+
 			float InterpolatedProportion = 1.f;
 			//Iterate through all segments and apply adjustment
 			for (int i = 0; i <= NumSegments; i++)
@@ -150,8 +154,23 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				}
 				else if (i > AdjustmentPointIndex)
 				{
-					TrajectoryData.TrajectoryPoints[i].Location.Z = AdjustmentProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
+					//TrajectoryData.TrajectoryPoints[i].Location.Z = AdjustmentProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
+
+					//InterpolatedProportion = FMath::InterpEaseOut(AdjustmentProportion, 1.f, static_cast<float>(i - AdjustmentPointIndex) / (TrajectoryData.TrajectoryPoints.Num() - AdjustmentPointIndex), 2.f);
+					InterpolatedProportion = FMath::InterpEaseOut(1.f, AdjustmentProportion, static_cast<float>(NumSegments - i) / (NumSegments - AdjustmentPointIndex), 3.f);
+
+					UE_LOG(LogTemp, Warning, TEXT("Interp value: %f"), InterpolatedProportion);
+
+					TrajectoryData.TrajectoryPoints[i].Location.Z = InterpolatedProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
 				}
+			}
+		}
+
+		if (!bNeedsAdjustment)
+		{
+			for (int i = 0; i <= NumSegments; i++)
+			{
+				TrajectoryData.TrajectoryPoints[i].Location.Z = FMath::Min(TrajectoryData.TrajectoryPoints[i].Location.Z, MAX_HEIGHT);
 			}
 		}
 
