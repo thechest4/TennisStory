@@ -29,6 +29,9 @@ public:
 	float MinNetClearance = 10.f;
 
 	UPROPERTY(EditAnywhere)
+	int MinAdjustmentIndex = 5;
+
+	UPROPERTY(EditAnywhere)
 	int MaxAdjustmentIndex = 15;
 
 	UPROPERTY(EditAnywhere)

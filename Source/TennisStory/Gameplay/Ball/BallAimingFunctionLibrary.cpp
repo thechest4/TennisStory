@@ -149,7 +149,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				}
 				else if (FMath::Abs(TrajectoryData.TrajectoryPoints[i].Location.X - NetXPosition) <= SegmentLength)
 				{
-					AdjustmentPointIndex = i;
+					AdjustmentPointIndex = (i > TrajParams.MinAdjustmentIndex) ? i : TrajParams.MinAdjustmentIndex;
 					GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Blue, FString::Printf(TEXT("Adjustment Index: %d"), AdjustmentPointIndex));
 
 					break;
