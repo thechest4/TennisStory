@@ -89,12 +89,15 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		//If the trajectory would send the ball into the net, we try to adjust it upwards so that it clears the net (Within reason)
 		bool bNeedsUpwardsAdjustment = false;
 		float AdjustmentHeight = NetHeight + TrajParams.MinNetClearance + BALL_RADIUS;
-		
-		//NOTE(achester): Alpha value for when the shot crosses the net is found by X = StartingPoint.X + A * DirectionVector.X, solved for A: A = X + -StartingPoint.X / DirectionVector.X
-		float CrossNetAlphaValue = FMath::Abs(NetXPosition + -StartLocation.X / TrajectoryDirection.X) / DirectLength;
-		if (CurveData.Eval(CrossNetAlphaValue) * CurveHeightConstant < AdjustmentHeight)
+
+		if (TrajParams.bCanBeAdjustedUpwards)
 		{
-			bNeedsUpwardsAdjustment = true;
+			//NOTE(achester): Alpha value for when the shot crosses the net is found by X = StartingPoint.X + A * DirectionVector.X, solved for A: A = X + -StartingPoint.X / DirectionVector.X
+			float CrossNetAlphaValue = FMath::Abs(NetXPosition + -StartLocation.X / TrajectoryDirection.X) / DirectLength;
+			if (CurveData.Eval(CrossNetAlphaValue) * CurveHeightConstant < AdjustmentHeight)
+			{
+				bNeedsUpwardsAdjustment = true;
+			}
 		}
 
 		//Generate initial curve data by evaluating FloatCurve asset using 3d height and distance values
@@ -108,7 +111,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * DirectLength;
 
 			//The CurveHeightConstant represents the highest point on the curve.  If greater than our max height we need to adjust the curve down so that the highest point is at or below our max
-			if (!bNeedsUpwardsAdjustment && CurveHeightConstant > MAX_HEIGHT && i <= TrajParams.MaxHeightConformingIndex)
+			if (TrajParams.bCanBeAdjustedDownwards && !bNeedsUpwardsAdjustment && CurveHeightConstant > MAX_HEIGHT && i <= TrajParams.MaxHeightConformingIndex)
 			{
 				HeightConstantToUse = FMath::Lerp(MAX_HEIGHT, CurveHeightConstant, (TrajParams.MaxHeightConformingIndex - i) / static_cast<float>(TrajParams.MaxHeightConformingIndex));
 
@@ -122,7 +125,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			TrajectoryPoint.Z = CalculatedHeightVal + (static_cast<float>(i) / NumSegments) * BALL_RADIUS;
 
 			//Make sure the final height does not exceed MAX_HEIGHT if we're adjusting downwards
-			if (!bNeedsUpwardsAdjustment)
+			if (TrajParams.bCanBeAdjustedDownwards && !bNeedsUpwardsAdjustment)
 			{
 				TrajectoryPoint.Z = FMath::Min(TrajectoryPoint.Z, MAX_HEIGHT);
 			}
@@ -130,7 +133,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint, FVector::ZeroVector);
 		}
 
-		if (bNeedsUpwardsAdjustment)
+		if (bNeedsUpwardsAdjustment && TrajParams.bCanBeAdjustedUpwards)
 		{
 			int AdjustmentPointIndex = -1;
 

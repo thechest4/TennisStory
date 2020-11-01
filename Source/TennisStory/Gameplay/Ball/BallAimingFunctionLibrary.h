@@ -25,16 +25,22 @@ public:
 	UPROPERTY(EditAnywhere)
 	UCurveFloat* TrajectoryCurve; 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment)
+	bool bCanBeAdjustedUpwards = true;
+
+	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
 	float MinNetClearance = 10.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MinAdjustmentIndex = 5;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MaxAdjustmentIndex = 15;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = DownwardsAdjustment)
+	bool bCanBeAdjustedDownwards = true;
+
+	UPROPERTY(EditAnywhere, Category = DownwardsAdjustment, meta = (EditCondition = bCanBeAdjustedDownwards))
 	int MaxHeightConformingIndex = 5;
 };
 
