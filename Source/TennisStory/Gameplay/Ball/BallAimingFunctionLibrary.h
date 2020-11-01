@@ -29,7 +29,10 @@ public:
 	float MinNetClearance = 10.f;
 
 	UPROPERTY(EditAnywhere)
-	int MaxAdjustmentIndex = 85;
+	int MaxAdjustmentIndex = 15;
+
+	UPROPERTY(EditAnywhere)
+	int MaxHeightConformingIndex = 5;
 };
 
 USTRUCT(BlueprintType)
