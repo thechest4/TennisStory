@@ -168,10 +168,10 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 				float StartTime = static_cast<float>(i) / NumSegments;
 				float EndTime = static_cast<float>(i + 1) / NumSegments;
 		
-				SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtTime(StartTime, ESplineCoordinateSpace::World), 
-											   TrajectorySplineComp->GetTangentAtTime(StartTime, ESplineCoordinateSpace::World),
-											   TrajectorySplineComp->GetLocationAtTime(EndTime, ESplineCoordinateSpace::World), 
-											   TrajectorySplineComp->GetTangentAtTime(EndTime, ESplineCoordinateSpace::World));
+				SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), 
+											   TrajectorySplineComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World),
+											   TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World),
+											   TrajectorySplineComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
 
 				break;
 			}

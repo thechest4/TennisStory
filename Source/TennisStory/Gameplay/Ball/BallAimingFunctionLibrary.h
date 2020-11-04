@@ -22,26 +22,35 @@ struct FTrajectoryParams_New : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory")
 	UCurveFloat* TrajectoryCurve; 
 
-	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment)
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment")
 	bool bCanBeAdjustedUpwards = true;
 
-	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
 	float MinNetClearance = 10.f;
 
-	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MinAdjustmentIndex = 5;
 
-	UPROPERTY(EditAnywhere, Category = UpwardsAdjustment, meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MaxAdjustmentIndex = 15;
 
-	UPROPERTY(EditAnywhere, Category = DownwardsAdjustment)
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | DownwardsAdjustment")
 	bool bCanBeAdjustedDownwards = true;
 
-	UPROPERTY(EditAnywhere, Category = DownwardsAdjustment, meta = (EditCondition = bCanBeAdjustedDownwards))
+	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | DownwardsAdjustment", meta = (EditCondition = bCanBeAdjustedDownwards))
 	int MaxHeightConformingIndex = 5;
+
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
+	UCurveFloat* BounceTrajectoryCurve;
+
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
+	float BaseBounceHeight = 65.f;
+
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
+	float BounceLengthProportion = 1.f;
 };
 
 USTRUCT(BlueprintType)
@@ -68,21 +77,31 @@ struct FBallTrajectoryPoint
 public:
 	FBallTrajectoryPoint()
 	{
-		Location = FVector::ZeroVector;
-		Tangent = FVector::ZeroVector;
 	}
 
-	FBallTrajectoryPoint(FVector PointLocation, FVector PointTangent)
+	FBallTrajectoryPoint(FVector PointLocation)
 	{
 		Location = PointLocation;
-		Tangent = PointTangent;
+	}
+
+	FBallTrajectoryPoint(FVector PointLocation, FVector PointArriveTangent, FVector PointLeaveTangent)
+	{
+		Location = PointLocation;
+		ArriveTangent = PointArriveTangent;
+		LeaveTangent = PointLeaveTangent;
 	}
 
 	UPROPERTY()
-	FVector Location;
+	FVector Location = FVector::ZeroVector;
 
 	UPROPERTY()
-	FVector Tangent;
+	FVector ArriveTangent = FVector::ZeroVector;
+
+	UPROPERTY()
+	FVector LeaveTangent = FVector::ZeroVector;
+
+	UPROPERTY()
+	bool bSetTangent = false;
 };
 
 USTRUCT()
@@ -95,9 +114,6 @@ public:
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
 	UPROPERTY()
-	bool bSetTangents;
-
-	UPROPERTY()
 	float ApexHeight;
 
 	UPROPERTY()
@@ -106,7 +122,9 @@ public:
 	UPROPERTY()
 	FVector TrajectoryEndLocation;
 
-	void AddTrajectoryPoint(FVector PointLocation, FVector PointTangent);
+	void AddTrajectoryPoint(FVector PointLocation);
+
+	void AddTrajectoryPoint(FVector PointLocation, FVector PointArriveTangent, FVector PointLeaveTangent);
 };
 
 UCLASS()

@@ -5,9 +5,15 @@
 
 #include "DrawDebugHelpers.h"
 
-void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector PointTangent)
+void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation)
 {
-	FBallTrajectoryPoint TrajectoryPoint = FBallTrajectoryPoint(PointLocation, PointTangent);
+	FBallTrajectoryPoint TrajectoryPoint = FBallTrajectoryPoint(PointLocation);
+	TrajectoryPoints.Add(TrajectoryPoint);
+}
+
+void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector PointArriveTangent, FVector PointLeaveTangent)
+{
+	FBallTrajectoryPoint TrajectoryPoint = FBallTrajectoryPoint(PointLocation, PointArriveTangent, PointLeaveTangent);
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
@@ -40,17 +46,17 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(UCurv
 	FVector StartTangent = DirectionVec.RotateAngleAxis(-LeaveAngle, RightVec);
 	FVector EndTangent = DirectionVec.RotateAngleAxis(-ArriveAngle, RightVec);
 
-	TrajectoryData.AddTrajectoryPoint(StartLocation, StartTangent * TangentLength);
+	//TrajectoryData.AddTrajectoryPoint(StartLocation, StartTangent * TangentLength);
 
 	MidPoint += FVector(0.f, 0.f, ApexHeight);
 
 	TrajectoryData.ApexHeight = MidPoint.Z;
-	TrajectoryData.AddTrajectoryPoint(MidPoint, DirectionVec * TangentLength);
-	TrajectoryData.AddTrajectoryPoint(EndLocation, EndTangent * TangentLength);
+	/*TrajectoryData.AddTrajectoryPoint(MidPoint, DirectionVec * TangentLength);
+	TrajectoryData.AddTrajectoryPoint(EndLocation, EndTangent * TangentLength);*/
 	
 	TrajectoryData.TrajectoryEndLocation = EndLocation;
 
-	TrajectoryData.bSetTangents = true;
+	//TrajectoryData.bSetTangents = true;
 
 	return TrajectoryData;
 }
@@ -64,12 +70,12 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
-	FVector DirectPath = EndLocation - StartLocation;
-	DirectPath.Z = 0;
+	FVector ShotDirectPath = EndLocation - StartLocation;
+	ShotDirectPath.Z = 0;
 
-	FVector TrajectoryDirection = DirectPath.GetSafeNormal();
+	FVector TrajectoryDirection = ShotDirectPath.GetSafeNormal();
 
-	float DirectLength = DirectPath.Size();
+	float ShotDirectLength = ShotDirectPath.Size();
 
 	if (TrajParams.TrajectoryCurve)
 	{
@@ -93,7 +99,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		if (TrajParams.bCanBeAdjustedUpwards)
 		{
 			//NOTE(achester): Alpha value for when the shot crosses the net is found by X = StartingPoint.X + A * DirectionVector.X, solved for A: A = X + -StartingPoint.X / DirectionVector.X
-			float CrossNetAlphaValue = FMath::Abs(NetXPosition + -StartLocation.X / TrajectoryDirection.X) / DirectLength;
+			float CrossNetAlphaValue = FMath::Abs(NetXPosition + -StartLocation.X / TrajectoryDirection.X) / ShotDirectLength;
 			if (CurveData.Eval(CrossNetAlphaValue) * CurveHeightConstant < AdjustmentHeight)
 			{
 				bNeedsUpwardsAdjustment = true;
@@ -108,7 +114,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			float CurveVal = CurveData.Eval(CurveAlpha * ExpectedCurveDuration);
 			float CalculatedHeightVal = CurveVal * HeightConstantToUse;
 
-			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * DirectLength;
+			FVector TrajectoryPoint = StartLocation + TrajectoryDirection * CurveAlpha * ShotDirectLength;
 
 			//The CurveHeightConstant represents the highest point on the curve.  If greater than our max height we need to adjust the curve down so that the highest point is at or below our max
 			if (TrajParams.bCanBeAdjustedDownwards && !bNeedsUpwardsAdjustment && CurveHeightConstant > MAX_HEIGHT && i <= TrajParams.MaxHeightConformingIndex)
@@ -130,7 +136,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				TrajectoryPoint.Z = FMath::Min(TrajectoryPoint.Z, MAX_HEIGHT);
 			}
 
-			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint, FVector::ZeroVector);
+			TrajectoryData.AddTrajectoryPoint(TrajectoryPoint);
 		}
 
 		if (bNeedsUpwardsAdjustment && TrajParams.bCanBeAdjustedUpwards)
@@ -140,7 +146,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			//NOTE(achester): This detection might be insufficient once shots that aren't straight lines are introduced (curving shots) 
 			for (int i = 0; i < NumSegments; i++)
 			{
-				static const float SegmentLength = (static_cast<float>(1) / NumSegments) * DirectLength;
+				static const float SegmentLength = (static_cast<float>(1) / NumSegments) * ShotDirectLength;
 
 				if (i == TrajParams.MaxAdjustmentIndex)
 				{
@@ -187,11 +193,34 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				}
 			}
 		}
+
+		//Generate bounce trajectory data
+		if (TrajParams.BounceTrajectoryCurve)
+		{
+			FRichCurve BounceCurveData = TrajParams.BounceTrajectoryCurve->FloatCurve;
+			TrajectoryData.TrajectoryPoints[NumSegments].bSetTangent = true;
+
+			const int NumBounceSegments = 10;
+			const int TotalNumSegments = NumSegments + NumBounceSegments;
+
+			//Skip NumSegments because that point should just be a repeat of the bounce location
+			for (int i = NumSegments + 1; i <= TotalNumSegments; i++)
+			{
+				float CurveAlpha = static_cast<float>(i - NumSegments) / NumBounceSegments;
+
+				float CurveVal = BounceCurveData.Eval(CurveAlpha * ExpectedCurveDuration);
+
+				FVector TrajectoryPoint = EndLocation + TrajectoryDirection * CurveAlpha * ShotDirectLength * TrajParams.BounceLengthProportion;
+				TrajectoryPoint.Z = CurveVal * TrajParams.BaseBounceHeight + BALL_RADIUS;
+
+				TrajectoryData.AddTrajectoryPoint(TrajectoryPoint);
+			}
+		}
 	}
 
 	return TrajectoryData;
 }
-
+PRAGMA_DISABLE_OPTIMIZATION
 void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
 {
 	if (!SplineComp)
@@ -205,17 +234,17 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 	{
 		SplineComp->AddSplinePointAtIndex(TrajectoryData.TrajectoryPoints[i].Location, i, ESplineCoordinateSpace::World, false);
 
-		if (TrajectoryData.bSetTangents)
+		if (TrajectoryData.TrajectoryPoints[i].bSetTangent)
 		{
-			SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+			//SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
 
-			//SplineComp->SetTangentsAtSplinePoint(i, (i > 0) ? TrajectoryData.TrajectoryPoints[i - 1].Tangent : FVector::ZeroVector, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
+			SplineComp->SetTangentsAtSplinePoint(i, (i > 0) ? TrajectoryData.TrajectoryPoints[i].ArriveTangent : FVector::ZeroVector, TrajectoryData.TrajectoryPoints[i].LeaveTangent, ESplineCoordinateSpace::World, false);
 		}
 	}
 
 	SplineComp->UpdateSpline();
 }
-
+PRAGMA_ENABLE_OPTIMIZATION
 void UBallAimingFunctionLibrary::DebugVisualizeSplineComp(USplineComponent* SplineComp)
 {
 	/*#include "DrawDebugHelpers.h"
