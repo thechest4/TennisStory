@@ -117,31 +117,17 @@ public:
 	}
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float GetMidpointAdditiveHeight();
-	virtual float GetMidpointAdditiveHeight_Implementation() override
-	{
-		return MidpointAdditiveHeight;
-	}
-	
-	UFUNCTION(BlueprintNativeEvent)
-	float GetTangentLength();
-	virtual float GetTangentLength_Implementation() override
-	{
-		return TangentLength;
-	}
-
-	UFUNCTION(BlueprintNativeEvent)
-	UCurveFloat* GetTrajectoryCurve();
-	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override
-	{
-		return TrajectoryCurve;
-	}
-
-	UFUNCTION(BlueprintNativeEvent)
 	int GetShotQuality();
 	virtual int GetShotQuality_Implementation() override
 	{
 		return 0;
+	}
+
+	UFUNCTION(BlueprintNativeEvent)
+	FName GetTrajectoryParamsRowName();
+	virtual FName GetTrajectoryParamsRowName_Implementation() override
+	{
+		return TEXT("Dive");
 	}
 	//IGroundstrokeAbilityInterface end
 
@@ -163,15 +149,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Dive Parameters")
 	float DiveDistance;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	UCurveFloat* TrajectoryCurve;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float MidpointAdditiveHeight = 150.f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float TangentLength = 500.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
 	float BallSpeed = 1000.0f;

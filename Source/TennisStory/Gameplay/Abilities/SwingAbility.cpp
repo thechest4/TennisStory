@@ -121,11 +121,6 @@ float USwingAbility::CalculateBallSpeed_Implementation()
 	return FMath::Lerp(MinBallSpeed, MaxBallSpeed, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
 }
 
-UCurveFloat* USwingAbility::GetTrajectoryCurve_Implementation()
-{
-	return TrajectoryCurve;
-}
-
 int USwingAbility::GetShotQuality_Implementation()
 {
 	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;

@@ -11,6 +11,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "TennisStoryGameMode.h"
+#include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
@@ -122,12 +123,9 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		}
 
 		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
+		FName TrajParamsRowName = IGroundstrokeAbilityInterface::Execute_GetTrajectoryParamsRowName(GroundstrokeAbilityObj);
 
-		float MidPointAdditiveHeight = IGroundstrokeAbilityInterface::Execute_GetMidpointAdditiveHeight(GroundstrokeAbilityObj);
-		float TangentLength = IGroundstrokeAbilityInterface::Execute_GetTangentLength(GroundstrokeAbilityObj);
-		
-		UCurveFloat* TrajectoryCurve = IGroundstrokeAbilityInterface::Execute_GetTrajectoryCurve(GroundstrokeAbilityObj);
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(TrajectoryCurve, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), MidPointAdditiveHeight, TangentLength);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParamsRowName, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation());
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt, OwnerChar);
 

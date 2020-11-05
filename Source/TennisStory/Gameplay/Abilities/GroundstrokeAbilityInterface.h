@@ -23,14 +23,8 @@ public:
 	float CalculateBallSpeed();
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float GetMidpointAdditiveHeight();
-	
-	UFUNCTION(BlueprintNativeEvent)
-	float GetTangentLength();
-	
-	UFUNCTION(BlueprintNativeEvent)
-	UCurveFloat* GetTrajectoryCurve();
-	
-	UFUNCTION(BlueprintNativeEvent)
 	int GetShotQuality();
+
+	UFUNCTION(BlueprintNativeEvent)
+	FName GetTrajectoryParamsRowName();
 };

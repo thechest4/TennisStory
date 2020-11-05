@@ -42,26 +42,15 @@ public:
 	virtual float CalculateBallSpeed_Implementation() override;
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float GetMidpointAdditiveHeight();
-	virtual float GetMidpointAdditiveHeight_Implementation() override
-	{
-		return (bCurrentShotIsHigh) ? MidpointAdditiveHeight_High : MidpointAdditiveHeight_Low;
-	}
-	
-	UFUNCTION(BlueprintNativeEvent)
-	float GetTangentLength();
-	virtual float GetTangentLength_Implementation() override
-	{
-		return (bCurrentShotIsHigh) ? TangentLength_High : TangentLength_Low;
-	}
-
-	UFUNCTION(BlueprintNativeEvent)
-	UCurveFloat* GetTrajectoryCurve();
-	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override;
-
-	UFUNCTION(BlueprintNativeEvent)
 	int GetShotQuality();
 	virtual int GetShotQuality_Implementation() override;
+
+	UFUNCTION(BlueprintNativeEvent)
+	FName GetTrajectoryParamsRowName();
+	virtual FName GetTrajectoryParamsRowName_Implementation() override
+	{
+		return (bCurrentShotIsHigh) ? TEXT("Volley_High") : TEXT("Volley_Low");
+	}
 	//IGroundstrokeAbilityInterface end
 
 protected:
@@ -91,24 +80,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed | Low Volley")
 	float ActiveVolleySpeed_Low = 1500.0f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
-	UCurveFloat* TrajectoryCurve_High;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
-	float MidpointAdditiveHeight_High = 0.f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | High Volley")
-	float TangentLength_High = 0.f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
-	UCurveFloat* TrajectoryCurve_Low;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
-	float MidpointAdditiveHeight_Low = 120.f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory | Low Volley")
-	float TangentLength_Low = 150.f;
 
 	UPROPERTY()
 	UTS_AbilityTask_PlayMontageAndWait* CurrentMontageTask;

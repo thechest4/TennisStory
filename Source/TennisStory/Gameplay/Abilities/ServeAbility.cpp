@@ -129,7 +129,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 		//This call changes the BallMovementComponent CurrentMovementState so it should be done before the FollowPath call
 		TennisBall->InterruptServiceToss();
 
-		if (Player->HasAuthority() && ServeTrajectoryCurve)
+		if (Player->HasAuthority())
 		{	
 			//Tell the simulated proxy that the serve was hit, only if is currently the authority serving
 			if (Player->IsLocallyControlled())
@@ -143,7 +143,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			GameMode->DetermineHitLegality(Player);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(ServeTrajectoryCurve, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), 200.f, 500.f);
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TEXT("Serve"), TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 

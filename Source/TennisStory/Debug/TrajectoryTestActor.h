@@ -41,9 +41,6 @@ protected:
 	float MoveSpeed = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "Parameters")
-	UCurveFloat* TrajectoryCurve;
-
-	UPROPERTY(EditAnywhere, Category = "Parameters")
 	UStaticMesh* SplineMesh;
 
 	UPROPERTY(VisibleAnywhere)

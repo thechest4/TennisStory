@@ -35,26 +35,15 @@ public:
 	virtual float CalculateBallSpeed_Implementation() override;
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float GetMidpointAdditiveHeight();
-	virtual float GetMidpointAdditiveHeight_Implementation() override
-	{
-		return MidpointAdditiveHeight;
-	}
-	
-	UFUNCTION(BlueprintNativeEvent)
-	float GetTangentLength();
-	virtual float GetTangentLength_Implementation() override
-	{
-		return TangentLength;
-	}
-
-	UFUNCTION(BlueprintNativeEvent)
-	UCurveFloat* GetTrajectoryCurve();
-	virtual UCurveFloat* GetTrajectoryCurve_Implementation() override;
-
-	UFUNCTION(BlueprintNativeEvent)
 	int GetShotQuality();
 	virtual int GetShotQuality_Implementation() override;
+	
+	UFUNCTION(BlueprintNativeEvent)
+	FName GetTrajectoryParamsRowName();
+	virtual FName GetTrajectoryParamsRowName_Implementation() override
+	{
+		return TEXT("Flat");
+	}
 	//IGroundstrokeAbilityInterface end
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animations")
@@ -73,15 +62,6 @@ protected:
 	UAbilityTask_Tick* CurrentTickingTask;
 
 	bool bSwingReleased;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	UCurveFloat* TrajectoryCurve;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float MidpointAdditiveHeight = 200.f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Trajectory")
-	float TangentLength = 500.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Ball Speed")
 	float MinBallSpeed = 1000.0f;

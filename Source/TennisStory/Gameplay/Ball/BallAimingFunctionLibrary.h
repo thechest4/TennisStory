@@ -110,9 +110,13 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
+	static FBallTrajectoryData GenerateTrajectoryData(FName TrajectoryRowName, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
+
 	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
+
+	static FTrajectoryParams RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName);
 
 	static void DebugVisualizeSplineComp(USplineComponent* SplineComp);
 };

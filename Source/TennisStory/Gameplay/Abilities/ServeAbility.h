@@ -43,9 +43,6 @@ protected:
 	UAnimMontage* ServeMontage;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
-	UCurveFloat* ServeTrajectoryCurve;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	TArray<float> OrderedServeSpeeds;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")

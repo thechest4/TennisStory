@@ -2,6 +2,7 @@
 
 #include "BallAimingFunctionLibrary.h"
 #include "Components/SplineComponent.h"
+#include "../TrajectoryDataProvider.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -17,7 +18,12 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FName TrajectoryRowName, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
+{
+	return GenerateTrajectoryData(RetrieveTrajectoryParamsFromDataProvider(TrajectoryRowName), StartLocation, EndLocation, WorldContextActor);
+}
+
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
@@ -168,6 +174,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 	return TrajectoryData;
 }
+
 void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
 {
 	if (!SplineComp)
@@ -190,6 +197,21 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 
 	SplineComp->UpdateSpline();
 }
+
+FTrajectoryParams UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName)
+{
+	const UDataTable* TrajParamsDT = UTrajectoryDataProvider::GetDefaultTrajectoryParamsDT();
+
+	ensureMsgf(TrajParamsDT, TEXT("UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider - Unable to get valid reference to Trajectory Params DT"));
+
+	FString ContextStr;
+	FTrajectoryParams* TrajParamsPtr = TrajParamsDT->FindRow<FTrajectoryParams>(TrajectoryRowName, ContextStr);
+
+	ensureMsgf(TrajParamsPtr, TEXT("UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider - Unable to retrieve Trajectory Params from DT"));
+
+	return *TrajParamsPtr;
+}
+
 void UBallAimingFunctionLibrary::DebugVisualizeSplineComp(USplineComponent* SplineComp)
 {
 	/*#include "DrawDebugHelpers.h"

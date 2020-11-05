@@ -72,14 +72,11 @@ void ATrajectoryTestActor::Tick(float DeltaSeconds)
 
 void ATrajectoryTestActor::UpdateTrajectory()
 {
-	if (TrajectoryCurve)
-	{
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation(), this);
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation(), this);
 
-		UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
+	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 
-		UpdateSplineMesh();
-	}
+	UpdateSplineMesh();
 }
 
 void ATrajectoryTestActor::UpdateSplineMesh()

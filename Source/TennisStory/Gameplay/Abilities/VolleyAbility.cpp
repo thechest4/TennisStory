@@ -140,11 +140,6 @@ float UVolleyAbility::CalculateBallSpeed_Implementation()
 	return PassiveVolleySpeed_High;
 }
 
-UCurveFloat* UVolleyAbility::GetTrajectoryCurve_Implementation()
-{
-	return (bCurrentShotIsHigh) ? TrajectoryCurve_High : TrajectoryCurve_Low;
-}
-
 int UVolleyAbility::GetShotQuality_Implementation()
 {
 	switch (CurrentVolleyType)
