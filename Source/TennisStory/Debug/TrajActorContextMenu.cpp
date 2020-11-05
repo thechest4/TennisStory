@@ -7,33 +7,16 @@
 void UTrajActorContextMenu::SetTrajActorRef(ATrajectoryTestActor* TrajActor)
 {
 	TrajActorRef = TrajActor;
-
-	if (TrajectoryData_Old)
-	{
-		FString ContextStr;
-		TArray<FTrajectoryParams_Old*> TrajRows;
-		TrajectoryData_Old->GetAllRows(ContextStr, TrajRows);
-
-		if (TrajRows.Num() > 0)
-		{
-			TrajActorRef->SetTrajParamsOld(*TrajRows[0]);
-		}
-	}
 	
-	if (TrajectoryData_New)
+	if (TrajectoryData)
 	{
 		FString ContextStr;
-		TArray<FTrajectoryParams_New*> TrajRows;
-		TrajectoryData_New->GetAllRows(ContextStr, TrajRows);
+		TArray<FTrajectoryParams*> TrajRows;
+		TrajectoryData->GetAllRows(ContextStr, TrajRows);
 
 		if (TrajRows.Num() > 0)
 		{
-			TrajActorRef->SetTrajParamsNew(*TrajRows[0]);
+			TrajActorRef->SetTrajParams(*TrajRows[0]);
 		}
 	}
-}
-
-ETrajectoryAlgorithm UTrajActorContextMenu::GetSelectedTrajectoryAlgorithm_Implementation()
-{
-	return ETrajectoryAlgorithm::New;
 }

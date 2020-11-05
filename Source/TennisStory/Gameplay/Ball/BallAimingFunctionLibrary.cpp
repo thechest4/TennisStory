@@ -17,56 +17,7 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight, float TangentLength)
-{
-	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
-
-	FVector MidPoint = (EndLocation - StartLocation) / 2.f + StartLocation;
-	
-	FVector DirectPath = EndLocation - StartLocation;
-	TrajectoryData.TrajectoryDistance = DirectPath.Size();
-
-	FVector DirectionVec = DirectPath;
-	DirectionVec.Z = 0.f;
-	DirectionVec.Normalize();
-
-	float LeaveSlope = 1.f;
-	float ArriveSlope = 1.f;
-	if (TrajectoryCurve)
-	{
-		FRichCurve CurveData = TrajectoryCurve->FloatCurve;
-		LeaveSlope = CurveData.GetFirstKey().LeaveTangent;
-		ArriveSlope = CurveData.GetLastKey().ArriveTangent;
-	}
-
-	float LeaveAngle = FMath::RadiansToDegrees(FMath::Atan(LeaveSlope));
-	float ArriveAngle = FMath::RadiansToDegrees(FMath::Atan(ArriveSlope));
-
-	FVector RightVec = FVector::CrossProduct(FVector::UpVector, DirectionVec);
-	FVector StartTangent = DirectionVec.RotateAngleAxis(-LeaveAngle, RightVec);
-	FVector EndTangent = DirectionVec.RotateAngleAxis(-ArriveAngle, RightVec);
-
-	//TrajectoryData.AddTrajectoryPoint(StartLocation, StartTangent * TangentLength);
-
-	MidPoint += FVector(0.f, 0.f, ApexHeight);
-
-	TrajectoryData.ApexHeight = MidPoint.Z;
-	/*TrajectoryData.AddTrajectoryPoint(MidPoint, DirectionVec * TangentLength);
-	TrajectoryData.AddTrajectoryPoint(EndLocation, EndTangent * TangentLength);*/
-	
-	TrajectoryData.TrajectoryEndLocation = EndLocation;
-
-	//TrajectoryData.bSetTangents = true;
-
-	return TrajectoryData;
-}
-
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation)
-{
-	return GenerateTrajectoryData_Old(TrajParams_Old.TrajectoryCurve, StartLocation, EndLocation, TrajParams_Old.ApexHeight, TrajParams_Old.TangentLength);
-}
-
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams_New TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
@@ -183,9 +134,6 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 					}
 					else if (i > AdjustmentPointIndex)
 					{
-						//TrajectoryData.TrajectoryPoints[i].Location.Z = AdjustmentProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
-
-						//InterpolatedProportion = FMath::InterpEaseOut(AdjustmentProportion, 1.f, static_cast<float>(i - AdjustmentPointIndex) / (TrajectoryData.TrajectoryPoints.Num() - AdjustmentPointIndex), 2.f);
 						InterpolatedProportion = FMath::InterpEaseOut(1.f, AdjustmentProportion, static_cast<float>(NumSegments - i) / (NumSegments - AdjustmentPointIndex), 3.f);
 
 						TrajectoryData.TrajectoryPoints[i].Location.Z = InterpolatedProportion * TrajectoryData.TrajectoryPoints[i].Location.Z;
@@ -220,7 +168,6 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 	return TrajectoryData;
 }
-PRAGMA_DISABLE_OPTIMIZATION
 void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
 {
 	if (!SplineComp)
@@ -236,15 +183,13 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 
 		if (TrajectoryData.TrajectoryPoints[i].bSetTangent)
 		{
-			//SplineComp->SetTangentAtSplinePoint(i, TrajectoryData.TrajectoryPoints[i].Tangent, ESplineCoordinateSpace::World, false);
-
+			//NOTE(achester): I think despite not actually setting the values for ArriveTangent and LeaveTangent I think this ends up working by setting the tangents to length 0 so that there's effectively no manually set tangent and no auto tangent
 			SplineComp->SetTangentsAtSplinePoint(i, (i > 0) ? TrajectoryData.TrajectoryPoints[i].ArriveTangent : FVector::ZeroVector, TrajectoryData.TrajectoryPoints[i].LeaveTangent, ESplineCoordinateSpace::World, false);
 		}
 	}
 
 	SplineComp->UpdateSpline();
 }
-PRAGMA_ENABLE_OPTIMIZATION
 void UBallAimingFunctionLibrary::DebugVisualizeSplineComp(USplineComponent* SplineComp)
 {
 	/*#include "DrawDebugHelpers.h"

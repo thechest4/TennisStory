@@ -31,13 +31,7 @@ public:
 	virtual void HideContextMenu() override;
 
 	UFUNCTION(BlueprintCallable)
-	void SetCurrentTrajAlgorithm(ETrajectoryAlgorithm NewAlgo);
-
-	UFUNCTION(BlueprintCallable)
-	void SetTrajParamsOld(FTrajectoryParams_Old TrajParams);
-	
-	UFUNCTION(BlueprintCallable)
-	void SetTrajParamsNew(FTrajectoryParams_New TrajParams);
+	void SetTrajParams(FTrajectoryParams TrajParams);
 
 	UFUNCTION(BlueprintCallable)
 	void SetMeshLocations(FVector SourceLocation, FVector EndLocation);
@@ -68,9 +62,7 @@ protected:
 
 	void UpdateSplineMesh();
 
-	TArray<USplineMeshComponent*> SplineMeshComps_Old;
-	
-	TArray<USplineMeshComponent*> SplineMeshComps_New;
+	TArray<USplineMeshComponent*> SplineMeshComps;
 
 	UPROPERTY(Transient)
 	FVector SourcePrevPos;
@@ -78,7 +70,5 @@ protected:
 	UPROPERTY(Transient)
 	FVector EndPrevPos;
 
-	ETrajectoryAlgorithm TrajAlgorithm;
-	FTrajectoryParams_Old TrajParams_Old;
-	FTrajectoryParams_New TrajParams_New;
+	FTrajectoryParams TrajParams;
 };

@@ -9,38 +9,31 @@
 
 class USplineComponent;
 
-UENUM()
-enum class ETrajectoryAlgorithm : uint8
-{
-	Old,
-	New
-};
-
 USTRUCT(BlueprintType)
-struct FTrajectoryParams_New : public FTableRowBase
+struct FTrajectoryParams : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory")
-	UCurveFloat* TrajectoryCurve; 
+	UPROPERTY(EditAnywhere, Category = "HitTrajectory")
+	UCurveFloat* TrajectoryCurve;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment")
+	UPROPERTY(EditAnywhere, Category = "AdjustUp")
 	bool bCanBeAdjustedUpwards = true;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "AdjustUp", meta = (EditCondition = bCanBeAdjustedUpwards))
 	float MinNetClearance = 10.f;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "AdjustUp", meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MinAdjustmentIndex = 5;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | UpwardsAdjustment", meta = (EditCondition = bCanBeAdjustedUpwards))
+	UPROPERTY(EditAnywhere, Category = "AdjustUp", meta = (EditCondition = bCanBeAdjustedUpwards))
 	int MaxAdjustmentIndex = 15;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | DownwardsAdjustment")
+	UPROPERTY(EditAnywhere, Category = "AdjustDown")
 	bool bCanBeAdjustedDownwards = true;
 
-	UPROPERTY(EditAnywhere, Category = "ShotTrajectory | DownwardsAdjustment", meta = (EditCondition = bCanBeAdjustedDownwards))
+	UPROPERTY(EditAnywhere, Category = "AdjustDown", meta = (EditCondition = bCanBeAdjustedDownwards))
 	int MaxHeightConformingIndex = 5;
 
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
@@ -51,22 +44,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
 	float BounceLengthProportion = 1.f;
-};
-
-USTRUCT(BlueprintType)
-struct FTrajectoryParams_Old : public FTableRowBase
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere)
-	UCurveFloat* TrajectoryCurve; 
-	
-	UPROPERTY(EditAnywhere)
-	float ApexHeight = 200.f; 
-	
-	UPROPERTY(EditAnywhere)
-	float TangentLength = 500.f;
 };
 
 USTRUCT()
@@ -133,11 +110,7 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
-	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_New TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
-
-	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams_Old TrajParams_Old, FVector StartLocation, FVector EndLocation);
-
-	static FBallTrajectoryData GenerateTrajectoryData_Old(UCurveFloat* TrajectoryCurve, FVector StartLocation, FVector EndLocation, float ApexHeight = 200.f, float TangentLength = 500.f);
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 

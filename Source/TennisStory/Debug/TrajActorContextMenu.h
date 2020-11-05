@@ -17,16 +17,10 @@ class TENNISSTORY_API UTrajActorContextMenu : public UUserWidget
 public:
 	void SetTrajActorRef(ATrajectoryTestActor* TrajActor);
 
-	UFUNCTION(BlueprintNativeEvent)
-	ETrajectoryAlgorithm GetSelectedTrajectoryAlgorithm();
-
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	ATrajectoryTestActor* TrajActorRef;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trajectory Data")
-	UDataTable* TrajectoryData_Old;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trajectory Data")
-	UDataTable* TrajectoryData_New;
+	UDataTable* TrajectoryData;
 };
