@@ -18,12 +18,10 @@ UBallMovementComponent::UBallMovementComponent()
 
 	SetIsReplicatedByDefault(true);
 
-	Velocity = 0.f;
+	CurrentVelocity = 0.f;
 	NumBounces = 0;
 	CurrentDirection = FVector::ZeroVector;
 	CurrentMovementState = EBallMovementState::NotMoving;
-	LastPathHeight = 0.f;
-	LastPathDistance = 0.f;
 
 	const float TargetFrameDuration = 0.01667f;
 	FramesOfBounceLag = 5;
@@ -47,7 +45,7 @@ void UBallMovementComponent::BeginPlay()
 	{
 		OwnerPtr->OnActorHit.AddDynamic(this, &UBallMovementComponent::HandleActorHit);
 	}
-	
+
 	BallCollisionComponent = Cast<UPrimitiveComponent>(OwnerPtr->GetRootComponent());
 
 	TrajectorySplineComp = Cast<USplineComponent>(OwnerPtr->GetComponentByClass(USplineComponent::StaticClass()));
@@ -63,28 +61,8 @@ void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if (NumBounces < GameMode->GetAllowedBounces())
-	{
-		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState && OwnerPtr->LastPlayerToHit.IsValid()) ? GameState->GetCourtToAimAtForCharacter(OwnerPtr->LastPlayerToHit.Get()) : nullptr;
-		FVector CurrentLocation = OwnerPtr->GetActorLocation();
-
-		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius(), BoundsContextForFirstBounce))
-		{
-			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce, Hit.ImpactPoint);
-		}
-		
-		GenerateAndFollowBouncePath(Hit);
-
-		OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
-
-		ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
-		if (OrderedBounceSFX.Num() == 2)
-		{
-			OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[1], OwnerPtr->GetActorLocation());
-		}
-	}
-	else if (OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
+	if ((CurrentMovementState == EBallMovementState::ContinueUntilHit || CurrentMovementState == EBallMovementState::Physical) 
+		&& OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
 	{
 		if (NumBounces == GameMode->GetAllowedBounces())
 		{
@@ -109,6 +87,37 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	}
 }
 
+void UBallMovementComponent::DoFirstBounceLogic()
+{
+	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
+	if (NumBounces < GameMode->GetAllowedBounces())
+	{
+		ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+		TWeakObjectPtr<AHalfCourt> CourtPtr = (GameState && OwnerPtr->LastPlayerToHit.IsValid()) ? GameState->GetCourtToAimAtForCharacter(OwnerPtr->LastPlayerToHit.Get()) : nullptr;
+		FVector CurrentLocation = OwnerPtr->GetActorLocation();
+
+		FVector BounceLocation = CurrentLocation;
+		BounceLocation.Z = 0.f;
+
+		if (CourtPtr.IsValid() && !CourtPtr->IsLocationInBounds(CurrentLocation, OwnerPtr->GetBallRadius(), BoundsContextForFirstBounce))
+		{
+			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce, BounceLocation);
+		}
+
+		OwnerPtr->Multicast_SpawnBounceParticleEffect(BounceLocation);
+
+		ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
+		if (OrderedBounceSFX.Num() == 2)
+		{
+			OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[1], OwnerPtr->GetActorLocation());
+		}
+
+		NumBounces++;
+
+		DoBounceLag();
+	}
+}
+
 void UBallMovementComponent::OnRep_CurrentMovementState()
 {
 	if (CurrentMovementState == EBallMovementState::Physical)
@@ -119,32 +128,6 @@ void UBallMovementComponent::OnRep_CurrentMovementState()
 	{
 		StopMoving();
 	}
-}
-
-void UBallMovementComponent::GenerateAndFollowBouncePath(const FHitResult& HitResult)
-{
-	if (!BounceTrajectoryCurve)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("UBallMovementComponent::GenerateAndFollowBouncePath - BounceTrajectoryCurve was null!"));
-		return;
-	}
-
-	FVector BallLocation = OwnerPtr->GetActorLocation();
-
-	//TODO(achester): Added a bunch of min values here as a temporary way to prevent weird/bad bounces until I get around to refactoring how bounces work
-
-	float BounceDistance = FMath::Max(LastPathDistance * 0.8f, 800.f);
-	FVector BounceEndLocation = HitResult.ImpactPoint + CurrentDirection.GetSafeNormal2D() * BounceDistance;
-
-	float BounceHeight = FMath::Max(LastPathHeight * 0.6f, 100.f); //Min Bounce Height
-	BounceHeight = FMath::Min(BounceHeight, 190.f); //Max Bounce Height - Player StrikeZone is 200 cm tall so we need to impose a limit here to prevent bouncing over it
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData_Old(BounceTrajectoryCurve, BallLocation, BounceEndLocation, BounceHeight, 350.f);
-
-	float BounceVelocity = FMath::Min(Velocity * 0.7f, 1600.f);
-	OwnerPtr->Multicast_FollowPath(TrajectoryData, BounceVelocity, false, EBoundsContext::FullCourt, nullptr);
-	UBallAimingFunctionLibrary::DebugVisualizeSplineComp(TrajectorySplineComp);
-	
-	NumBounces++;
 }
 
 void UBallMovementComponent::DoBounceLag()
@@ -169,28 +152,56 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	else if (CurrentMovementState == EBallMovementState::FollowingPath && TrajectorySplineComp)
 	{
 		FVector CurrentLocation = OwnerPtr->GetActorLocation();
-		FVector Direction = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
-		FVector NaiveNewLocation = CurrentLocation + Direction * Velocity * DeltaTime;
-		FVector SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+		FVector SplineNewLocation;
+
+		bool bIsBouncing = false;
+
+		//If we haven't bounced yet, detect when we reach the point of the first bounce
+		if (NumBounces == 0)
+		{
+			FVector BounceLocation = TrajectorySplineComp->GetLocationAtSplinePoint(CurrentTrajectoryData.BounceLocationIndex, ESplineCoordinateSpace::World);
+			FVector TranslationToBounceLocation = BounceLocation - CurrentLocation;
+			float DistanceToBounceLocation = TranslationToBounceLocation.Size();
+
+			//If we're close enough to the bounce location, just snap directly to it
+			if (DistanceToBounceLocation <= CurrentVelocity * DeltaTime)
+			{
+				SplineNewLocation = BounceLocation;
+				bIsBouncing = true;
+
+				FVector NextLocation = TrajectorySplineComp->GetLocationAtSplinePoint(CurrentTrajectoryData.BounceLocationIndex + 1, ESplineCoordinateSpace::World);
+				CurrentDirection = NextLocation - BounceLocation;
+				CurrentDirection.Normalize();
+			}
+		}
+
+		if (!bIsBouncing)
+		{
+			FVector NaiveNewLocation = CurrentLocation + CurrentDirection * CurrentVelocity * DeltaTime;
+			SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
+
+			CurrentDirection = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
+		}
+
+		OwnerPtr->SetActorLocation(SplineNewLocation, true);
+
+		//If we're bouncing this frame, do the bounce stuff
+		if (bIsBouncing && OwnerPtr->HasAuthority())
+		{
+			DoFirstBounceLogic();
+		}
 		
 		FVector SplineEndLocation = TrajectorySplineComp->GetWorldLocationAtTime(TrajectorySplineComp->Duration);
-		
-		if (SplineNewLocation.Equals(SplineEndLocation))
+
+		if (NumBounces > 0 && SplineNewLocation.Equals(SplineEndLocation))
 		{
 			CurrentMovementState = EBallMovementState::ContinueUntilHit;
-		}
-		else
-		{
-			CurrentDirection = SplineNewLocation - CurrentLocation;
-			CurrentDirection.Normalize();
-
-			OwnerPtr->SetActorLocation(SplineNewLocation, true);
 		}
 	}
 
 	if (CurrentMovementState == EBallMovementState::ContinueUntilHit)
 	{
-		FVector NewLocation = OwnerPtr->GetActorLocation() + CurrentDirection * Velocity * DeltaTime;
+		FVector NewLocation = OwnerPtr->GetActorLocation() + CurrentDirection * CurrentVelocity * DeltaTime;
 		OwnerPtr->SetActorLocation(NewLocation, true);
 	}
 
@@ -219,75 +230,18 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-//NOTE(achester): The spline mesh parts of this function should be moved to another player component related to aiming
-//void UBallMovementComponent::VisualizePath()
-//{
-	//if (!SplineComp)
-	//{
-	//	return;
-	//}
-
-	//if (!SplineMesh)
-	//{
-	//	return;
-	//}
-
-	//for (float i = 0.f; i < SplineComp->Duration; i += 0.2f)
-	//{
-	//	FVector SplineLoc = SplineComp->GetLocationAtTime(i, ESplineCoordinateSpace::World);
-
-	//	DrawDebugSphere(GetWorld(), SplineLoc, 5.0f, 20, FColor::Purple, false, 100.0f);
-	//}
-
-	//bool bCreateSplineMeshComps = false;
-	//if (!SplineMeshComps.Num())
-	//{
-	//	bCreateSplineMeshComps = true;
-	//}
-
-	//for (int i = 0; i < SplineComp->GetNumberOfSplinePoints() - 1; i++)
-	//{
-	//	USplineMeshComponent* SplineMeshComp;
-	//	if (bCreateSplineMeshComps)
-	//	{
-	//		SplineMeshComp = NewObject<USplineMeshComponent>(GetOwner());
-	//		SplineMeshComp->RegisterComponent();
-	//		SplineMeshComp->SetMobility(EComponentMobility::Movable);
-	//		//SplineMeshComp->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-	//		SplineMeshComp->SetStaticMesh(SplineMesh);
-	//	}
-	//	else
-	//	{
-	//		SplineMeshComp = SplineMeshComps[i];
-	//	}
-
-	//	SplineMeshComp->SetWorldLocationAndRotation(SplineComp->GetOwner()->GetActorLocation(), SplineComp->GetOwner()->GetActorRotation());
-	//	SplineMeshComp->SetStartAndEnd(SplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local), 
-	//								   SplineComp->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Local),
-	//								   SplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::Local), 
-	//								   SplineComp->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::Local));
-	//}
-//}
-
-void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float argVelocity, bool bIsFromHit)
+void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity)
 {
+	CurrentTrajectoryData = TrajectoryData;
+
 	OwnerPtr->SetBallState(ETennisBallState::PlayState);
 
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
-	LastPathDistance = TrajectoryData.TrajectoryDistance;
-	LastPathHeight = TrajectoryData.ApexHeight;
 
 	CurrentMovementState = EBallMovementState::FollowingPath;
-	Velocity = argVelocity;
+	CurrentVelocity = Velocity;
 
-	if (bIsFromHit)
-	{	
-		NumBounces = 0;
-	}
-	else
-	{
-		DoBounceLag();
-	}
+	NumBounces = 0;
 	
 	if (BallCollisionComponent)
 	{
@@ -298,7 +252,7 @@ void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryDa
 void UBallMovementComponent::StopMoving()
 {
 	CurrentMovementState = EBallMovementState::NotMoving;
-	Velocity = 0.f;
+	CurrentVelocity = 0.f;
 	CurrentDirection = FVector::ZeroVector;
 	
 	if (BallCollisionComponent)
@@ -356,10 +310,10 @@ void UBallMovementComponent::EnterPhysicalMovementState()
 	if (BallCollisionComponent)
 	{
 		BallCollisionComponent->SetSimulatePhysics(true);
-		BallCollisionComponent->SetPhysicsLinearVelocity(CurrentDirection * Velocity);
+		BallCollisionComponent->SetPhysicsLinearVelocity(CurrentDirection * CurrentVelocity);
 	}
 	
-	Velocity = 0.f;
+	CurrentVelocity = 0.f;
 }
 
 #if WITH_EDITORONLY_DATA

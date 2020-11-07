@@ -153,23 +153,25 @@ void ATennisBall::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector 
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, bool bFromHit, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall)
 {
 	if (!BallTrailParticleEffect->IsActive() && !bTrailAlwaysOn)
 	{
 		BallTrailParticleEffect->SetActive(true);
 	}
 
-	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity, bFromHit);
+	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity);
 	BallMovementComp->ProvideBoundsContext(BoundsContext);
 
-	if (HasAuthority() && bFromHit)
+	if (HasAuthority())
 	{
-		Multicast_SpawnBounceLocationParticleEffect(TrajectoryData.TrajectoryEndLocation);
+		FVector BounceLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.BounceLocationIndex].Location;
+		BounceLocation.Z = 0;
+		Multicast_SpawnBounceLocationParticleEffect(BounceLocation);
 	}
 
 	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
-	if (TSGameState && bFromHit && PlayerWhoHitBall)
+	if (TSGameState && PlayerWhoHitBall)
 	{
 		int LastPlayerToHitTeamId = TSGameState->GetTeamIdForCharacter(PlayerWhoHitBall);
 

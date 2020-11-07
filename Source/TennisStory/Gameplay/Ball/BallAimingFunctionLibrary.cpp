@@ -46,6 +46,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		static const float ExpectedCurveDuration = 1.f;
 		static const int NumSegments = 20;
 
+		TrajectoryData.BounceLocationIndex = NumSegments;
+
 		static const float NetXPosition = 0.f; //TODO(achester): even though this likely will always be 0, it would be better to query this from the net actor to be safe
 		static const float NetHeight = 112.f; //TODO(achester): find a way to populate this with some query so that if the net changes it will automatically update
 		
@@ -109,14 +111,11 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				{
 					AdjustmentPointIndex = TrajParams.MaxAdjustmentIndex;
 
-					GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Blue, FString::Printf(TEXT("Using Max Adjustment Index: %d"), AdjustmentPointIndex));
-
 					break;
 				}
 				else if (FMath::Abs(TrajectoryData.TrajectoryPoints[i].Location.X - NetXPosition) <= SegmentLength)
 				{
 					AdjustmentPointIndex = (i > TrajParams.MinAdjustmentIndex) ? i : TrajParams.MinAdjustmentIndex;
-					GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Blue, FString::Printf(TEXT("Adjustment Index: %d"), AdjustmentPointIndex));
 
 					break;
 				}
@@ -126,8 +125,6 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			{
 				float AdjustmentProportion = AdjustmentHeight / TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z;
 				TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z = AdjustmentHeight;
-
-				UE_LOG(LogTemp, Warning, TEXT("StartingAdjustment: %f"), AdjustmentProportion);
 
 				float InterpolatedProportion = 1.f;
 				//Iterate through all segments and apply adjustment
@@ -190,7 +187,7 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 
 		if (TrajectoryData.TrajectoryPoints[i].bSetTangent)
 		{
-			//NOTE(achester): I think despite not actually setting the values for ArriveTangent and LeaveTangent I think this ends up working by setting the tangents to length 0 so that there's effectively no manually set tangent and no auto tangent
+			//NOTE(achester): Despite not actually setting the values for ArriveTangent and LeaveTangent I think this ends up working by setting the tangents to length 0 so that there's effectively no manually set tangent and no auto tangent
 			SplineComp->SetTangentsAtSplinePoint(i, (i > 0) ? TrajectoryData.TrajectoryPoints[i].ArriveTangent : FVector::ZeroVector, TrajectoryData.TrajectoryPoints[i].LeaveTangent, ESplineCoordinateSpace::World, false);
 		}
 	}

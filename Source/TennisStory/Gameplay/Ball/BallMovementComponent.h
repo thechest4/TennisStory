@@ -34,7 +34,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity, bool bIsFromHit);
+	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -72,6 +72,8 @@ protected:
 	UFUNCTION()
 	void HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
 
+	void DoFirstBounceLogic();
+
 	UPROPERTY()
 	UPrimitiveComponent* BallCollisionComponent;
 
@@ -88,15 +90,10 @@ protected:
 	UPROPERTY()
 	ATennisBall* OwnerPtr;
 
-	float Velocity;
+	FBallTrajectoryData CurrentTrajectoryData;
+	float CurrentVelocity;
 	int NumBounces;
 	FVector CurrentDirection;
-
-	//Bounce Properties
-	void GenerateAndFollowBouncePath(const FHitResult& HitResult);
-
-	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
-	UCurveFloat* BounceTrajectoryCurve;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	int FramesOfBounceLag;
@@ -108,10 +105,6 @@ protected:
 	void DoBounceLag();
 
 	EBoundsContext BoundsContextForFirstBounce;
-
-	//Cached last path data
-	float LastPathDistance;
-	float LastPathHeight;
 
 	//Current ball toss state info
 	FVector TossStartLocation;

@@ -97,6 +97,9 @@ public:
 	float TrajectoryDistance;
 
 	UPROPERTY()
+	int BounceLocationIndex;
+
+	UPROPERTY()
 	FVector TrajectoryEndLocation;
 
 	void AddTrajectoryPoint(FVector PointLocation);

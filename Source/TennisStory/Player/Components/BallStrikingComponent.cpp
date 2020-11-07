@@ -127,7 +127,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParamsRowName, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation());
 
-		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, true, EBoundsContext::FullCourt, OwnerChar);
+		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, EBoundsContext::FullCourt, OwnerChar);
 
 		BallHitEvent.Broadcast();
 	}
