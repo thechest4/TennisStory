@@ -3,6 +3,8 @@
 #include "BallAimingFunctionLibrary.h"
 #include "Components/SplineComponent.h"
 #include "../TrajectoryDataProvider.h"
+#include "../TennisNetActor.h"
+#include <Kismet/KismetSystemLibrary.h>
 
 #include "DrawDebugHelpers.h"
 
@@ -143,6 +145,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 					}
 				}
 			}
+
+			TrajectoryData.bWasAdjustedUpwards = true;
+			TrajectoryData.AdjustmentIndex = AdjustmentPointIndex;
 		}
 
 		//Generate bounce trajectory data
@@ -193,6 +198,46 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 	}
 
 	SplineComp->UpdateSpline();
+}
+
+bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
+{
+	//Trust that if we weren't adjusted upwards, the trajectory will clear the net
+	if (!TrajectoryData.bWasAdjustedUpwards)
+	{
+		return true;
+	}
+	
+	static const float BALL_RADIUS = 10.f;
+
+	//Starting from the adjustment index and ending at the bounce location, do a series of collision tests to determine if the ball will clear the net
+	FVector AdjustmentLocation = SplineComp->GetWorldLocationAtSplinePoint(TrajectoryData.AdjustmentIndex);
+	FVector BounceLocation = SplineComp->GetWorldLocationAtSplinePoint(TrajectoryData.BounceLocationIndex);
+	FVector TestDirection = BounceLocation - AdjustmentLocation;
+
+	const int NumTests = 10;
+	float TestInterval = TestDirection.Size() / NumTests;
+
+	TestDirection.Normalize();
+
+	for (int i = 1; i <= NumTests; i++)
+	{
+		FVector TestLocation = SplineComp->FindLocationClosestToWorldLocation(AdjustmentLocation + TestDirection * i * TestInterval, ESplineCoordinateSpace::World);
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
+
+		TArray<AActor*> OutActors;
+
+		UKismetSystemLibrary::SphereOverlapActors(SplineComp, TestLocation, BALL_RADIUS, ObjectTypes, ATennisNetActor::StaticClass(), TArray<AActor*>(), OutActors);
+		
+		if (OutActors.Num() > 0)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 FTrajectoryParams UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName)

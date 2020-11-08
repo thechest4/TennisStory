@@ -57,9 +57,15 @@ protected:
 
 	void UpdateTrajectory();
 
-	void UpdateSplineMesh();
+	void UpdateSplineMesh(bool bUseValidMat);
 
 	TArray<USplineMeshComponent*> SplineMeshComps;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* ValidTrajectoryMat;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* InvalidTrajectoryMat;
 
 	UPROPERTY(Transient)
 	FVector SourcePrevPos;

@@ -91,16 +91,16 @@ public:
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
 	UPROPERTY()
-	float ApexHeight;
-
-	UPROPERTY()
-	float TrajectoryDistance;
-
-	UPROPERTY()
 	int BounceLocationIndex;
 
 	UPROPERTY()
 	FVector TrajectoryEndLocation;
+
+	UPROPERTY()
+	bool bWasAdjustedUpwards = false;
+
+	UPROPERTY()
+	int AdjustmentIndex = 0;
 
 	void AddTrajectoryPoint(FVector PointLocation);
 
@@ -118,6 +118,8 @@ public:
 	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
+
+	static bool ValidateTrajectorySplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
 	static FTrajectoryParams RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName);
 

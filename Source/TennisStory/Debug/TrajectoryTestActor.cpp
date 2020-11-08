@@ -76,10 +76,12 @@ void ATrajectoryTestActor::UpdateTrajectory()
 
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 
-	UpdateSplineMesh();
+	bool bUseValidMat = UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(TrajectoryData, TrajectorySplineComp);
+
+	UpdateSplineMesh(bUseValidMat);
 }
 
-void ATrajectoryTestActor::UpdateSplineMesh()
+void ATrajectoryTestActor::UpdateSplineMesh(bool bUseValidMat)
 {
 	if (!SplineMesh)
 	{
@@ -116,6 +118,21 @@ void ATrajectoryTestActor::UpdateSplineMesh()
 										TrajectorySplineComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World),
 										TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World),
 										TrajectorySplineComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
+
+		if (bUseValidMat)
+		{
+			if (ValidTrajectoryMat)
+			{
+				SplineMeshComp->SetMaterial(0, ValidTrajectoryMat);
+			}
+		}
+		else
+		{
+			if (InvalidTrajectoryMat)
+			{
+				SplineMeshComp->SetMaterial(0, InvalidTrajectoryMat);
+			}
+		}
 	}
 }
 
