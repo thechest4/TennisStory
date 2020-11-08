@@ -20,6 +20,8 @@
 #include "Gameplay/Abilities/DiveAbility.h"
 #include "Net/UnrealNetwork.h"
 #include <AbilitySystemBlueprintLibrary.h>
+#include <Kismet/GameplayStatics.h>
+#include "Components/TrajectoryPreviewComponent.h"
 
 #if WITH_EDITORONLY_DATA
 #include "Components/BillboardComponent.h"
@@ -58,6 +60,8 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	BallStrikingComp = CreateOptionalDefaultSubobject<UBallStrikingComponent>(TEXT("BallStrikingComp"));
 
 	BallAimingSplineComp = CreateOptionalDefaultSubobject<USplineComponent>(TEXT("BallAimingSplineComp"));
+
+	TrajectoryPreviewComp = CreateOptionalDefaultSubobject<UTrajectoryPreviewComponent>(TEXT("TrajectoryPreviewComp"));
 
 	StrikeZone = CreateOptionalDefaultSubobject<UBoxComponent>(TEXT("StrikeZone"));
 	StrikeZone->SetupAttachment(RootComponent);
@@ -274,12 +278,17 @@ void ATennisStoryCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext)
+void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext, FName TrajectoryParamsRowName, UObject* OverrideTrajSourceObj)
 {
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (TargetActor && GameState && Controller)
 	{
 		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForCharacter(this), IsLocallyControlled(), TargetingContext);
+
+		if (TrajectoryPreviewComp)
+		{
+			TrajectoryPreviewComp->StartShowingTrajectory(BallAimingSplineComp, (OverrideTrajSourceObj) ? OverrideTrajSourceObj : StrikeZone, TargetActor, TrajectoryParamsRowName);
+		}
 	}
 }
 
@@ -306,6 +315,11 @@ void ATennisStoryCharacter::DisablePlayerTargeting()
 	if (MouseTarget)
 	{
 		MouseTarget->HideTarget();
+	}
+
+	if (TrajectoryPreviewComp)
+	{
+		TrajectoryPreviewComp->StopShowingTrajectory();
 	}
 }
 

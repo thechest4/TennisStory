@@ -50,6 +50,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	float BadServeMargin = 0.3f;
+
+	FName TrajectoryParamsRowName = FName(TEXT("Serve"));
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
 	TArray<UParticleSystem*> OrderedServeHitVFX;

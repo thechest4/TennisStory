@@ -65,7 +65,7 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UServeAbility::HandleServeMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 	
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service);
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service, TrajectoryParamsRowName, TennisBall);
 
 	if (OwnerChar->HasAuthority())
 	{
@@ -143,7 +143,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			GameMode->DetermineHitLegality(Player);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TEXT("Serve"), TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryParamsRowName, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 

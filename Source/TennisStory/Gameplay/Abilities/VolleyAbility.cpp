@@ -71,7 +71,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley, GetTrajectoryParamsRowName());
 
 	if (OwnerChar->BallStrikingComp)
 	{

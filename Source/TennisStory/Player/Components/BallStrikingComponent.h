@@ -58,9 +58,6 @@ protected:
 	UPROPERTY()
 	APlayerTargetActor* OwnerTarget;
 
-	UPROPERTY()
-	USplineComponent* OwnerSplineComp;
-
 	bool bBallStrikingAllowed;
 
 	FBallHitEvent BallHitEvent;

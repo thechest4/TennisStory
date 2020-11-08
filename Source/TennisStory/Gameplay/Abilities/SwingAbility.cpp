@@ -72,7 +72,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke, GetTrajectoryParamsRowName());
 
 	if (OwnerChar->BallStrikingComp)
 	{

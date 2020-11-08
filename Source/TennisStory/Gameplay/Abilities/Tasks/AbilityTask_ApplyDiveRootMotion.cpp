@@ -7,6 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Net/UnrealNetwork.h"
+#include "Gameplay/Abilities/DiveAbility.h"
 
 UAbilityTask_ApplyDiveRootMotion::UAbilityTask_ApplyDiveRootMotion()
 	: DiveDirection(ForceInitToZero)

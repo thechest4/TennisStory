@@ -109,10 +109,6 @@ void ATrajectoryTestActor::UpdateSplineMesh(bool bUseValidMat)
 			SplineMeshComp = SplineMeshComps[i];
 			SplineMeshComp->SetHiddenInGame(false);
 		}
-
-		
-		float StartTime = static_cast<float>(i) / NumSegments;
-		float EndTime = static_cast<float>(i + 1) / NumSegments;
 		
 		SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), 
 										TrajectorySplineComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World),

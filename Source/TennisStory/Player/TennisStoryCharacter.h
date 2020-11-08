@@ -15,6 +15,7 @@ class ATennisBall;
 class UBoxComponent;
 class UDistanceIndicatorComponent;
 class APlayerMouseTarget;
+class UTrajectoryPreviewComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
 
@@ -78,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UBallStrikingComponent* BallStrikingComp;
 
-	void EnablePlayerTargeting(ETargetingContext TargetingContext);
+	void EnablePlayerTargeting(ETargetingContext TargetingContext, FName TrajectoryParamsRowName, UObject* OverrideTrajSourceObj = nullptr);
 
 	void FreezePlayerTarget();
 
@@ -237,6 +238,9 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	USplineComponent* BallAimingSplineComp;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
+	UTrajectoryPreviewComponent* TrajectoryPreviewComp;
 
 	//These vectors are used to orient the character relative to the court it's aiming at
 	//Set whenever a character is assigned to a court

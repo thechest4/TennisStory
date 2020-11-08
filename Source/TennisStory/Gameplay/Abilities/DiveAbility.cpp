@@ -2,6 +2,7 @@
 
 #include "DiveAbility.h"
 #include "Player/TennisStoryCharacter.h"
+#include "Player/Components/BallStrikingComponent.h"
 #include "Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "Tasks/AbilityTask_ApplyDiveRootMotion.h"
 
@@ -84,7 +85,7 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		CurrentRootMotionTask->ReadyForActivation();
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke, GetTrajectoryParamsRowName());
 
 	if (OwnerChar->BallStrikingComp)
 	{

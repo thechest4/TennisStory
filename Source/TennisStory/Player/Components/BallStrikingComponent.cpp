@@ -27,9 +27,8 @@ void UBallStrikingComponent::BeginPlay()
 	OwnerChar = Cast<ATennisStoryCharacter>(GetOwner());
 	OwnerRacquet = (OwnerChar) ? OwnerChar->RacquetActor : nullptr;
 	OwnerTarget = (OwnerChar) ? OwnerChar->TargetActor : nullptr;
-	OwnerSplineComp = (OwnerChar) ? OwnerChar->BallAimingSplineComp : nullptr;
 	
-	checkf((OwnerRacquet || !OwnerTarget || !OwnerSplineComp), TEXT("UBallStrikingComponent::BeginPlay - Some required owner pointer not valid!"))
+	checkf((OwnerRacquet || !OwnerTarget), TEXT("UBallStrikingComponent::BeginPlay - Some required owner pointer not valid!"))
 }
 
 void UBallStrikingComponent::AllowBallStriking()
