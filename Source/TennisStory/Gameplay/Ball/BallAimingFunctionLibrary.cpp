@@ -57,13 +57,20 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		bool bNeedsUpwardsAdjustment = false;
 		float AdjustmentHeight = NetHeight + TrajParams.MinNetClearance + BALL_RADIUS;
 
-		if (TrajParams.bCanBeAdjustedUpwards)
+		//Determine if upwards adjustment should be applied.  Due to validation, we check even for trajectories that aren't able to be adjusted upwards
 		{
 			//NOTE(achester): Alpha value for when the shot crosses the net is found by X = StartingPoint.X + A * DirectionVector.X, solved for A: A = X + -StartingPoint.X / DirectionVector.X
 			float CrossNetAlphaValue = FMath::Abs(NetXPosition + -StartLocation.X / TrajectoryDirection.X) / ShotDirectLength;
 			if (CurveData.Eval(CrossNetAlphaValue) * CurveHeightConstant < AdjustmentHeight)
 			{
-				bNeedsUpwardsAdjustment = true;
+				bNeedsUpwardsAdjustment = TrajParams.bCanBeAdjustedUpwards;
+				TrajectoryData.bShouldBeValidated = true;
+
+				//If we cannot do an actual adjustment, come up with an index that can be used for validation
+				if (!TrajParams.bCanBeAdjustedUpwards)
+				{
+					TrajectoryData.ValidateFromIndex = static_cast<int>(CrossNetAlphaValue * NumSegments) - 1; //Subtract 1 to make sure we're testing from before the net crossing
+				}
 			}
 		}
 
@@ -146,8 +153,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				}
 			}
 
-			TrajectoryData.bWasAdjustedUpwards = true;
-			TrajectoryData.AdjustmentIndex = AdjustmentPointIndex;
+			TrajectoryData.bShouldBeValidated = true;
+			TrajectoryData.ValidateFromIndex = AdjustmentPointIndex;
 		}
 
 		//Generate bounce trajectory data
@@ -203,7 +210,7 @@ void UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(FBallTrajectory
 bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
 {
 	//Trust that if we weren't adjusted upwards, the trajectory will clear the net
-	if (!TrajectoryData.bWasAdjustedUpwards)
+	if (!TrajectoryData.bShouldBeValidated)
 	{
 		return true;
 	}
@@ -211,11 +218,11 @@ bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryDat
 	static const float BALL_RADIUS = 10.f;
 
 	//Starting from the adjustment index and ending at the bounce location, do a series of collision tests to determine if the ball will clear the net
-	FVector AdjustmentLocation = SplineComp->GetWorldLocationAtSplinePoint(TrajectoryData.AdjustmentIndex);
+	FVector AdjustmentLocation = SplineComp->GetWorldLocationAtSplinePoint(TrajectoryData.ValidateFromIndex);
 	FVector BounceLocation = SplineComp->GetWorldLocationAtSplinePoint(TrajectoryData.BounceLocationIndex);
 	FVector TestDirection = BounceLocation - AdjustmentLocation;
 
-	const int NumTests = 10;
+	const int NumTests = 20;
 	float TestInterval = TestDirection.Size() / NumTests;
 
 	TestDirection.Normalize();
@@ -233,8 +240,14 @@ bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryDat
 		
 		if (OutActors.Num() > 0)
 		{
+			//DrawDebugSphere(SplineComp->GetWorld(), TestLocation, 10.f, 10, FColor::Red, false, 1.f, 0, 1.f);
+
 			return false;
 		}
+		/*else
+		{
+			DrawDebugSphere(SplineComp->GetWorld(), TestLocation, 10.f, 10, FColor::Yellow, false, 1.f, 0, 1.f);
+		}*/
 	}
 
 	return true;

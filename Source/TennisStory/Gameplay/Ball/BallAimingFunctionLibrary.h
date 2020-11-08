@@ -97,10 +97,12 @@ public:
 	FVector TrajectoryEndLocation;
 
 	UPROPERTY()
-	bool bWasAdjustedUpwards = false;
+	//true when the trajectory needed adjustment to clear the net (or would have, in the case of trajectories that don't get adjusted)
+	bool bShouldBeValidated = false;
 
 	UPROPERTY()
-	int AdjustmentIndex = 0;
+	//Index to start validation from.  Equal to adjustment index when adjustment takes place
+	int ValidateFromIndex = 0;
 
 	void AddTrajectoryPoint(FVector PointLocation);
 
