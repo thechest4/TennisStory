@@ -285,7 +285,7 @@ void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingCon
 	{
 		TargetActor->ShowTargetOnCourt(GameState->GetCourtToAimAtForCharacter(this), IsLocallyControlled(), TargetingContext);
 
-		if (TrajectoryPreviewComp)
+		if (TrajectoryPreviewComp && IsLocallyControlled())
 		{
 			TrajectoryPreviewComp->StartShowingTrajectory(BallAimingSplineComp, (OverrideTrajSourceObj) ? OverrideTrajSourceObj : StrikeZone, TargetActor, TrajectoryParamsRowName);
 		}
