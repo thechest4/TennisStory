@@ -67,7 +67,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void EnterPhysicalMovementState();
+	void EnterPhysicalMovementState(bool bOverrideVelocity = false, FVector OverrideNewVelocity = FVector::ZeroVector);
+
+	FVector InvertVelocityFromNetHit(float VelocityScale);
 
 	UFUNCTION()
 	void HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
@@ -114,6 +116,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce SFX")
 	TArray<USoundBase*> OrderedBounceSFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Net SFX")
+	USoundBase* NetSFX;
 	
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

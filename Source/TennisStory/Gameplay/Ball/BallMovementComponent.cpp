@@ -66,19 +66,21 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 	{
 		if (OtherActor->IsA<ATennisNetActor>())
 		{
-			EnterPhysicalMovementState();
+			EnterPhysicalMovementState(true, InvertVelocityFromNetHit(0.3f));
 
 			OwnerPtr->OnBallHitNet().Broadcast(BoundsContextForFirstBounce);
+			
+			if (NetSFX)
+			{
+				OwnerPtr->Multicast_PlaySound(NetSFX, OwnerPtr->GetActorLocation());
+			}
 		}
 	}
 	else if ((CurrentMovementState == EBallMovementState::ContinueUntilHit || CurrentMovementState == EBallMovementState::Physical) 
 		&& OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
 	{
-		if (OtherActor->IsA<ATennisNetActor>())
-		{
-			//Play net sound.  Anything else?
-		}
-		else //NOTE(achester): this is probably 'ground' specific logic, but since there's nothing else in scene yet the ball can collide with besides net and ground, just handle anything not the net with the below logic
+		//NOTE(achester): this is probably 'ground' specific logic, but since there's nothing else in scene yet the ball can collide with besides net and ground, just handle anything not the net with the below logic
+		if (!OtherActor->IsA<ATennisNetActor>())
 		{
 			if (NumBounces == GameMode->GetAllowedBounces())
 			{
@@ -320,17 +322,27 @@ void UBallMovementComponent::FinishServiceToss(bool bWasInterrupted /*= false*/)
 	}
 }
 
-void UBallMovementComponent::EnterPhysicalMovementState()
+void UBallMovementComponent::EnterPhysicalMovementState(bool bOverrideNewVelocity /* = false*/, FVector OverrideNewVelocity /* = FVector::ZeroVector*/)
 {
 	CurrentMovementState = EBallMovementState::Physical;
 
-	if (BallCollisionComponent)
+	if (BallCollisionComponent && !BallCollisionComponent->IsSimulatingPhysics())
 	{
 		BallCollisionComponent->SetSimulatePhysics(true);
-		BallCollisionComponent->SetPhysicsLinearVelocity(CurrentDirection * CurrentVelocity);
+
+		FVector NewVelocity = (bOverrideNewVelocity) ? OverrideNewVelocity : CurrentDirection * CurrentVelocity;
+		BallCollisionComponent->SetPhysicsLinearVelocity(NewVelocity);
 	}
 	
 	CurrentVelocity = 0.f;
+}
+
+FVector UBallMovementComponent::InvertVelocityFromNetHit(float VelocityScale)
+{
+	const float NewZDirection = -0.2f;
+	
+	//TODO(achester): This is a very naive way to reflect the ball when hitting the net, reliant on the court being positioned along the X Axis (net across the Y Axis)
+	return VelocityScale * CurrentVelocity * FVector(-CurrentDirection.X, CurrentDirection.Y, NewZDirection);
 }
 
 #if WITH_EDITORONLY_DATA
