@@ -86,6 +86,12 @@ protected:
 
 	void HandleBallHitBounceLimit();
 
+	void HandleBallHitNet(EBoundsContext BoundsContext);
+
+	bool IsFault(EBoundsContext BoundsContext, bool& bWasDoubleFault);
+
+	void ResolveFault(bool bShowBounceMarker, FVector BounceLocation = FVector::ZeroVector);
+
 	void ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, EPointResolutionType PointType);
 
 	void EndMatch(bool bWasForfeit = false, FString WinnerName = FString(), FString LoserName = FString());

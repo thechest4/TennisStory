@@ -14,6 +14,7 @@ class UDistanceIndicatorComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBallOutOfBoundsEvent, EBoundsContext, FVector)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBallHitNetEvent, EBoundsContext)
 
 UENUM(BlueprintType)
 enum class ETennisBallState : uint8
@@ -33,6 +34,7 @@ public:
 
 	FOnBallOutOfBoundsEvent& OnBallOutOfBounds(){ return BallOutOfBoundsEvent; }
 	FOnBallHitBounceLimitEvent& OnBallHitBounceLimit(){ return BallHitBounceLimitEvent; }
+	FOnBallHitNetEvent& OnBallHitNet() { return BallHitNetEvent; }
 
 	ATennisBall();
 	
@@ -142,4 +144,5 @@ private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;
 	FOnBallOutOfBoundsEvent BallOutOfBoundsEvent;
 	FOnBallHitBounceLimitEvent BallHitBounceLimitEvent;
+	FOnBallHitNetEvent BallHitNetEvent;
 };

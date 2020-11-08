@@ -232,7 +232,7 @@ bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryDat
 		FVector TestLocation = SplineComp->FindLocationClosestToWorldLocation(AdjustmentLocation + TestDirection * i * TestInterval, ESplineCoordinateSpace::World);
 
 		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_GameTraceChannel5)); //Object Channel TennisNet
 
 		TArray<AActor*> OutActors;
 

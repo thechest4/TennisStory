@@ -11,6 +11,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryPlayerController.h"
 #include "Player/TennisStoryCharacter.h"
+#include "../TennisNetActor.h"
 
 UBallMovementComponent::UBallMovementComponent()
 {
@@ -61,29 +62,45 @@ void UBallMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
 	ATennisStoryGameMode* GameMode = GetWorld()->GetAuthGameMode<ATennisStoryGameMode>();
-	if ((CurrentMovementState == EBallMovementState::ContinueUntilHit || CurrentMovementState == EBallMovementState::Physical) 
-		&& OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
+	if (CurrentMovementState == EBallMovementState::FollowingPath && NumBounces == 0)
 	{
-		if (NumBounces == GameMode->GetAllowedBounces())
+		if (OtherActor->IsA<ATennisNetActor>())
 		{
 			EnterPhysicalMovementState();
 
-			OwnerPtr->OnBallHitBounceLimit().Broadcast();
+			OwnerPtr->OnBallHitNet().Broadcast(BoundsContextForFirstBounce);
 		}
-
-		const float MinImpulseForParticles = 500.f;
-		if (NormalImpulse.Size() > MinImpulseForParticles)
+	}
+	else if ((CurrentMovementState == EBallMovementState::ContinueUntilHit || CurrentMovementState == EBallMovementState::Physical) 
+		&& OwnerPtr->GetCurrentBallState() == ETennisBallState::PlayState)
+	{
+		if (OtherActor->IsA<ATennisNetActor>())
 		{
-			OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
-
-			ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
-			if (OrderedBounceSFX.Num() == 2)
-			{
-				OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[0], OwnerPtr->GetActorLocation());
-			}
+			//Play net sound.  Anything else?
 		}
-		
-		NumBounces++;
+		else //NOTE(achester): this is probably 'ground' specific logic, but since there's nothing else in scene yet the ball can collide with besides net and ground, just handle anything not the net with the below logic
+		{
+			if (NumBounces == GameMode->GetAllowedBounces())
+			{
+				EnterPhysicalMovementState();
+
+				OwnerPtr->OnBallHitBounceLimit().Broadcast();
+			}
+
+			const float MinImpulseForParticles = 500.f;
+			if (NormalImpulse.Size() > MinImpulseForParticles)
+			{
+				OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
+
+				ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
+				if (OrderedBounceSFX.Num() == 2)
+				{
+					OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[0], OwnerPtr->GetActorLocation());
+				}
+			}
+
+			NumBounces++;
+		}
 	}
 }
 

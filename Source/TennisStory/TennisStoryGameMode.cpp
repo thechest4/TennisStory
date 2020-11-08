@@ -93,6 +93,7 @@ void ATennisStoryGameMode::StartPlay()
 
 		TSGameState->CurrentBallActor->OnBallOutOfBounds().AddUObject(this, &ATennisStoryGameMode::HandleBallOutOfBounds);
 		TSGameState->CurrentBallActor->OnBallHitBounceLimit().AddUObject(this, &ATennisStoryGameMode::HandleBallHitBounceLimit);
+		TSGameState->CurrentBallActor->OnBallHitNet().AddUObject(this, &ATennisStoryGameMode::HandleBallHitNet);
 	}
 
 	if (DefaultBounceMarkerClass)
@@ -496,36 +497,16 @@ void ATennisStoryGameMode::GetCamPositioningCompFromWorld()
 
 void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, FVector BounceLocation)
 {
-	if (BoundsContext == EBoundsContext::ServiceAd || BoundsContext == EBoundsContext::ServiceDeuce)
+	bool bWasDoubleFault = false;
+	if (IsFault(BoundsContext, bWasDoubleFault))
 	{
-		if (TSGameState->CurrentFaultCount < AllowedFaults)
+		if (bWasDoubleFault)
 		{
-			if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
-			{
-				return;
-			}
-
-			TSGameState->CurrentFaultCount++;
-			
-			TSGameState->CurrentPlayState = EPlayState::Waiting;
-
-			float ResetDuration = 1.5f;
-
-			TSGameState->AddCalloutWidgetToViewport(ResetDuration, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")), false);
-
-			FTimerHandle NextPointHandle;
-			GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, ResetDuration);
-			
-			if (BounceMarkerActor.IsValid())
-			{
-				BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, ResetDuration);
-			}
-
-			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::HandleBallOutOfBounds - Fault"))
+			ResolvePoint(false, true, BounceLocation, EPointResolutionType::DoubleFault);
 		}
 		else
 		{
-			ResolvePoint(false, true, BounceLocation, EPointResolutionType::DoubleFault);
+			ResolveFault(true, BounceLocation);
 		}
 	}
 	else
@@ -537,6 +518,59 @@ void ATennisStoryGameMode::HandleBallOutOfBounds(EBoundsContext BoundsContext, F
 void ATennisStoryGameMode::HandleBallHitBounceLimit()
 {
 	ResolvePoint(true, false, FVector::ZeroVector, EPointResolutionType::Winner);
+}
+
+void ATennisStoryGameMode::HandleBallHitNet(EBoundsContext BoundsContext)
+{
+	bool bWasDoubleFault = false;
+	if (IsFault(BoundsContext, bWasDoubleFault))
+	{
+		if (bWasDoubleFault)
+		{
+			ResolvePoint(false, false, FVector::ZeroVector, EPointResolutionType::DoubleFault);
+		}
+		else
+		{
+			ResolveFault(false);
+		}
+	}
+	else
+	{
+		ResolvePoint(false, false, FVector::ZeroVector, EPointResolutionType::Net);
+	}
+}
+
+bool ATennisStoryGameMode::IsFault(EBoundsContext BoundsContext, bool& bWasDoubleFault)
+{
+	bWasDoubleFault = TSGameState->CurrentFaultCount >= AllowedFaults;
+
+	return BoundsContext == EBoundsContext::ServiceAd || BoundsContext == EBoundsContext::ServiceDeuce;
+}
+
+void ATennisStoryGameMode::ResolveFault(bool bShowBounceMarker, FVector BounceLocation /* = FVector::ZeroVector*/)
+{
+	if (TSGameState->CurrentPlayState != EPlayState::PlayingPoint)
+	{
+		return;
+	}
+
+	TSGameState->CurrentFaultCount++;
+
+	TSGameState->CurrentPlayState = EPlayState::Waiting;
+
+	float ResetDuration = 1.5f;
+
+	TSGameState->AddCalloutWidgetToViewport(ResetDuration, FText::FromString(TEXT("FAULT")), FText::FromString(TEXT("SECOND SERVE")), false);
+
+	FTimerHandle NextPointHandle;
+	GetWorldTimerManager().SetTimer(NextPointHandle, this, &ATennisStoryGameMode::SetUpNextPoint, ResetDuration);
+
+	if (bShowBounceMarker && BounceMarkerActor.IsValid())
+	{
+		BounceMarkerActor->Multicast_ShowMarkerAtLocation(BounceLocation, ResetDuration);
+	}
+
+	UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolveFault"))
 }
 
 void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLocation, FVector BounceLocation, EPointResolutionType PointType)
@@ -658,6 +692,14 @@ void ATennisStoryGameMode::ResolvePoint(bool bLastPlayerWon, bool bShowBounceLoc
 			ResolutionTypeString = FString(TEXT("ILLEGAL HIT"));
 				
 			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Illegal Hit by team: %d"), LoserTeamId)
+
+			break;
+		}
+		case EPointResolutionType::Net:
+		{
+			ResolutionTypeString = FString(TEXT("NET"));
+
+			UE_LOG(LogTS_MatchState, Log, TEXT("ATennisStoryGameMode::ResolvePoint - Net Hit by team: %d"), LoserTeamId)
 
 			break;
 		}

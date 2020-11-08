@@ -55,7 +55,8 @@ enum class EPointResolutionType : uint8
 	Winner,
 	Out,
 	DoubleFault,
-	IllegalHit
+	IllegalHit,
+	Net
 };
 
 USTRUCT()
