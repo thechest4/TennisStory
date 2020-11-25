@@ -124,14 +124,24 @@ public:
 	}
 
 	UFUNCTION(BlueprintNativeEvent)
-	FName GetTrajectoryParamsRowName();
-	virtual FName GetTrajectoryParamsRowName_Implementation() override
+	FGameplayTag GetShotSourceTag();
+	virtual FGameplayTag GetShotSourceTag_Implementation() override
 	{
-		return TEXT("Dive");
+		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Dive"));
+	}
+
+	UFUNCTION(BlueprintNativeEvent)
+	FGameplayTag GetFallbackShotTypeTag();
+	virtual FGameplayTag GetFallbackShotTypeTag_Implementation() override
+	{
+		return FallbackGameplayTag;
 	}
 	//IGroundstrokeAbilityInterface end
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
+	FGameplayTag FallbackGameplayTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"));
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	UAnimMontage* DiveMontage;
 

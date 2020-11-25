@@ -54,6 +54,14 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	bVolleyReleased = false;
 	CurrentVolleyType = EVolleyType::PassiveVolley;
 
+	if (OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
+		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
+	}
+
+	//Can't call UpdateShotContext until shot tags are set since it may trigger a call to get the trajectory params
 	UpdateShotContext(TennisBall, OwnerChar);
 	UAnimMontage* MontageToPlay = GetVolleyMontage();
 	SetStrikeZonePosition(OwnerChar);
@@ -71,13 +79,8 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley, GetTrajectoryParamsRowName());
-
-	if (OwnerChar->BallStrikingComp)
-	{
-		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
-		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
-	}
+	//This needs to happen after the shot tags are set
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
 }
 
 void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -112,6 +115,9 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		{
 			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
 			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+
+			//If this ability has been canceled, we want to retain our DesiredShotTags so the canceling ability can use them (DiveAbility) but we never want to retain our context tags since they are unique to this ability
+			OwnerChar->BallStrikingComp->ResetAllShotTags(true, !bWasCancelled);
 		}
 	}
 }
@@ -197,8 +203,14 @@ bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryChar
 	if (BallSplineComp.IsValid())
 	{
 		FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(OwnerCharacter->GetActorLocation(), ESplineCoordinateSpace::World);
-		const float MinHeightForHighVolley = 100.f;
+		const float MinHeightForHighVolley = 130.f;
 		bCurrentShotIsHigh = FutureBallLocation.Z >= MinHeightForHighVolley;
+	}
+
+	if (bCurrentShotIsHigh != bPrevShotHigh)
+	{
+		FGameplayTagContainer ContextTags = FGameplayTagContainer((bCurrentShotIsHigh) ? FGameplayTag::RequestGameplayTag(TEXT("Shot.Context.Volley.High")) : FGameplayTag::RequestGameplayTag(TEXT("Shot.Context.Volley.Low")));
+		OwnerCharacter->BallStrikingComp->SetShotContextTags(ContextTags);
 	}
 
 	return bCurrentShotIsForehand != bPrevShotForehand || bCurrentShotIsHigh != bPrevShotHigh;

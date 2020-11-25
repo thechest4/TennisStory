@@ -51,7 +51,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	float BadServeMargin = 0.3f;
 
-	FName TrajectoryParamsRowName = FName(TEXT("Serve"));
+	FGameplayTag ShotSourceTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Serve"));
+	FGameplayTag FallbackShotTypeTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Flat"));
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Hit FX")
 	TArray<UParticleSystem*> OrderedServeHitVFX;

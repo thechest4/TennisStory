@@ -150,9 +150,9 @@ void ATrajectoryTestActor::HideContextMenu()
 	}
 }
 
-void ATrajectoryTestActor::SetTrajParams(FTrajectoryParams argTrajParams)
+void ATrajectoryTestActor::UpdateTrajParams(FGameplayTag SourceTag, FGameplayTagContainer ContextTags, FGameplayTag ShotTypeTag, FGameplayTag FallbackTypeTag)
 {
-	TrajParams = argTrajParams;
+	TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(SourceTag, ContextTags, ShotTypeTag, FallbackTypeTag);
 	UpdateTrajectory();
 }
 

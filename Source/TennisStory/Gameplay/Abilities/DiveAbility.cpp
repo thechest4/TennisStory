@@ -85,12 +85,14 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		CurrentRootMotionTask->ReadyForActivation();
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke, GetTrajectoryParamsRowName());
-
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
+
+	//This needs to happen after shot tags are set
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
 }
 
 void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -120,6 +122,7 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+			OwnerChar->BallStrikingComp->ResetAllShotTags();
 		}
 
 		OwnerChar->SetActorRotation(CachedPrevRotation);

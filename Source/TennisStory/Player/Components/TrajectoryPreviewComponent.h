@@ -9,6 +9,7 @@
 
 class USplineMeshComponent;
 class USplineComponent;
+class UBallStrikingComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UTrajectoryPreviewComponent : public UActorComponent
@@ -18,22 +19,28 @@ class TENNISSTORY_API UTrajectoryPreviewComponent : public UActorComponent
 public:	
 	UTrajectoryPreviewComponent();
 
-	void StartShowingTrajectory(USplineComponent* SplinePreviewComp, UObject* StartLocObj, UObject* EndLocObj, FName TrajParamsRowName);
+	void SetBallStrikingCompReference(UBallStrikingComponent* BallStrikingComp);
+
+	void StartShowingTrajectory(USplineComponent* SplinePreviewComp, UObject* StartLocObj, UObject* EndLocObj);
 
 	void StopShowingTrajectory();
 
 protected:
+	void HandleShotTagsChanged();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void GeneratePreviewTrajectory();
 
 	FVector GetObjectLocation(UObject* Object);
 
+	TWeakObjectPtr<UBallStrikingComponent> OwnerBallStrikingComp;
+
 	TWeakObjectPtr<USplineComponent> OwnerSplinePreviewComp;
 	TWeakObjectPtr<UObject> StartLocObjPtr;
 	TWeakObjectPtr<UObject> EndLocObjPtr;
 
-	FName CurrentTrajParamsRowName;
+	FTrajectoryParams CurrentTrajParams;
 
 	TArray<USplineMeshComponent*> SplineMeshComps;
 

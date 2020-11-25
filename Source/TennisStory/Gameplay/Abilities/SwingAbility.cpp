@@ -72,12 +72,14 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke, GetTrajectoryParamsRowName());
-
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
+
+	//This needs to happen after the shot tags are set
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
 }
 
 void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -106,6 +108,9 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+
+			//If this ability has been canceled, we want to retain our DesiredShotTags so the canceling ability can use them (DiveAbility) but we never want to retain our context tags since they are unique to this ability
+			OwnerChar->BallStrikingComp->ResetAllShotTags(true, !bWasCancelled);
 		}
 	}
 }

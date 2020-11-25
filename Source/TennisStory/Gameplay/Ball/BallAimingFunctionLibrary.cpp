@@ -20,11 +20,6 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FName TrajectoryRowName, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor)
-{
-	return GenerateTrajectoryData(RetrieveTrajectoryParamsFromDataProvider(TrajectoryRowName), StartLocation, EndLocation, WorldContextActor);
-}
-
 FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
@@ -253,18 +248,39 @@ bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryDat
 	return true;
 }
 
-FTrajectoryParams UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName)
+FTrajectoryParams UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(FGameplayTag SourceTag, FGameplayTagContainer argContextTags, FGameplayTag argShotTypeTag, FGameplayTag FallbackTypeTag)
 {
-	const UDataTable* TrajParamsDT = UTrajectoryDataProvider::GetDefaultTrajectoryParamsDT();
+	const UDataTable* TrajParamsDT = UTrajectoryDataProvider::GetDefaultTrajectoryTableByTag(SourceTag);
 
-	ensureMsgf(TrajParamsDT, TEXT("UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider - Unable to get valid reference to Trajectory Params DT"));
+	ensureMsgf(TrajParamsDT, TEXT("UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider - Unable to get valid reference to Trajectory DT"));
 
-	FString ContextStr;
-	FTrajectoryParams* TrajParamsPtr = TrajParamsDT->FindRow<FTrajectoryParams>(TrajectoryRowName, ContextStr);
+	FTrajectoryParams* FallbackTrajParams = nullptr;
 
-	ensureMsgf(TrajParamsPtr, TEXT("UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider - Unable to retrieve Trajectory Params from DT"));
+	for (auto Row : TrajParamsDT->GetRowMap())
+	{
+		FTrajectoryParams* TrajParams = reinterpret_cast<FTrajectoryParams*>(Row.Value);
 
-	return *TrajParamsPtr;
+		if (TrajParams->ContextTags.HasAllExact(argContextTags))
+		{
+			if (TrajParams->ShotTypeTag.MatchesTagExact(argShotTypeTag))
+			{
+				return *TrajParams;
+			}
+			else if (TrajParams->ShotTypeTag.MatchesTagExact(FallbackTypeTag))
+			{
+				FallbackTrajParams = TrajParams;
+			}
+		}
+	}
+
+	if (FallbackTrajParams)
+	{
+		return *FallbackTrajParams;
+	}
+
+	checkNoEntry()
+
+	return FTrajectoryParams();
 }
 
 void UBallAimingFunctionLibrary::DebugVisualizeSplineComp(USplineComponent* SplineComp)

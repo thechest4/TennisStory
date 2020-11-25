@@ -122,9 +122,12 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		}
 
 		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
-		FName TrajParamsRowName = IGroundstrokeAbilityInterface::Execute_GetTrajectoryParamsRowName(GroundstrokeAbilityObj);
 
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParamsRowName, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation());
+		ensureMsgf(CurrentShotSourceTag != FGameplayTag::EmptyTag, TEXT("No ShotSourceTag available"));
+		ensureMsgf(CurrentFallbackShotTypeTag != FGameplayTag::EmptyTag, TEXT("No FallbackShotTypeTag available"));
+
+		FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(CurrentShotSourceTag, CurrentShotContextTags, DesiredShotTypeTag, CurrentFallbackShotTypeTag);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation());
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, EBoundsContext::FullCourt, OwnerChar);
 

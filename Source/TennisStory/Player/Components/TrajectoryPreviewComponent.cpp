@@ -3,6 +3,7 @@
 #include "TrajectoryPreviewComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
+#include "BallStrikingComponent.h"
 
 UTrajectoryPreviewComponent::UTrajectoryPreviewComponent()
 {
@@ -11,6 +12,34 @@ UTrajectoryPreviewComponent::UTrajectoryPreviewComponent()
 	bIsCurrentlyShowingTrajectory = false;
 	PrevStartLocation = FVector::ZeroVector;
 	PrevEndLocation = FVector::ZeroVector;
+}
+
+void UTrajectoryPreviewComponent::SetBallStrikingCompReference(UBallStrikingComponent* BallStrikingComp)
+{
+	//Currently only supporting binding once and not rebinding
+	if (OwnerBallStrikingComp.IsValid())
+	{
+		return;
+	}
+	
+	OwnerBallStrikingComp = BallStrikingComp;
+
+	if (OwnerBallStrikingComp.IsValid())
+	{
+		OwnerBallStrikingComp->OnShotTagsChanged().AddUObject(this, &UTrajectoryPreviewComponent::HandleShotTagsChanged);		
+	}
+}
+
+void UTrajectoryPreviewComponent::HandleShotTagsChanged()
+{
+	ensureMsgf(OwnerBallStrikingComp.IsValid(), TEXT("OwnerBallStrikingComp was null"));
+
+	FGameplayTag ShotSource = OwnerBallStrikingComp->CurrentShotSourceTag;
+	FGameplayTagContainer ShotContext = OwnerBallStrikingComp->CurrentShotContextTags;
+	FGameplayTag DesiredShotType = OwnerBallStrikingComp->DesiredShotTypeTag;
+	FGameplayTag FallbackShotType = OwnerBallStrikingComp->CurrentFallbackShotTypeTag;
+
+	CurrentTrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSource, ShotContext, DesiredShotType, FallbackShotType);
 }
 
 void UTrajectoryPreviewComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -28,7 +57,7 @@ void UTrajectoryPreviewComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 void UTrajectoryPreviewComponent::GeneratePreviewTrajectory()
 {
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParamsRowName, GetObjectLocation(StartLocObjPtr.Get()), GetObjectLocation(EndLocObjPtr.Get()));
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParams, GetObjectLocation(StartLocObjPtr.Get()), GetObjectLocation(EndLocObjPtr.Get()));
 
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, OwnerSplinePreviewComp.Get());
 
@@ -102,7 +131,7 @@ FVector UTrajectoryPreviewComponent::GetObjectLocation(UObject* Object)
 	return FVector::ZeroVector;
 }
 
-void UTrajectoryPreviewComponent::StartShowingTrajectory(USplineComponent* SplinePreviewComp, UObject* StartLocObj, UObject* EndLocObj, FName TrajParamsRowName)
+void UTrajectoryPreviewComponent::StartShowingTrajectory(USplineComponent* SplinePreviewComp, UObject* StartLocObj, UObject* EndLocObj)
 {
 	if (!StartLocObj || !EndLocObj)
 	{
@@ -115,10 +144,10 @@ void UTrajectoryPreviewComponent::StartShowingTrajectory(USplineComponent* Splin
 	StartLocObjPtr = StartLocObj;
 	EndLocObjPtr = EndLocObj;
 
-	CurrentTrajParamsRowName = TrajParamsRowName;
-
 	PrevStartLocation = GetObjectLocation(StartLocObjPtr.Get());
 	PrevEndLocation = GetObjectLocation(EndLocObjPtr.Get());
+
+	CurrentTrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(OwnerBallStrikingComp->CurrentShotSourceTag, OwnerBallStrikingComp->CurrentShotContextTags, OwnerBallStrikingComp->DesiredShotTypeTag, OwnerBallStrikingComp->CurrentFallbackShotTypeTag);
 
 	GeneratePreviewTrajectory();
 }

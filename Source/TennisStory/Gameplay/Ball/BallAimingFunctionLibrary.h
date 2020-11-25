@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include <Engine/DataTable.h>
+#include <GameplayTagContainer.h>
 #include "BallAimingFunctionLibrary.generated.h"
 
 class USplineComponent;
@@ -17,6 +18,12 @@ struct FTrajectoryParams : public FTableRowBase
 public:
 	UPROPERTY(EditAnywhere, Category = "HitTrajectory")
 	UCurveFloat* TrajectoryCurve;
+
+	UPROPERTY(EditAnywhere, Category = "GameplayTags", BlueprintReadOnly)
+	FGameplayTagContainer ContextTags;
+
+	UPROPERTY(EditAnywhere, Category = "GameplayTags", BlueprintReadOnly)
+	FGameplayTag ShotTypeTag;
 
 	UPROPERTY(EditAnywhere, Category = "AdjustUp")
 	bool bCanBeAdjustedUpwards = true;
@@ -115,15 +122,13 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
-	static FBallTrajectoryData GenerateTrajectoryData(FName TrajectoryRowName, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
-
 	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
 	static bool ValidateTrajectorySplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
-	static FTrajectoryParams RetrieveTrajectoryParamsFromDataProvider(FName TrajectoryRowName);
+	static FTrajectoryParams RetrieveTrajectoryParamsFromDataProvider(FGameplayTag SourceTag, FGameplayTagContainer ContextTags, FGameplayTag ShotTypeTag, FGameplayTag FallbackTypeTag);
 
 	static void DebugVisualizeSplineComp(USplineComponent* SplineComp);
 };

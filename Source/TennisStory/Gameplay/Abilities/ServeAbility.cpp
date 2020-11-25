@@ -64,13 +64,19 @@ void UServeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayServeMontage"), ServeMontage, 1.0f, TEXT("Toss"));
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UServeAbility::HandleServeMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
-	
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service, TrajectoryParamsRowName, TennisBall);
 
 	if (OwnerChar->HasAuthority())
 	{
 		OwnerChar->Multicast_LockMovement();
 	}
+
+	if (OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(ShotSourceTag, FallbackShotTypeTag);
+	}
+
+	//This needs to happen after the shot tags are set
+	OwnerChar->EnablePlayerTargeting(ETargetingContext::Service, TennisBall);
 }
 
 void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -100,6 +106,11 @@ void UServeAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	if (OwnerChar->HasAuthority())
 	{
 		OwnerChar->Multicast_UnlockMovement();
+	}
+
+	if (OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->ResetAllShotTags();
 	}
 }
 
@@ -143,7 +154,8 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			GameMode->DetermineHitLegality(Player);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajectoryParamsRowName, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
+			FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSourceTag, FGameplayTagContainer::EmptyContainer, Player->BallStrikingComp->GetDesiredShotTypeTag(), FallbackShotTypeTag);
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
 			
 			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 

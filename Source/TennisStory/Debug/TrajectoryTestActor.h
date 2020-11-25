@@ -31,7 +31,7 @@ public:
 	virtual void HideContextMenu() override;
 
 	UFUNCTION(BlueprintCallable)
-	void SetTrajParams(FTrajectoryParams TrajParams);
+	void UpdateTrajParams(FGameplayTag SourceTag, FGameplayTagContainer ContextTags, FGameplayTag ShotTypeTag, FGameplayTag FallbackTypeTag);
 
 	UFUNCTION(BlueprintCallable)
 	void SetMeshLocations(FVector SourceLocation, FVector EndLocation);

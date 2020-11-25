@@ -4,9 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include <GameplayTagContainer.h>
+#include <Engine/DataTable.h>
 #include "TrajectoryDataProvider.generated.h"
 
-class UDataTable;
+USTRUCT(BlueprintType)
+struct FSourceTrajectoryMapping : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag ShotSourceTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UDataTable* SourceDT;
+};
 
 UCLASS()
 class TENNISSTORY_API UTrajectoryDataProvider : public UObject
@@ -16,11 +29,12 @@ class TENNISSTORY_API UTrajectoryDataProvider : public UObject
 public:
 	UTrajectoryDataProvider();
 
-	static const UDataTable* GetDefaultTrajectoryParamsDT();
+	UFUNCTION(BlueprintCallable, Category = "Trajectory Data")
+	static UDataTable* GetDefaultTrajectoryTableByTag(FGameplayTag SourceTag) { return GetDefault<UTrajectoryDataProvider>()->GetTrajectoryTableByTag(SourceTag); }
 
-	const UDataTable* GetTrajectoryParamsDataTable() const { return TrajectoryParamsDT; }
+	UDataTable* GetTrajectoryTableByTag(FGameplayTag SourceTag) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	UDataTable* TrajectoryParamsDT;
+	UDataTable* SourceTrajectoryMappingDT;
 };

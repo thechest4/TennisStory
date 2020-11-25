@@ -1,24 +1,40 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TrajectoryDataProvider.h"
-#include <Engine/DataTable.h>
 
 UTrajectoryDataProvider::UTrajectoryDataProvider()
 {
 	if (this == GetDefault<UTrajectoryDataProvider>())
 	{
-		static ConstructorHelpers::FObjectFinder<UDataTable> DTFinder(TEXT("DataTable'/Game/Blueprints/Gameplay/Trajectory/TrajectoryParams_DT.TrajectoryParams_DT'"));
-		TrajectoryParamsDT = DTFinder.Object;
+		//Locate Mapping DT
+		static ConstructorHelpers::FObjectFinder<UDataTable> MappingDTFinder(TEXT("DataTable'/Game/Blueprints/Gameplay/Trajectory/SourceTrajectoryMapping_DT.SourceTrajectoryMapping_DT'"));
+		SourceTrajectoryMappingDT = MappingDTFinder.Object;
 
-		if (!DTFinder.Succeeded())
+		if (!MappingDTFinder.Succeeded())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UTrajectoryDataProvider - Unable to find the TrajectoryParams_DT"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UTrajectoryDataProvider - Unable to find SourceTrajectoryMappingDT"));
 		}
 	}
 }
 
-const UDataTable* UTrajectoryDataProvider::GetDefaultTrajectoryParamsDT()
+UDataTable* UTrajectoryDataProvider::GetTrajectoryTableByTag(FGameplayTag SourceTag) const
 {
-	return GetDefault<UTrajectoryDataProvider>()->GetTrajectoryParamsDataTable();
+	ensureMsgf(SourceTrajectoryMappingDT, TEXT("SourceTrajectoryMappingDT was null"));
+
+	for (auto Row : SourceTrajectoryMappingDT->GetRowMap())
+	{
+		FSourceTrajectoryMapping* SourceTrajMapping = reinterpret_cast<FSourceTrajectoryMapping*>(Row.Value);
+
+		ensureMsgf(SourceTrajMapping, TEXT("Wrong row struct in table"));
+
+		if (SourceTrajMapping->ShotSourceTag.MatchesTagExact(SourceTag))
+		{
+			return SourceTrajMapping->SourceDT;
+		}
+	}
+
+	checkNoEntry();
+
+	return nullptr;
 }
 

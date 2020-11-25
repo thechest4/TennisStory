@@ -239,6 +239,11 @@ void ATennisStoryCharacter::PostInitializeComponents()
 		TargetActor = GetWorld()->SpawnActor<APlayerTargetActor>(TargetActorClass, ActorLocationOnGround + GetActorForwardVector() * 800.0f, GetActorRotation(), SpawnParams);
 		TargetActor->SetOwner(this);
 	}
+
+	if (TrajectoryPreviewComp)
+	{
+		TrajectoryPreviewComp->SetBallStrikingCompReference(BallStrikingComp);
+	}
 }
 
 void ATennisStoryCharacter::PossessedBy(AController* NewController)
@@ -278,7 +283,7 @@ void ATennisStoryCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext, FName TrajectoryParamsRowName, UObject* OverrideTrajSourceObj)
+void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingContext, UObject* OverrideTrajSourceObj)
 {
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (TargetActor && GameState && Controller)
@@ -287,7 +292,7 @@ void ATennisStoryCharacter::EnablePlayerTargeting(ETargetingContext TargetingCon
 
 		if (TrajectoryPreviewComp && IsLocallyControlled())
 		{
-			TrajectoryPreviewComp->StartShowingTrajectory(BallAimingSplineComp, (OverrideTrajSourceObj) ? OverrideTrajSourceObj : StrikeZone, TargetActor, TrajectoryParamsRowName);
+			TrajectoryPreviewComp->StartShowingTrajectory(BallAimingSplineComp, (OverrideTrajSourceObj) ? OverrideTrajSourceObj : StrikeZone, TargetActor);
 		}
 	}
 }

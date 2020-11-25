@@ -7,7 +7,7 @@
 #include "Components/CapsuleComponent.h"
 
 ADebugReferenceCharacter::ADebugReferenceCharacter(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer.DoNotCreateDefaultSubobject(TEXT("Mesh")).DoNotCreateDefaultSubobject(TEXT("CharacterMovement")).DoNotCreateDefaultSubobject(TEXT("AbilitySystemComp")).DoNotCreateDefaultSubobject(TEXT("BallStrikingComp")).DoNotCreateDefaultSubobject(TEXT("BallAimingSplineComp")).DoNotCreateDefaultSubobject(TEXT("TrajectoryPreviewComp")))
+: Super(ObjectInitializer.DoNotCreateDefaultSubobject(TEXT("Mesh")).DoNotCreateDefaultSubobject(TEXT("CharacterMovement")).DoNotCreateDefaultSubobject(TEXT("AbilitySystemComp")).DoNotCreateDefaultSubobject(TEXT("BallStrikingComp")).DoNotCreateDefaultSubobject(TEXT("BallAimingSplineComp")).DoNotCreateDefaultSubobject(TEXT("TrajectoryPreviewComp")))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = false;

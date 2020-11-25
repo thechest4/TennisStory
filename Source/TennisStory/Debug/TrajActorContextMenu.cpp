@@ -7,16 +7,5 @@
 void UTrajActorContextMenu::SetTrajActorRef(ATrajectoryTestActor* TrajActor)
 {
 	TrajActorRef = TrajActor;
-	
-	if (TrajectoryData)
-	{
-		FString ContextStr;
-		TArray<FTrajectoryParams*> TrajRows;
-		TrajectoryData->GetAllRows(ContextStr, TrajRows);
-
-		if (TrajRows.Num() > 0)
-		{
-			TrajActorRef->SetTrajParams(*TrajRows[0]);
-		}
-	}
+	TrajActorRef->UpdateTrajParams(StartingSourceTag, FGameplayTagContainer::EmptyContainer, StartingShotType, StartingShotType);
 }

@@ -79,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UBallStrikingComponent* BallStrikingComp;
 
-	void EnablePlayerTargeting(ETargetingContext TargetingContext, FName TrajectoryParamsRowName, UObject* OverrideTrajSourceObj = nullptr);
+	void EnablePlayerTargeting(ETargetingContext TargetingContext, UObject* OverrideTrajSourceObj = nullptr);
 
 	void FreezePlayerTarget();
 

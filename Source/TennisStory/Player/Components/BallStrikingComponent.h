@@ -16,6 +16,7 @@ class APlayerTargetActor;
 class IGroundstrokeAbilityInterface;
 
 DECLARE_EVENT(UBallStrikingComponent, FBallHitEvent)
+DECLARE_EVENT(UBallStrikingComponent, FShotTagsChangedEvent)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallStrikingComponent : public UActorComponent
@@ -30,8 +31,50 @@ public:
 	void StopBallStriking();
 
 	FBallHitEvent& OnBallHit() { return BallHitEvent; }
+	
+	FShotTagsChangedEvent& OnShotTagsChanged() { return ShotTagsChangedEvent; }
 
 	void SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr);
+
+	void SetShotSourceAndFallbackTypeTags(FGameplayTag ShotSourceTag, FGameplayTag FallbackShotTypeTag) 
+	{ 
+		CurrentShotSourceTag = ShotSourceTag; 
+		CurrentFallbackShotTypeTag = FallbackShotTypeTag; 
+
+		ShotTagsChangedEvent.Broadcast();
+	}
+
+	void SetShotContextTags(FGameplayTagContainer ShotContextTags)
+	{
+		CurrentShotContextTags = ShotContextTags;
+
+		ShotTagsChangedEvent.Broadcast();
+	}
+
+	void SetDesiredShotTypeTag(FGameplayTag ShotTypeTag)
+	{
+		DesiredShotTypeTag = ShotTypeTag;
+
+		ShotTagsChangedEvent.Broadcast();
+	}
+
+	FGameplayTag GetDesiredShotTypeTag() { return DesiredShotTypeTag; }
+
+	void ResetAllShotTags(bool bResetContextTags = true, bool bResetDesiredTypeTag = true)
+	{
+		CurrentShotSourceTag = FGameplayTag::EmptyTag;
+		CurrentFallbackShotTypeTag = FGameplayTag::EmptyTag;
+
+		if (bResetContextTags)
+		{
+			CurrentShotContextTags = FGameplayTagContainer::EmptyContainer;
+		}
+
+		if (bResetDesiredTypeTag)
+		{
+			DesiredShotTypeTag = FGameplayTag::EmptyTag;
+		}
+	}
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,8 +88,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Hit SFX")
 	TArray<USoundBase*> OrderedHitSFX;
 
+	//Current Trajectory Identifiers
 	UPROPERTY()
 	TScriptInterface<IGroundstrokeAbilityInterface> CurrentGroundstrokeAbility;
+
+	FGameplayTag CurrentShotSourceTag;
+	FGameplayTag CurrentFallbackShotTypeTag;
+	FGameplayTagContainer CurrentShotContextTags;
+	FGameplayTag DesiredShotTypeTag;
 
 	//Cached Owner Pointers
 	UPROPERTY()
@@ -61,6 +110,8 @@ protected:
 	bool bBallStrikingAllowed;
 
 	FBallHitEvent BallHitEvent;
+	FShotTagsChangedEvent ShotTagsChangedEvent;
 
 	friend class ATennisStoryCharacter;
+	friend class UTrajectoryPreviewComponent;
 };

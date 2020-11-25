@@ -26,5 +26,8 @@ public:
 	int GetShotQuality();
 
 	UFUNCTION(BlueprintNativeEvent)
-	FName GetTrajectoryParamsRowName();
+	FGameplayTag GetShotSourceTag();
+
+	UFUNCTION(BlueprintNativeEvent)
+	FGameplayTag GetFallbackShotTypeTag();
 };

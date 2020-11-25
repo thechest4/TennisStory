@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include <GameplayTagContainer.h>
 #include "TrajActorContextMenu.generated.h"
 
 class ATrajectoryTestActor;
@@ -21,6 +22,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	ATrajectoryTestActor* TrajActorRef;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Trajectory Data")
-	UDataTable* TrajectoryData;
+	UPROPERTY(EditAnywhere, Category = "Starting Trajectory")
+	FGameplayTag StartingSourceTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Swing"));
+
+	UPROPERTY(EditAnywhere, Category = "Starting Trajectory")
+	FGameplayTag StartingShotType = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"));
+
 };

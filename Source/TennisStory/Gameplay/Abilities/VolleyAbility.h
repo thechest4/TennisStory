@@ -46,14 +46,24 @@ public:
 	virtual int GetShotQuality_Implementation() override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	FName GetTrajectoryParamsRowName();
-	virtual FName GetTrajectoryParamsRowName_Implementation() override
+	FGameplayTag GetShotSourceTag();
+	virtual FGameplayTag GetShotSourceTag_Implementation() override
 	{
-		return (bCurrentShotIsHigh) ? TEXT("Volley_High") : TEXT("Volley_Low");
+		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Volley"));
+	}
+
+	UFUNCTION(BlueprintNativeEvent)
+	FGameplayTag GetFallbackShotTypeTag();
+	virtual FGameplayTag GetFallbackShotTypeTag_Implementation() override
+	{
+		return FallbackGameplayTag;
 	}
 	//IGroundstrokeAbilityInterface end
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
+	FGameplayTag FallbackGameplayTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Flat"));
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animations | High Volley")
 	UAnimMontage* ForehandMontage_High;
 	
