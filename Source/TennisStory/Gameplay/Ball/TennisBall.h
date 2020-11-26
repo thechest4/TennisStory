@@ -23,6 +23,19 @@ enum class ETennisBallState : uint8
 	PlayState
 };
 
+USTRUCT(BlueprintType)
+struct FShotTypeColorMapping : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	FGameplayTag ShotTypeTag;
+
+	UPROPERTY(EditAnywhere)
+	FLinearColor TrailColor;
+};
+
 UCLASS()
 class TENNISSTORY_API ATennisBall : public AActor
 {
@@ -127,6 +140,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
 	UParticleSystemComponent* BallTrailParticleEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ball FX")
+	UDataTable* ShotTypeColorMappingDT;
+
+	void SetBallTrailColor(FGameplayTag ShotTypeTag);
 	
 	UPROPERTY(VisibleDefaultsOnly)
 	UStaticMeshComponent* DistanceIndicatorRing;

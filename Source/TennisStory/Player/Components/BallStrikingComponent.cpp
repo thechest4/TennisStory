@@ -148,8 +148,6 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 void UBallStrikingComponent::OnRep_ServerDesiredShotType()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("OnRep_ServerDesiredShotType: %s"), *ServerDesiredShotType.ToString()));
-
 	if (DesiredShotTypeTag != ServerDesiredShotType)
 	{
 		SetDesiredShotTypeTag(ServerDesiredShotType);

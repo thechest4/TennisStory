@@ -718,8 +718,6 @@ void ATennisStoryCharacter::ChangeDesiredShotType(FGameplayTag DesiredShotTypeTa
 		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Client - ChangeDesiredShotType: %s"), *DesiredShotTypeTag.ToString()));
-
 	if (BallStrikingComp)
 	{
 		BallStrikingComp->SetDesiredShotTypeTag(DesiredShotTypeTag);
@@ -735,13 +733,11 @@ bool ATennisStoryCharacter::Server_ChangeDesiredShotType_Validate(FGameplayTag D
 	return DesiredShotTypeTag.IsValid();
 }
 
-void ATennisStoryCharacter::Server_ChangeDesiredShotType_Implementation(FGameplayTag DesiredShotTypeTag)
+void ATennisStoryCharacter::Server_ChangeDesiredShotType_Implementation(FGameplayTag argDesiredShotTypeTag)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Server - ChangeDesiredShotType: %s"), *DesiredShotTypeTag.ToString()));
-
 	if (BallStrikingComp)
 	{
-		BallStrikingComp->ServerDesiredShotType = DesiredShotTypeTag;
+		BallStrikingComp->ServerDesiredShotType = BallStrikingComp->DesiredShotTypeTag = argDesiredShotTypeTag;
 	}
 }
 

@@ -160,6 +160,8 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 		BallTrailParticleEffect->SetActive(true);
 	}
 
+	SetBallTrailColor(TrajectoryData.ShotTypeTag);
+
 	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity);
 	BallMovementComp->ProvideBoundsContext(BoundsContext);
 
@@ -228,6 +230,30 @@ void ATennisBall::ApplyBallState()
 			OnRep_BallState();
 
 			break;
+		}
+	}
+}
+
+void ATennisBall::SetBallTrailColor(FGameplayTag argShotTypeTag)
+{
+	if (!BallTrailParticleEffect)
+	{
+		return;
+	}
+
+	if (ShotTypeColorMappingDT)
+	{
+		for (auto Row : ShotTypeColorMappingDT->GetRowMap())
+		{
+			FShotTypeColorMapping* ColorMapping = reinterpret_cast<FShotTypeColorMapping*>(Row.Value);
+
+			ensureMsgf(ColorMapping, TEXT("Wrong row struct in DT"));
+
+			if (ColorMapping->ShotTypeTag == argShotTypeTag)
+			{
+				BallTrailParticleEffect->SetColorParameter(TEXT("ShotTypeColor"), ColorMapping->TrailColor);
+				return;
+			}
 		}
 	}
 }

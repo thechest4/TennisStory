@@ -99,7 +99,7 @@ protected:
 	FGameplayTag DesiredShotTypeTag;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ServerDesiredShotType)
-	//Replicated DesiredShotType from Server to make sure our prediction is fixed if incorrect///
+	//Replicated DesiredShotType from Server to make sure our prediction is fixed if incorrect.  On Server this and DesiredShotTypeTag will be identical
 	FGameplayTag ServerDesiredShotType;
 
 	UFUNCTION()

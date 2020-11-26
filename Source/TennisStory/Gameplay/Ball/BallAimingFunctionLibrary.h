@@ -95,6 +95,9 @@ struct FBallTrajectoryData
 
 public:
 	UPROPERTY()
+	FGameplayTag ShotTypeTag;
+
+	UPROPERTY()
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
 	UPROPERTY()

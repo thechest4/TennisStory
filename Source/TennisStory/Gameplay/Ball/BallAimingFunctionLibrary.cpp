@@ -6,8 +6,6 @@
 #include "../TennisNetActor.h"
 #include <Kismet/KismetSystemLibrary.h>
 
-#include "DrawDebugHelpers.h"
-
 void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation)
 {
 	FBallTrajectoryPoint TrajectoryPoint = FBallTrajectoryPoint(PointLocation);
@@ -23,6 +21,8 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
+
+	TrajectoryData.ShotTypeTag = TrajParams.ShotTypeTag;
 
 	FVector ShotDirectPath = EndLocation - StartLocation;
 	ShotDirectPath.Z = 0;
