@@ -12,12 +12,21 @@
 #include "Components/BoxComponent.h"
 #include "TennisStoryGameMode.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
+#include "Net/UnrealNetwork.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	SetIsReplicatedByDefault(true);
 
 	bBallStrikingAllowed = false;
+}
+
+void UBallStrikingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UBallStrikingComponent, ServerDesiredShotType);
 }
 
 void UBallStrikingComponent::BeginPlay()
@@ -81,6 +90,8 @@ void UBallStrikingComponent::SetCurrentGroundstrokeAbility(UGameplayAbility* Abi
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	//NOTE(achester): This handler is only bound by the Authority so a remote client should never be executing this code
+
 	ATennisBall* TennisBall = Cast<ATennisBall>(OtherActor);
 	if (OwnerTarget && TennisBall && TennisBall->GetCurrentBallState() != ETennisBallState::ServiceState)
 	{
@@ -132,5 +143,15 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 		TennisBall->Multicast_FollowPath(TrajectoryData, BallSpeed, EBoundsContext::FullCourt, OwnerChar);
 
 		BallHitEvent.Broadcast();
+	}
+}
+
+void UBallStrikingComponent::OnRep_ServerDesiredShotType()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::Printf(TEXT("OnRep_ServerDesiredShotType: %s"), *ServerDesiredShotType.ToString()));
+
+	if (DesiredShotTypeTag != ServerDesiredShotType)
+	{
+		SetDesiredShotTypeTag(ServerDesiredShotType);
 	}
 }

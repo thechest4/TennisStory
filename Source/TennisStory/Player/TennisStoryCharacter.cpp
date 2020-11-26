@@ -54,6 +54,7 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	ClampLocation1 = FVector(-1.f, -1.f, -1.f);
 	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
 	bEnableRotationFix = false;
+	LastShotTypeRequestTimestamp = 0.f;
 
 	AbilitySystemComp = CreateOptionalDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
@@ -430,6 +431,16 @@ void ATennisStoryCharacter::UnclampLocation()
 	bIsLocationClamped = false;
 }
 
+void ATennisStoryCharacter::ResetPlayStates()
+{
+	CancelAllAbilities();
+
+	if (BallStrikingComp)
+	{
+		BallStrikingComp->ResetAllShotTags();
+	}
+}
+
 void ATennisStoryCharacter::CancelAllAbilities()
 {
 	for (FGrantedAbilityInfo& AbilityInfo : AbilitiesToGive)
@@ -515,6 +526,11 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("MouseAimRight", this, &ATennisStoryCharacter::AddMouseAimRightInput);
 
 	PlayerInputComponent->BindAction("Dive", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::PerformDive);
+
+	PlayerInputComponent->BindAction("ShotType_Topspin", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::RequestTopspinShot);
+	PlayerInputComponent->BindAction("ShotType_Slice", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::RequestSliceShot);
+	PlayerInputComponent->BindAction("ShotType_Flat", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::RequestFlatShot);
+	PlayerInputComponent->BindAction("ShotType_Lob", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::RequestLobShot);
 
 	AbilitySystemComp->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "EAbilityInput"));
 }
@@ -692,6 +708,41 @@ void ATennisStoryCharacter::PerformDive()
 	DiveEventData.TargetData.Add(DiveTargetData);
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag(TEXT("Player.Event.Dive")), DiveEventData);
+}
+
+void ATennisStoryCharacter::ChangeDesiredShotType(FGameplayTag DesiredShotTypeTag)
+{
+	//If we requested a change to our shot type too recently, ignore
+	if (GetWorld()->GetTimeSeconds() - LastShotTypeRequestTimestamp <= ShotTypeRequestThrottle)
+	{
+		return;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Client - ChangeDesiredShotType: %s"), *DesiredShotTypeTag.ToString()));
+
+	if (BallStrikingComp)
+	{
+		BallStrikingComp->SetDesiredShotTypeTag(DesiredShotTypeTag);
+
+		Server_ChangeDesiredShotType(DesiredShotTypeTag);
+
+		LastShotTypeRequestTimestamp = GetWorld()->GetTimeSeconds();
+	}
+}
+
+bool ATennisStoryCharacter::Server_ChangeDesiredShotType_Validate(FGameplayTag DesiredShotTypeTag)
+{
+	return DesiredShotTypeTag.IsValid();
+}
+
+void ATennisStoryCharacter::Server_ChangeDesiredShotType_Implementation(FGameplayTag DesiredShotTypeTag)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Server - ChangeDesiredShotType: %s"), *DesiredShotTypeTag.ToString()));
+
+	if (BallStrikingComp)
+	{
+		BallStrikingComp->ServerDesiredShotType = DesiredShotTypeTag;
+	}
 }
 
 void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity)

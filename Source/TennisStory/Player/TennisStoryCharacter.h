@@ -9,6 +9,7 @@
 #include "Components/SplineComponent.h"
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Player/PlayerTargetActor.h"
+#include <GameplayTagContainer.h>
 #include "TennisStoryCharacter.generated.h"
 
 class ATennisBall;
@@ -157,6 +158,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_RestoreBaseSpeed();
 
+	//Resets any necessary state for beginning a point
+	void ResetPlayStates();
+
 	void CancelAllAbilities();
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -201,6 +205,20 @@ protected:
 	void AddMouseAimRightInput(float Value);
 
 	void SpawnMouseTargetActor();
+
+	//Desired Shot Type
+	float LastShotTypeRequestTimestamp;
+	float ShotTypeRequestThrottle = 0.2f; //Prevent changing shot type more than once every 200 ms
+
+	void RequestTopspinShot()	{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"))); }
+	void RequestSliceShot()		{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Slice"))); }
+	void RequestFlatShot()		{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Flat"))); }
+	void RequestLobShot()		{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Lob"))); }
+
+	void ChangeDesiredShotType(FGameplayTag DesiredShotTypeTag);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ChangeDesiredShotType(FGameplayTag DesiredShotTypeTag);
 
 	UFUNCTION()
 	void HandleCharacterMovementUpdated(float DeltaSeconds, FVector OldLocation, FVector OldVelocity);

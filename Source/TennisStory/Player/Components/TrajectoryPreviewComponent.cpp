@@ -39,7 +39,11 @@ void UTrajectoryPreviewComponent::HandleShotTagsChanged()
 	FGameplayTag DesiredShotType = OwnerBallStrikingComp->DesiredShotTypeTag;
 	FGameplayTag FallbackShotType = OwnerBallStrikingComp->CurrentFallbackShotTypeTag;
 
-	CurrentTrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSource, ShotContext, DesiredShotType, FallbackShotType);
+	//Minimum requirements to get a TrajectoryParam is a ShotSource and a FallbackShotType
+	if (ShotSource != FGameplayTag::EmptyTag && FallbackShotType != FGameplayTag::EmptyTag)
+	{
+		CurrentTrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSource, ShotContext, DesiredShotType, FallbackShotType);
+	}
 }
 
 void UTrajectoryPreviewComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

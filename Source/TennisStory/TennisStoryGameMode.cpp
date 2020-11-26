@@ -362,7 +362,7 @@ void ATennisStoryGameMode::SetUpNextPoint()
 	{
 		if (AllCharacters[i].IsValid())
 		{
-			AllCharacters[i]->CancelAllAbilities();
+			AllCharacters[i]->ResetPlayStates();
 			TeleportCharacterToCourt(AllCharacters[i].Get());
 		}
 	}

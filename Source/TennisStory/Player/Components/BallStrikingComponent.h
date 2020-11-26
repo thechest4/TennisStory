@@ -72,6 +72,7 @@ public:
 
 		if (bResetDesiredTypeTag)
 		{
+			ServerDesiredShotType = FGameplayTag::EmptyTag;
 			DesiredShotTypeTag = FGameplayTag::EmptyTag;
 		}
 	}
@@ -96,6 +97,13 @@ protected:
 	FGameplayTag CurrentFallbackShotTypeTag;
 	FGameplayTagContainer CurrentShotContextTags;
 	FGameplayTag DesiredShotTypeTag;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ServerDesiredShotType)
+	//Replicated DesiredShotType from Server to make sure our prediction is fixed if incorrect///
+	FGameplayTag ServerDesiredShotType;
+
+	UFUNCTION()
+	void OnRep_ServerDesiredShotType();
 
 	//Cached Owner Pointers
 	UPROPERTY()
