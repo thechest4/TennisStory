@@ -210,6 +210,9 @@ protected:
 	float LastShotTypeRequestTimestamp;
 	float ShotTypeRequestThrottle = 0.2f; //Prevent changing shot type more than once every 200 ms
 
+	UPROPERTY(EditAnywhere, Category = "Shot Type")
+	UParticleSystem* ShotTypeChangeParticle;
+
 	void RequestTopspinShot()	{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"))); }
 	void RequestSliceShot()		{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Slice"))); }
 	void RequestFlatShot()		{ ChangeDesiredShotType(FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Flat"))); }

@@ -27,6 +27,8 @@
 #include "Components/BillboardComponent.h"
 #include "Engine/Texture2D.h"
 #endif
+#include <Particles/ParticleSystemComponent.h>
+#include "../Gameplay/TrajectoryDataProvider.h"
 
 ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
 
@@ -725,6 +727,30 @@ void ATennisStoryCharacter::ChangeDesiredShotType(FGameplayTag DesiredShotTypeTa
 		Server_ChangeDesiredShotType(DesiredShotTypeTag);
 
 		LastShotTypeRequestTimestamp = GetWorld()->GetTimeSeconds();
+
+		if (ShotTypeChangeParticle)
+		{
+			UParticleSystemComponent* ParticleComp = UGameplayStatics::SpawnEmitterAttached(ShotTypeChangeParticle, GetMesh());
+
+			//Get the particle color from the color mapping table
+			UDataTable* ShotTypeColorMappingDT = UTrajectoryDataProvider::GetDefaultColorMappingTable();
+
+			if (ShotTypeColorMappingDT)
+			{
+				for (auto Row : ShotTypeColorMappingDT->GetRowMap())
+				{
+					FShotTypeColorMapping* ColorMapping = reinterpret_cast<FShotTypeColorMapping*>(Row.Value);
+
+					ensureMsgf(ColorMapping, TEXT("Wrong row struct in Color Mapping DT"));
+
+					if (ColorMapping->ShotTypeTag == DesiredShotTypeTag)
+					{
+						ParticleComp->SetColorParameter(TEXT("ShotTypeColor"), ColorMapping->ShotColor);
+						break;
+					}
+				}
+			}
+		}
 	}
 }
 

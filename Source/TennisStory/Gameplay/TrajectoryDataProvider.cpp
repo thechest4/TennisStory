@@ -14,6 +14,15 @@ UTrajectoryDataProvider::UTrajectoryDataProvider()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UTrajectoryDataProvider - Unable to find SourceTrajectoryMappingDT"));
 		}
+
+		//Locate Color Mapping DT
+		static ConstructorHelpers::FObjectFinder<UDataTable> ColorMappingDTFinder(TEXT("DataTable'/Game/Blueprints/Gameplay/Trajectory/ShotTypeColorMapping_DT.ShotTypeColorMapping_DT'"));
+		ShotTypeColorMappingDT = ColorMappingDTFinder.Object;
+
+		if (!ColorMappingDTFinder.Succeeded())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UTrajectoryDataProvider - Unable to find ShotTypeColorMappingDT"));
+		}
 	}
 }
 

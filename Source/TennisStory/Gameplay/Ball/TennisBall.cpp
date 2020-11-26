@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Player/Components/DistanceIndicatorComponent.h"
+#include "../TrajectoryDataProvider.h"
 
 ATennisBall::FOnBallSpawnedEvent ATennisBall::BallSpawnedEvent;
 
@@ -241,6 +242,8 @@ void ATennisBall::SetBallTrailColor(FGameplayTag argShotTypeTag)
 		return;
 	}
 
+	UDataTable* ShotTypeColorMappingDT = UTrajectoryDataProvider::GetDefaultColorMappingTable();
+
 	if (ShotTypeColorMappingDT)
 	{
 		for (auto Row : ShotTypeColorMappingDT->GetRowMap())
@@ -251,7 +254,7 @@ void ATennisBall::SetBallTrailColor(FGameplayTag argShotTypeTag)
 
 			if (ColorMapping->ShotTypeTag == argShotTypeTag)
 			{
-				BallTrailParticleEffect->SetColorParameter(TEXT("ShotTypeColor"), ColorMapping->TrailColor);
+				BallTrailParticleEffect->SetColorParameter(TEXT("ShotTypeColor"), ColorMapping->ShotColor);
 				return;
 			}
 		}

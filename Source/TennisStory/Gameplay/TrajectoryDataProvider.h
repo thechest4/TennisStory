@@ -21,6 +21,19 @@ public:
 	UDataTable* SourceDT;
 };
 
+USTRUCT(BlueprintType)
+struct FShotTypeColorMapping : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere)
+	FGameplayTag ShotTypeTag;
+
+	UPROPERTY(EditAnywhere)
+	FLinearColor ShotColor;
+};
+
 UCLASS()
 class TENNISSTORY_API UTrajectoryDataProvider : public UObject
 {
@@ -34,7 +47,15 @@ public:
 
 	UDataTable* GetTrajectoryTableByTag(FGameplayTag SourceTag) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Trajectory Data")
+	static UDataTable* GetDefaultColorMappingTable() { return GetDefault<UTrajectoryDataProvider>()->GetColorMappingTable(); }
+
+	UDataTable* GetColorMappingTable() const { return ShotTypeColorMappingDT; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	UDataTable* SourceTrajectoryMappingDT;
+
+	UPROPERTY(EditDefaultsOnly)
+	UDataTable* ShotTypeColorMappingDT;
 };
