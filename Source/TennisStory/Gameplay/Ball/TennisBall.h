@@ -56,7 +56,7 @@ public:
 	TWeakObjectPtr<ATennisStoryCharacter> LastPlayerToHit;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, float Velocity, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall);
+	void Multicast_FollowPath(FBallTrajectoryData TrajectoryData, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpawnBounceParticleEffect(FVector Location);

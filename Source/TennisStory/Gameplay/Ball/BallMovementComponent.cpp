@@ -89,7 +89,7 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 				OwnerPtr->OnBallHitBounceLimit().Broadcast();
 			}
 
-			const float MinImpulseForParticles = 500.f;
+			const float MinImpulseForParticles = 350.f;
 			if (NormalImpulse.Size() > MinImpulseForParticles)
 			{
 				OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
@@ -130,6 +130,8 @@ void UBallMovementComponent::DoFirstBounceLogic()
 		{
 			OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[1], OwnerPtr->GetActorLocation());
 		}
+
+		LateralVelocity = CurrentTrajectoryData.ModifiedBounceVelocity;
 
 		NumBounces++;
 
@@ -196,10 +198,14 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 		if (!bIsBouncing)
 		{
+			//Using trig to find velocity by hypotenuse = adjacentside / cos(theta)
+			float CosAngle = FVector::DotProduct(CurrentDirection, LateralDirection);
+			CurrentVelocity = (LateralVelocity) / CosAngle;
 			FVector NaiveNewLocation = CurrentLocation + CurrentDirection * CurrentVelocity * DeltaTime;
+
 			SplineNewLocation = TrajectorySplineComp->FindLocationClosestToWorldLocation(NaiveNewLocation, ESplineCoordinateSpace::World);
 
-			CurrentDirection = TrajectorySplineComp->FindDirectionClosestToWorldLocation(CurrentLocation, ESplineCoordinateSpace::World);
+			CurrentDirection = TrajectorySplineComp->FindDirectionClosestToWorldLocation(SplineNewLocation, ESplineCoordinateSpace::World);
 		}
 
 		OwnerPtr->SetActorLocation(SplineNewLocation, true);
@@ -249,7 +255,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity)
+void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryData)
 {
 	CurrentTrajectoryData = TrajectoryData;
 
@@ -258,7 +264,14 @@ void UBallMovementComponent::StartFollowingPath(FBallTrajectoryData TrajectoryDa
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
 
 	CurrentMovementState = EBallMovementState::FollowingPath;
-	CurrentVelocity = Velocity;
+	CurrentVelocity = TrajectoryData.ModifiedVelocity;
+	LateralVelocity = TrajectoryData.ModifiedVelocity;
+
+	CurrentDirection = TrajectorySplineComp->FindDirectionClosestToWorldLocation(OwnerPtr->GetActorLocation(), ESplineCoordinateSpace::World);
+
+	LateralDirection = TrajectoryData.TrajectoryEndLocation - OwnerPtr->GetActorLocation();
+	LateralDirection.Z = 0.f;
+	LateralDirection.Normalize();
 
 	NumBounces = 0;
 	

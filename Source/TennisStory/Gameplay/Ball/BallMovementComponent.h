@@ -34,7 +34,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartFollowingPath(FBallTrajectoryData TrajectoryData, float Velocity);
+	void StartFollowingPath(FBallTrajectoryData TrajectoryData);
 
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	void StopMoving();
@@ -96,6 +96,9 @@ protected:
 	float CurrentVelocity;
 	int NumBounces;
 	FVector CurrentDirection;
+
+	float LateralVelocity;
+	FVector LateralDirection;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Bounce")
 	int FramesOfBounceLag;

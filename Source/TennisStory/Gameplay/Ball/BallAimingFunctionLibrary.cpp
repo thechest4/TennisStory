@@ -18,11 +18,14 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/, float VelocityModifier/* = 1.f*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
 	TrajectoryData.ShotTypeTag = TrajParams.ShotTypeTag;
+	
+	TrajectoryData.ModifiedVelocity = TrajParams.BaseVelocity * VelocityModifier;
+	TrajectoryData.ModifiedBounceVelocity = TrajParams.BounceBaseVelocity * VelocityModifier;
 
 	FVector ShotDirectPath = EndLocation - StartLocation;
 	ShotDirectPath.Z = 0;

@@ -19,6 +19,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "HitTrajectory")
 	UCurveFloat* TrajectoryCurve;
 
+	UPROPERTY(EditAnywhere, Category = "HitTrajectory")
+	float BaseVelocity = 1500.f;
+
 	UPROPERTY(EditAnywhere, Category = "GameplayTags", BlueprintReadOnly)
 	FGameplayTagContainer ContextTags;
 
@@ -45,6 +48,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
 	UCurveFloat* BounceTrajectoryCurve;
+
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
+	float BounceBaseVelocity = 1200.f;
 
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
 	float BaseBounceHeight = 65.f;
@@ -101,6 +107,12 @@ public:
 	TArray<FBallTrajectoryPoint> TrajectoryPoints;
 
 	UPROPERTY()
+	float ModifiedVelocity;
+
+	UPROPERTY()
+	float ModifiedBounceVelocity;
+
+	UPROPERTY()
 	int BounceLocationIndex;
 
 	UPROPERTY()
@@ -125,7 +137,7 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
-	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr);
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr, float VelocityModifier = 1.f);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 

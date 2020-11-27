@@ -161,7 +161,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			EBoundsContext BoundsContextForServe = (GameState->GetServiceSide() == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
 
-			TennisBall->Multicast_FollowPath(TrajectoryData, ServeSpeed, BoundsContextForServe, Player);
+			TennisBall->Multicast_FollowPath(TrajectoryData, BoundsContextForServe, Player);
 
 			TennisBall->LastPlayerToHit = Player;
 			TennisBall->bWasLastHitAServe = true;

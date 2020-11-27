@@ -154,7 +154,7 @@ void ATennisBall::Multicast_PlaySound_Implementation(USoundBase* Sound, FVector 
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
 }
 
-void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, float Velocity, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall)
+void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData TrajectoryData, EBoundsContext BoundsContext, ATennisStoryCharacter* PlayerWhoHitBall)
 {
 	if (!BallTrailParticleEffect->IsActive() && !bTrailAlwaysOn)
 	{
@@ -163,7 +163,7 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 
 	SetBallTrailColor(TrajectoryData.ShotTypeTag);
 
-	BallMovementComp->StartFollowingPath(TrajectoryData, Velocity);
+	BallMovementComp->StartFollowingPath(TrajectoryData);
 	BallMovementComp->ProvideBoundsContext(BoundsContext);
 
 	if (HasAuthority())
