@@ -46,6 +46,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AdjustDown", meta = (EditCondition = bCanBeAdjustedDownwards))
 	int MaxHeightConformingIndex = 5;
 
+	UPROPERTY(EditAnywhere, Category = "HeightOverride")
+	bool bOverrideHeight = false;
+
+	UPROPERTY(EditAnywhere, Category = "HeightOverride", meta = (EditCondition = bOverrideHeight))
+	float HeightOverride = 500.f;
+
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
 	UCurveFloat* BounceTrajectoryCurve;
 

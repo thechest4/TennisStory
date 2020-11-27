@@ -37,6 +37,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 	if (TrajParams.TrajectoryCurve)
 	{
 		FRichCurve CurveData = TrajParams.TrajectoryCurve->FloatCurve;
+
+		//Normalize the height constant so that it is equal to the highest point on the trajectory, rather than the starting height of the trajectory
 		float CurveHeightConstant = StartLocation.Z / CurveData.Eval(0.f);
 		float HeightConstantToUse = CurveHeightConstant;
 
@@ -76,6 +78,12 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		for (int i = 0; i <= NumSegments; i++)
 		{
 			float CurveAlpha = static_cast<float>(i) / NumSegments;
+
+			//Similar to downwards adjustment but with less qualifiers, this is height override logic initially intended for lobs.  Shouldn't be used with other kinds of adjustment
+			if (TrajParams.bOverrideHeight && i <= TrajParams.MaxHeightConformingIndex) 
+			{
+				HeightConstantToUse = FMath::InterpEaseOut(CurveHeightConstant, TrajParams.HeightOverride, i / static_cast<float>(TrajParams.MaxHeightConformingIndex), 3.f);
+			}
 
 			float CurveVal = CurveData.Eval(CurveAlpha * ExpectedCurveDuration);
 			float CalculatedHeightVal = CurveVal * HeightConstantToUse;
