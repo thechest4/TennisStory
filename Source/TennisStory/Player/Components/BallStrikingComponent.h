@@ -91,7 +91,7 @@ protected:
 
 	//Current Trajectory Identifiers
 	UPROPERTY()
-	TScriptInterface<IGroundstrokeAbilityInterface> CurrentGroundstrokeAbility;
+	UGameplayAbility* CurrentGroundstrokeAbility;
 
 	FGameplayTag CurrentShotSourceTag;
 	FGameplayTag CurrentFallbackShotTypeTag;

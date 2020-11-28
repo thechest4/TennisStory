@@ -16,7 +16,6 @@ UVolleyAbility::UVolleyAbility()
 	bVolleyReleased = false;
 	bCurrentShotIsForehand = false;
 	bCurrentShotIsHigh = false;
-	CurrentVolleyType = EVolleyType::PassiveVolley;
 }
 
 bool UVolleyAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags /*= nullptr*/, const FGameplayTagContainer* TargetTags /*= nullptr*/, OUT FGameplayTagContainer* OptionalRelevantTags /*= nullptr*/) const
@@ -52,7 +51,6 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	}
 
 	bVolleyReleased = false;
-	CurrentVolleyType = EVolleyType::PassiveVolley;
 
 	if (OwnerChar->BallStrikingComp)
 	{
@@ -125,44 +123,6 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 void UVolleyAbility::HandleVolleyMontageBlendOut()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
-}
-
-float UVolleyAbility::CalculateBallSpeed_Implementation()
-{
-	switch (CurrentVolleyType)
-	{
-		case EVolleyType::PassiveVolley:
-		{
-			return (bCurrentShotIsHigh) ? PassiveVolleySpeed_High : PassiveVolleySpeed_Low;
-		}
-		case EVolleyType::ActiveVolley:
-		{
-			return (bCurrentShotIsHigh) ? ActiveVolleySpeed_High : ActiveVolleySpeed_Low;
-		}
-	}
-
-	checkNoEntry()
-
-	return PassiveVolleySpeed_High;
-}
-
-int UVolleyAbility::GetShotQuality_Implementation()
-{
-	switch (CurrentVolleyType)
-	{
-		case EVolleyType::PassiveVolley:
-		{
-			return 0;
-		}
-		case EVolleyType::ActiveVolley:
-		{
-			return 1;
-		}
-	}
-
-	checkNoEntry()
-
-	return 0;
 }
 
 void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)

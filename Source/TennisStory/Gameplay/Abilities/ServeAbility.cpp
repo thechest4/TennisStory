@@ -127,9 +127,9 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 	{
 		int ServeQualityIndex = EvaluateServeQuality(TennisBall->BallMovementComp);
 		
-		ensureMsgf(OrderedServeSpeeds.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - ServeSpeeds array doesn't have the right number of items!"));
+		ensureMsgf(OrderedSpeedMultipliers.Num() == static_cast<int>(EServeQuality::MAX), TEXT("UServeAbility::HandlePlayerHitServe - OrderedSpeedMultipliers doesn't have the right number of items!"));
 
-		if (OrderedServeSpeeds.Num() != static_cast<int>(EServeQuality::MAX))
+		if (OrderedSpeedMultipliers.Num() != static_cast<int>(EServeQuality::MAX))
 		{
 			return;
 		}
@@ -155,10 +155,9 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 			GameMode->DetermineHitLegality(Player);
 
 			FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSourceTag, FGameplayTagContainer::EmptyContainer, Player->BallStrikingComp->GetDesiredShotTypeTag(), FallbackShotTypeTag);
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation());
-			
-			float ServeSpeed = OrderedServeSpeeds[ServeQualityIndex];
 
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), nullptr, OrderedSpeedMultipliers[ServeQualityIndex]);
+			
 			EBoundsContext BoundsContextForServe = (GameState->GetServiceSide() == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
 
 			TennisBall->Multicast_FollowPath(TrajectoryData, BoundsContextForServe, Player);

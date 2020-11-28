@@ -19,15 +19,11 @@ class TENNISSTORY_API IGroundstrokeAbilityInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent)
-	float CalculateBallSpeed();
-	
-	UFUNCTION(BlueprintNativeEvent)
-	int GetShotQuality();
+	virtual FGameplayTag GetShotSourceTag() = 0;
 
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetShotSourceTag();
+	virtual FGameplayTag GetFallbackShotTypeTag() = 0;
 
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetFallbackShotTypeTag();
+	virtual int GetShotQuality() { return 0; }
+
+	virtual float GetSpeedMultiplier() { return 1.f; }
 };

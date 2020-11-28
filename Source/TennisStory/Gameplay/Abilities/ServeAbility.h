@@ -43,7 +43,7 @@ protected:
 	UAnimMontage* ServeMontage;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
-	TArray<float> OrderedServeSpeeds;
+	TArray<float> OrderedSpeedMultipliers;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Serve Properties")
 	float PerfectServeMargin = 0.15f;

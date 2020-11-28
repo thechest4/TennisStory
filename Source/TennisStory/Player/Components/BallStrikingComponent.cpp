@@ -85,7 +85,7 @@ void UBallStrikingComponent::SetCurrentGroundstrokeAbility(UGameplayAbility* Abi
 {
 	ensureMsgf(!AbilityPtr || (AbilityPtr && AbilityPtr->GetClass()->ImplementsInterface(UGroundstrokeAbilityInterface::StaticClass())), TEXT("Groundstroke ability did not implement GroundstrokeAbilityInterface!"));
 
-	CurrentGroundstrokeAbility.SetObject(AbilityPtr);
+	CurrentGroundstrokeAbility = AbilityPtr;
 }
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -109,9 +109,9 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			GameMode->DetermineHitLegality(OwnerChar);
 		}
 
-		UObject* GroundstrokeAbilityObj = CurrentGroundstrokeAbility.GetObject();
+		IGroundstrokeAbilityInterface* GroundstrokeAbility = Cast<IGroundstrokeAbilityInterface>(CurrentGroundstrokeAbility);
 
-		ensureMsgf(GroundstrokeAbilityObj, TEXT("Invalid groundstroke ability object - no provided ball speed or trajectory"));
+		ensureMsgf(GroundstrokeAbility, TEXT("Invalid groundstroke ability object - no provided ball speed or trajectory"));
 		
 		if (OwnerChar->HasAuthority())
 		{
@@ -123,7 +123,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
 			}
 
-			int ShotQuality = IGroundstrokeAbilityInterface::Execute_GetShotQuality(GroundstrokeAbilityObj);
+			int ShotQuality = GroundstrokeAbility->GetShotQuality();
 
 			int SFXIndex = (ShotQuality >= 0 && ShotQuality < OrderedHitSFX.Num()) ? ShotQuality : 0;
 			if (OrderedHitSFX.Num() > 0)
@@ -132,13 +132,14 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			}
 		}
 
-		float BallSpeed = IGroundstrokeAbilityInterface::Execute_CalculateBallSpeed(GroundstrokeAbilityObj);
-
 		ensureMsgf(CurrentShotSourceTag != FGameplayTag::EmptyTag, TEXT("No ShotSourceTag available"));
 		ensureMsgf(CurrentFallbackShotTypeTag != FGameplayTag::EmptyTag, TEXT("No FallbackShotTypeTag available"));
 
 		FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(CurrentShotSourceTag, CurrentShotContextTags, DesiredShotTypeTag, CurrentFallbackShotTypeTag);
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation());
+
+		float SpeedMultiplier = GroundstrokeAbility->GetSpeedMultiplier();
+
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), nullptr, SpeedMultiplier);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, EBoundsContext::FullCourt, OwnerChar);
 

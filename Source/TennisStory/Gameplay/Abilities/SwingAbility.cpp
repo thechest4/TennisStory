@@ -120,13 +120,13 @@ void USwingAbility::HandleSwingMontageBlendOut()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
-float USwingAbility::CalculateBallSpeed_Implementation()
+float USwingAbility::GetSpeedMultiplier()
 {
 	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
-	return FMath::Lerp(MinBallSpeed, MaxBallSpeed, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
+	return FMath::Lerp(MinSpeedMult, MaxSpeedMult, FMath::Min(ChargeDuration / MaxChargeDuration, 1.0f));
 }
 
-int USwingAbility::GetShotQuality_Implementation()
+int USwingAbility::GetShotQuality()
 {
 	float ChargeDuration = LastChargeEndTime - LastChargeStartTime;
 	float ChargeQuality = ChargeDuration / MaxChargeDuration;

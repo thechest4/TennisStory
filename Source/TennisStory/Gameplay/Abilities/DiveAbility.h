@@ -109,30 +109,12 @@ public:
 	void HandleDiveMontageBlendOut();
 	
 	//IGroundstrokeAbilityInterface implementation
-	UFUNCTION(BlueprintNativeEvent)
-	float CalculateBallSpeed();
-	virtual float CalculateBallSpeed_Implementation() override
-	{
-		return BallSpeed;
-	}
-	
-	UFUNCTION(BlueprintNativeEvent)
-	int GetShotQuality();
-	virtual int GetShotQuality_Implementation() override
-	{
-		return 0;
-	}
-
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetShotSourceTag();
-	virtual FGameplayTag GetShotSourceTag_Implementation() override
+	virtual FGameplayTag GetShotSourceTag() override
 	{
 		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Dive"));
 	}
 
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetFallbackShotTypeTag();
-	virtual FGameplayTag GetFallbackShotTypeTag_Implementation() override
+	virtual FGameplayTag GetFallbackShotTypeTag() override
 	{
 		return FallbackGameplayTag;
 	}

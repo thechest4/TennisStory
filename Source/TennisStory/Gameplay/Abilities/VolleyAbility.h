@@ -12,13 +12,6 @@ class ATennisStoryCharacter;
 class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
-UENUM()
-enum class EVolleyType : uint8
-{
-	PassiveVolley,
-	ActiveVolley
-};
-
 UCLASS()
 class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
 {
@@ -37,24 +30,12 @@ public:
 	void HandleVolleyMontageBlendOut();
 	
 	//IGroundstrokeAbilityInterface implementation
-	UFUNCTION(BlueprintNativeEvent)
-	float CalculateBallSpeed();
-	virtual float CalculateBallSpeed_Implementation() override;
-	
-	UFUNCTION(BlueprintNativeEvent)
-	int GetShotQuality();
-	virtual int GetShotQuality_Implementation() override;
-
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetShotSourceTag();
-	virtual FGameplayTag GetShotSourceTag_Implementation() override
+	virtual FGameplayTag GetShotSourceTag() override
 	{
 		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Volley"));
 	}
 
-	UFUNCTION(BlueprintNativeEvent)
-	FGameplayTag GetFallbackShotTypeTag();
-	virtual FGameplayTag GetFallbackShotTypeTag_Implementation() override
+	virtual FGameplayTag GetFallbackShotTypeTag() override
 	{
 		return FallbackGameplayTag;
 	}
@@ -100,8 +81,6 @@ protected:
 	bool bVolleyReleased;
 	bool bCurrentShotIsForehand;
 	bool bCurrentShotIsHigh;
-
-	EVolleyType CurrentVolleyType;
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
