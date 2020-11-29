@@ -136,7 +136,8 @@ void UBallMovementComponent::DoFirstBounceLogic()
 
 		NumBounces++;
 
-		DoBounceLag();
+		//NOTE(achester): Purposely disabling bounce lag after implementing swing forgiveness
+		//DoBounceLag();
 	}
 }
 

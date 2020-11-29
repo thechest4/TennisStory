@@ -170,7 +170,9 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 	{
 		FVector BounceLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.BounceLocationIndex].Location;
 		BounceLocation.Z = 0;
-		Multicast_SpawnBounceLocationParticleEffect(BounceLocation);
+
+		//NOTE(achester): Purposely disabling bounce location indicator after implementing swing forgiveness
+		//Multicast_SpawnBounceLocationParticleEffect(BounceLocation);
 	}
 
 	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
@@ -182,8 +184,9 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 
 		FTeamData ReceivingTeamData = TSGameState->GetTeamById(ReceivingTeamId);
 
+		//NOTE(achester): Purposely disabling distance indicator stuff after implementing swing forgiveness
 		//TODO(achester): Refactor for doubles
-		if (ReceivingTeamData.AssignedCharacters.Num() > 0 && ReceivingTeamData.AssignedCharacters[0]->IsLocallyControlled())
+		/*if (ReceivingTeamData.AssignedCharacters.Num() > 0 && ReceivingTeamData.AssignedCharacters[0]->IsLocallyControlled())
 		{
 			DistanceIndicatorComp->StartVisualizingDistance(ReceivingTeamData.AssignedCharacters[0]);
 		}
@@ -195,7 +198,7 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 		if (DynamicBallMat)
 		{
 			DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 0.f);
-		}
+		}*/
 	}
 }
 
