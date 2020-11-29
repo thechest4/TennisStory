@@ -113,7 +113,7 @@ public:
 	UPROPERTY(Transient, Replicated)
 	FQuat ServerDesiredRotation;
 	
-	bool bEnableRotationFix; //Controls the rotation fix for the autonomous proxy
+	bool bEnableRotationFix; //Controls the rotation fix for the autonomous proxy.  DiveAbility disables this during the activation
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetActorTransform(FTransform NewTransform);
@@ -169,6 +169,9 @@ public:
 	bool DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility);
 
 	bool ShouldPerformForehand(ATennisBall* TennisBall);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ReleaseForgivingAbility(FGameplayAbilitySpecHandle AbilitySpecHandle);
 
 	static const FName AXISNAME_MOVEFORWARD;
 	static const FName AXISNAME_MOVERIGHT;

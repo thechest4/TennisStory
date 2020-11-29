@@ -187,6 +187,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		}
 	}
 
+	TrajectoryData.TrajectoryEndLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.TrajectoryPoints.Num() - 1].Location;
+
 	return TrajectoryData;
 }
 

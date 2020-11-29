@@ -7,6 +7,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
+#include "AnimNotifies/BallStrikingWindow.h"
 
 UVolleyAbility::UVolleyAbility()
 {
@@ -107,6 +108,8 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		if (OwnerChar->HasAuthority())
 		{
 			OwnerChar->Multicast_RestoreBaseSpeed();
+			OwnerChar->Multicast_UnlockMovement();
+			OwnerChar->Multicast_UnlockAbilities();
 		}
 		
 		if (OwnerChar->BallStrikingComp)
@@ -125,6 +128,14 @@ void UVolleyAbility::HandleVolleyMontageBlendOut()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
+void UVolleyAbility::ReleaseForgiveness()
+{
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->JumpToSection(TEXT("Swing"));
+	}
+}
+
 void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	if (bVolleyReleased)
@@ -132,11 +143,7 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 		return;
 	}
 
-	if (CurrentMontageTask)
-	{
-		CurrentMontageTask->JumpToSection(TEXT("Swing"));
-		bVolleyReleased = true;
-	}
+	bVolleyReleased = true;
 
 	if (CurrentTickingTask)
 	{
@@ -149,6 +156,51 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();
+
+		if (OwnerChar->HasAuthority())
+		{
+			OwnerChar->Multicast_LockMovement();
+			OwnerChar->Multicast_LockAbilities();
+
+			//Find the BallStrikingWindow so we can determine how much time the animation needs
+			int SwingSectionIndex = CurrentMontage->GetSectionIndex(TEXT("Swing"));
+
+			float StartTime;
+			float EndTime;
+			CurrentMontage->GetSectionStartAndEndTime(SwingSectionIndex, StartTime, EndTime);
+
+			TArray<FAnimNotifyEventReference> AnimNotifies;
+			CurrentMontage->GetAnimNotifiesFromDeltaPositions(StartTime, EndTime, AnimNotifies);
+
+			const FAnimNotifyEvent* BallStrikingWindowNotify = nullptr;
+			for (int i = 0; i < AnimNotifies.Num(); i++)
+			{
+				if (AnimNotifies[i].GetNotify()->NotifyStateClass->IsA<UBallStrikingWindow>())
+				{
+					BallStrikingWindowNotify = AnimNotifies[i].GetNotify();
+					break;
+				}
+			}
+
+			if (BallStrikingWindowNotify)
+			{
+				float TriggerTime = BallStrikingWindowNotify->GetTriggerTime() - StartTime;
+
+				if (OwnerChar->BallStrikingComp && OwnerChar->BallStrikingComp->ShouldWaitForTimingForgiveness(TriggerTime))
+				{
+					//Bind to forgiveness end handler
+					OwnerChar->BallStrikingComp->OnTimingForgivesnessEnded().AddUObject(this, &UVolleyAbility::HandleSwingForgivenessEnded);
+				}
+				else
+				{
+					HandleSwingForgivenessEnded();
+				}
+			}
+			else
+			{
+				HandleSwingForgivenessEnded();
+			}
+		}
 	}
 }
 
@@ -264,6 +316,17 @@ void UVolleyAbility::HandleTaskTick(float DeltaTime)
 		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 		CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 		CurrentMontageTask->ReadyForActivation();
+	}
+}
+
+void UVolleyAbility::HandleSwingForgivenessEnded()
+{
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+	if (OwnerChar && OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->OnTimingForgivesnessEnded().RemoveAll(this);
+
+		OwnerChar->Multicast_ReleaseForgivingAbility(CurrentSpecHandle);
 	}
 }
 

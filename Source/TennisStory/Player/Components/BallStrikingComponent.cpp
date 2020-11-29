@@ -11,6 +11,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "TennisStoryGameMode.h"
+#include "TennisStoryGameState.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
 #include "Net/UnrealNetwork.h"
 
@@ -86,6 +87,69 @@ void UBallStrikingComponent::SetCurrentGroundstrokeAbility(UGameplayAbility* Abi
 	ensureMsgf(!AbilityPtr || (AbilityPtr && AbilityPtr->GetClass()->ImplementsInterface(UGroundstrokeAbilityInterface::StaticClass())), TEXT("Groundstroke ability did not implement GroundstrokeAbilityInterface!"));
 
 	CurrentGroundstrokeAbility = AbilityPtr;
+}
+
+bool UBallStrikingComponent::ShouldWaitForTimingForgiveness(float AnimDelay)
+{
+	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (TSGameState) ? TSGameState->GetTennisBall().Get() : nullptr;
+
+	if (TennisBall && TennisBall->BallMovementComp && TennisBall->GetSplineComponent().IsValid())
+	{
+		//We only want to worry about the ball when it's following a path
+		if (TennisBall->BallMovementComp->GetBallMovementState() != EBallMovementState::FollowingPath)
+		{
+			return false;
+		}
+
+		const FBallTrajectoryData& TrajData = TennisBall->BallMovementComp->GetCurrentTrajectoryData();
+
+		FVector CurrentLocation = TennisBall->GetActorLocation();
+		FVector BounceLocation = TrajData.TrajectoryPoints[TrajData.BounceLocationIndex].Location;
+		FVector EndLocation = TrajData.TrajectoryEndLocation;
+		FVector StrikeZoneLocation = TennisBall->GetSplineComponent()->FindLocationClosestToWorldLocation(OwnerChar->GetStrikeZone()->GetComponentLocation(), ESplineCoordinateSpace::World);
+
+		FVector ToCurrentLocation = CurrentLocation - StrikeZoneLocation;
+		FVector ToBounceLocation = BounceLocation - StrikeZoneLocation;
+		FVector ToEndLocation = EndLocation - StrikeZoneLocation;
+
+		//Since we've fixed our lateral velocity for ball movement, don't consider the Z axis at all
+		ToCurrentLocation.Z = 0.f;
+		ToBounceLocation.Z = 0.f;
+		ToEndLocation.Z = 0.f;
+
+		float DotProd = FVector::DotProduct(ToCurrentLocation.GetSafeNormal(), ToEndLocation.GetSafeNormal());
+		//We expect the dot product to be negative here, indicating that the strike zone location is between the current and end locations
+		if (DotProd >= 0)
+		{
+			return false;
+		}
+
+		//If the dot product is positive here, it indicates the bounce location is in the same direction as the current location, and therefore we'll need to consider the bounce speed
+		bool bWillBounce = (FVector::DotProduct(ToCurrentLocation.GetSafeNormal(), ToBounceLocation.GetSafeNormal()) > 0);
+
+		float DistanceToCurrent = ToCurrentLocation.Size2D();
+		float DistanceToBounce = (bWillBounce) ? ToBounceLocation.Size2D() : 0.f;
+
+		//Subtract out bounce distance from total distance if needed
+		if (bWillBounce)
+		{
+			DistanceToCurrent -= DistanceToBounce;
+		}
+
+		float TravelDuration = DistanceToCurrent / TrajData.ModifiedVelocity + DistanceToBounce / TrajData.ModifiedBounceVelocity;
+		float ForgivenessDuration = TravelDuration - AnimDelay;
+
+		if (ForgivenessDuration > 0.f && ForgivenessDuration <= ForgivenessThreshold)
+		{
+			FTimerHandle ForgivenessHandle;
+			GetWorld()->GetTimerManager().SetTimer(ForgivenessHandle, this, &UBallStrikingComponent::EndTimingForgiveness, ForgivenessDuration, false);
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

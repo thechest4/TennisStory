@@ -29,6 +29,7 @@
 #endif
 #include <Particles/ParticleSystemComponent.h>
 #include "../Gameplay/TrajectoryDataProvider.h"
+#include "../Gameplay/Abilities/ForgivingAbilityInterface.h"
 
 ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
 
@@ -55,7 +56,7 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	bIsLocationClamped = false;
 	ClampLocation1 = FVector(-1.f, -1.f, -1.f);
 	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
-	bEnableRotationFix = false;
+	bEnableRotationFix = true;
 	LastShotTypeRequestTimestamp = 0.f;
 
 	AbilitySystemComp = CreateOptionalDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
@@ -498,6 +499,23 @@ bool ATennisStoryCharacter::ShouldPerformForehand(ATennisBall* TennisBall)
 	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), GetAimRightVector());
 	
 	return DotProd >= 0.f;
+}
+
+void ATennisStoryCharacter::Multicast_ReleaseForgivingAbility_Implementation(FGameplayAbilitySpecHandle AbilitySpecHandle)
+{
+	FGameplayAbilitySpec* AbilitySpec = AbilitySystemComp->FindAbilitySpecFromHandle(AbilitySpecHandle);
+
+	if (AbilitySpec && AbilitySpec->GetAbilityInstances().Num())
+	{
+		for (UGameplayAbility* Instance : AbilitySpec->GetAbilityInstances())
+		{
+			if (Instance->GetClass()->ImplementsInterface(UForgivingAbilityInterface::StaticClass()))
+			{
+				IForgivingAbilityInterface* ForgivingAbilityPtr = Cast<IForgivingAbilityInterface>(Instance);
+				ForgivingAbilityPtr->ReleaseForgiveness();
+			}
+		}
+	}
 }
 
 void ATennisStoryCharacter::Multicast_ModifyBaseSpeed_Implementation(float ModifiedBaseSpeed)

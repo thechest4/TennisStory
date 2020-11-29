@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "ForgivingAbilityInterface.h"
 #include "SwingAbility.generated.h"
 
 class ATennisBall;
@@ -13,7 +14,7 @@ class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
 UCLASS()
-class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
+class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface, public IForgivingAbilityInterface
 {
 	GENERATED_BODY()
 	
@@ -44,6 +45,10 @@ public:
 
 	virtual float GetSpeedMultiplier() override;
 	//IGroundstrokeAbilityInterface end
+
+	//IForgivingAbilityInterface implementation
+	virtual void ReleaseForgiveness() override;
+	//IForgivingAbilityInterface end
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
 	FGameplayTag FallbackGameplayTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"));
@@ -93,4 +98,6 @@ protected:
 
 	UFUNCTION()
 	void HandleTaskTick(float DeltaTime);
+
+	void HandleSwingForgivenessEnded();
 };

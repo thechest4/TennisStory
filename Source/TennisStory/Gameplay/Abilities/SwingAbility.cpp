@@ -8,6 +8,7 @@
 #include "Gameplay/Ball/TennisBall.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Player/Components/BallStrikingComponent.h"
+#include "AnimNotifies/BallStrikingWindow.h"
 
 USwingAbility::USwingAbility()
 {
@@ -103,6 +104,8 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		if (OwnerChar->HasAuthority())
 		{
 			OwnerChar->Multicast_RestoreBaseSpeed();
+			OwnerChar->Multicast_UnlockMovement();
+			OwnerChar->Multicast_UnlockAbilities();
 		}
 		
 		if (OwnerChar->BallStrikingComp)
@@ -141,11 +144,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 		return;
 	}
 
-	if (CurrentMontageTask)
-	{
-		CurrentMontageTask->JumpToSection(TEXT("Swing"));
-		bSwingReleased = true;
-	}
+	bSwingReleased = true;
 
 	if (CurrentTickingTask)
 	{
@@ -162,7 +161,57 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 		if (OwnerChar->HasAuthority())
 		{
 			LastChargeEndTime = GetWorld()->GetTimeSeconds();
+
+			OwnerChar->Multicast_LockMovement();
+			OwnerChar->Multicast_LockAbilities(); //Locking abilities to prevent dive canceling after releasing a swing
+
+			//Find the BallStrikingWindow so we can determine how much time the animation needs
+			int SwingSectionIndex = CurrentMontage->GetSectionIndex(TEXT("Swing"));
+
+			float StartTime;
+			float EndTime;
+			CurrentMontage->GetSectionStartAndEndTime(SwingSectionIndex, StartTime, EndTime);
+
+			TArray<FAnimNotifyEventReference> AnimNotifies;
+			CurrentMontage->GetAnimNotifiesFromDeltaPositions(StartTime, EndTime, AnimNotifies);
+
+			const FAnimNotifyEvent* BallStrikingWindowNotify = nullptr;
+			for (int i = 0; i < AnimNotifies.Num(); i++)
+			{
+				if (AnimNotifies[i].GetNotify()->NotifyStateClass->IsA<UBallStrikingWindow>())
+				{
+					BallStrikingWindowNotify = AnimNotifies[i].GetNotify();
+					break;
+				}
+			}
+
+			if (BallStrikingWindowNotify)
+			{
+				float TriggerTime = BallStrikingWindowNotify->GetTriggerTime() - StartTime;
+
+				if (OwnerChar->BallStrikingComp && OwnerChar->BallStrikingComp->ShouldWaitForTimingForgiveness(TriggerTime))
+				{
+					//Bind to forgiveness end handler
+					OwnerChar->BallStrikingComp->OnTimingForgivesnessEnded().AddUObject(this, &USwingAbility::HandleSwingForgivenessEnded);
+				}
+				else
+				{
+					HandleSwingForgivenessEnded();
+				}
+			}
+			else
+			{
+				HandleSwingForgivenessEnded();
+			}
 		}
+	}
+}
+
+void USwingAbility::ReleaseForgiveness()
+{
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->JumpToSection(TEXT("Swing"));
 	}
 }
 
@@ -218,5 +267,16 @@ void USwingAbility::HandleTaskTick(float DeltaTime)
 		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
 		CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 		CurrentMontageTask->ReadyForActivation();
+	}
+}
+
+void USwingAbility::HandleSwingForgivenessEnded()
+{
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+	if (OwnerChar && OwnerChar->BallStrikingComp)
+	{
+		OwnerChar->BallStrikingComp->OnTimingForgivesnessEnded().RemoveAll(this);
+
+		OwnerChar->Multicast_ReleaseForgivingAbility(CurrentSpecHandle);
 	}
 }

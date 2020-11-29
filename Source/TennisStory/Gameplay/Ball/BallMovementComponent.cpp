@@ -20,6 +20,7 @@ UBallMovementComponent::UBallMovementComponent()
 	SetIsReplicatedByDefault(true);
 
 	CurrentVelocity = 0.f;
+	LateralVelocity = 0.f;
 	NumBounces = 0;
 	CurrentDirection = FVector::ZeroVector;
 	CurrentMovementState = EBallMovementState::NotMoving;
@@ -216,9 +217,7 @@ void UBallMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 			DoFirstBounceLogic();
 		}
 		
-		FVector SplineEndLocation = TrajectorySplineComp->GetWorldLocationAtTime(TrajectorySplineComp->Duration);
-
-		if (NumBounces > 0 && SplineNewLocation.Equals(SplineEndLocation))
+		if (NumBounces > 0 && SplineNewLocation.Equals(CurrentTrajectoryData.TrajectoryEndLocation))
 		{
 			CurrentMovementState = EBallMovementState::ContinueUntilHit;
 		}
@@ -285,6 +284,7 @@ void UBallMovementComponent::StopMoving()
 {
 	CurrentMovementState = EBallMovementState::NotMoving;
 	CurrentVelocity = 0.f;
+	LateralVelocity = 0.f;
 	CurrentDirection = FVector::ZeroVector;
 	
 	if (BallCollisionComponent)
@@ -348,6 +348,7 @@ void UBallMovementComponent::EnterPhysicalMovementState(bool bOverrideNewVelocit
 	}
 	
 	CurrentVelocity = 0.f;
+	LateralVelocity = 0.f;
 }
 
 FVector UBallMovementComponent::InvertVelocityFromNetHit(float VelocityScale)

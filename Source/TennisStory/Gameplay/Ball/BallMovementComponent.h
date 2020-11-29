@@ -64,6 +64,8 @@ public:
 		BoundsContextForFirstBounce = BoundsContext;
 	}
 
+	const FBallTrajectoryData& GetCurrentTrajectoryData() { return CurrentTrajectoryData; }
+
 protected:
 	virtual void BeginPlay() override;
 

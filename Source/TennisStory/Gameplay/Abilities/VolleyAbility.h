@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "ForgivingAbilityInterface.h"
 #include "VolleyAbility.generated.h"
 
 class ATennisBall;
@@ -13,7 +14,7 @@ class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
 UCLASS()
-class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
+class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface, public IForgivingAbilityInterface
 {
 	GENERATED_BODY()
 	
@@ -40,6 +41,10 @@ public:
 		return FallbackGameplayTag;
 	}
 	//IGroundstrokeAbilityInterface end
+
+	//IForgivingAbilityInterface implementation
+	virtual void ReleaseForgiveness() override;
+	//IForgivingAbilityInterface end
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
@@ -96,4 +101,6 @@ protected:
 
 	UFUNCTION()
 	void HandleTaskTick(float DeltaTime);
+
+	void HandleSwingForgivenessEnded();
 };

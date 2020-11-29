@@ -17,6 +17,7 @@ class IGroundstrokeAbilityInterface;
 
 DECLARE_EVENT(UBallStrikingComponent, FBallHitEvent)
 DECLARE_EVENT(UBallStrikingComponent, FShotTagsChangedEvent)
+DECLARE_EVENT(UBallStrikingComponent, FTimingForgivenessEndedEvent)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TENNISSTORY_API UBallStrikingComponent : public UActorComponent
@@ -33,6 +34,8 @@ public:
 	FBallHitEvent& OnBallHit() { return BallHitEvent; }
 	
 	FShotTagsChangedEvent& OnShotTagsChanged() { return ShotTagsChangedEvent; }
+
+	FTimingForgivenessEndedEvent& OnTimingForgivesnessEnded() { return TimingForgivenessEndedEvent; }
 
 	void SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr);
 
@@ -77,6 +80,8 @@ public:
 		}
 	}
 
+	bool ShouldWaitForTimingForgiveness(float AnimDelay);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -117,8 +122,15 @@ protected:
 
 	bool bBallStrikingAllowed;
 
+	//Timing Forgiveness
+	UPROPERTY(EditDefaultsOnly, Category = "Timing Forgiveness")
+	float ForgivenessThreshold = 0.5f; //The amount of time that player can swing in advance that we'll correct
+
+	void EndTimingForgiveness() { TimingForgivenessEndedEvent.Broadcast(); }
+
 	FBallHitEvent BallHitEvent;
 	FShotTagsChangedEvent ShotTagsChangedEvent;
+	FTimingForgivenessEndedEvent TimingForgivenessEndedEvent;
 
 	friend class ATennisStoryCharacter;
 	friend class UTrajectoryPreviewComponent;
