@@ -492,11 +492,47 @@ bool AHalfCourt::IsLocationInFrontHalfOfCourt(FVector Location)
 	}
 
 	FVector RelativeLocation = Location - GetActorLocation();
+
+	//If we're right on the court location
+	if (!RelativeLocation.Size())
+	{
+		return true;
+	}
+
 	RelativeLocation.Normalize();
 
 	float DotProd = FVector::DotProduct(RelativeLocation, GetActorForwardVector());
 
-	if (DotProd > 0.f)
+	if (DotProd >= 0.f)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool AHalfCourt::IsLocationInFrontQuarterOfCourt(FVector Location)
+{
+	if (!IsLocationInBounds(Location, 0.f, EBoundsContext::FullCourt))
+	{
+		return false;
+	}
+
+	FVector FrontQuarterRefLocation = GetActorLocation() + GetActorForwardVector() * CourtLength * 0.25f;
+
+	FVector RelativeLocation = Location - FrontQuarterRefLocation;
+
+	//If we're right on the court location
+	if (!RelativeLocation.Size())
+	{
+		return true;
+	}
+
+	RelativeLocation.Normalize();
+
+	float DotProd = FVector::DotProduct(RelativeLocation, GetActorForwardVector());
+
+	if (DotProd >= 0.f)
 	{
 		return true;
 	}

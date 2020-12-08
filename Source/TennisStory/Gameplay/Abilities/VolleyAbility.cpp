@@ -211,12 +211,21 @@ bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryChar
 
 	bCurrentShotIsForehand = OwnerCharacter->ShouldPerformForehand(TennisBall);
 	bCurrentShotIsHigh = false;
+	
+	bool bIsInFrontQuarter = false;
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	TWeakObjectPtr<AHalfCourt> PlayerCourt = (GameState) ? GameState->GetCourtForCharacter(OwnerCharacter) : nullptr;
+	if (PlayerCourt.IsValid())
+	{
+		bIsInFrontQuarter = PlayerCourt->IsLocationInFrontQuarterOfCourt(OwnerCharacter->GetActorLocation());
+	}
+
 	TWeakObjectPtr<const USplineComponent> BallSplineComp = TennisBall->GetSplineComponent();
 	if (BallSplineComp.IsValid())
 	{
 		FVector FutureBallLocation = BallSplineComp->FindLocationClosestToWorldLocation(OwnerCharacter->GetActorLocation(), ESplineCoordinateSpace::World);
-		const float MinHeightForHighVolley = 130.f;
-		bCurrentShotIsHigh = FutureBallLocation.Z >= MinHeightForHighVolley;
+		const float MinHeightForHighVolley = 140.f;
+		bCurrentShotIsHigh = FutureBallLocation.Z >= MinHeightForHighVolley && bIsInFrontQuarter;
 	}
 
 	if (OwnerCharacter->BallStrikingComp->GetShotContextTags().Num() == 0 || bCurrentShotIsHigh != bPrevShotHigh)

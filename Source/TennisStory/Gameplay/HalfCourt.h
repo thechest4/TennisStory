@@ -121,6 +121,8 @@ public:
 	void GetServiceClampLocations(EServiceSide ServiceSide, FVector& MidCourtLocation, FVector& SideCourtLocation);
 
 	bool IsLocationInFrontHalfOfCourt(FVector Location);
+	
+	bool IsLocationInFrontQuarterOfCourt(FVector Location);
 
 protected:
 	virtual void BeginPlay() override;
