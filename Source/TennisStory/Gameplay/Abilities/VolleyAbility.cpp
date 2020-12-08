@@ -219,7 +219,7 @@ bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryChar
 		bCurrentShotIsHigh = FutureBallLocation.Z >= MinHeightForHighVolley;
 	}
 
-	if (bCurrentShotIsHigh != bPrevShotHigh)
+	if (OwnerCharacter->BallStrikingComp->GetShotContextTags().Num() == 0 || bCurrentShotIsHigh != bPrevShotHigh)
 	{
 		FGameplayTagContainer ContextTags = FGameplayTagContainer((bCurrentShotIsHigh) ? FGameplayTag::RequestGameplayTag(TEXT("Shot.Context.Volley.High")) : FGameplayTag::RequestGameplayTag(TEXT("Shot.Context.Volley.Low")));
 		OwnerCharacter->BallStrikingComp->SetShotContextTags(ContextTags);

@@ -203,7 +203,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		float SpeedMultiplier = GroundstrokeAbility->GetSpeedMultiplier();
 
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), nullptr, SpeedMultiplier);
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), TennisBall, SpeedMultiplier);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, EBoundsContext::FullCourt, OwnerChar);
 

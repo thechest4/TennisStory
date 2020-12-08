@@ -13,6 +13,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Player/Components/DistanceIndicatorComponent.h"
 #include "../TrajectoryDataProvider.h"
+#include <Components/SphereComponent.h>
 
 ATennisBall::FOnBallSpawnedEvent ATennisBall::BallSpawnedEvent;
 
@@ -28,9 +29,15 @@ ATennisBall::ATennisBall()
 	bWasLastHitAServe = false;
 	LastPlayerToHit = nullptr;
 
-	RootComponent = BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
-	BallMesh->SetCollisionProfileName(TEXT("TennisBall"));
-	BallMesh->SetEnableGravity(true);
+	RootComponent = BallCollisionBody = CreateDefaultSubobject<USphereComponent>(TEXT("BallCollisionBody"));
+	BallCollisionBody->SetCollisionProfileName(TEXT("TennisBall"));
+	BallCollisionBody->SetEnableGravity(true);
+	BallCollisionBody->SetSphereRadius(DefaultBallRadius);
+
+	BallMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallMesh"));
+	BallMesh->SetupAttachment(RootComponent);
+	BallMesh->SetAbsolute(false, false, true);
+	BallMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
 	DropShadowDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("Drop Shadow Decal"));
 	DropShadowDecal->SetupAttachment(RootComponent);
@@ -97,13 +104,7 @@ void ATennisBall::SetBallState(ETennisBallState NewState)
 
 float ATennisBall::GetBallRadius() const
 {
-	//Hardcoded base radius is half of 1m
-	static const float BaseRadius = 50.f;
-		
-	//Assuming uniform scale
-	float ActualBallRadius = BaseRadius * GetActorScale().X;
-
-	return ActualBallRadius;
+	return BallCollisionBody->GetScaledSphereRadius();
 }
 
 void ATennisBall::StartServiceToss(float TossHeight, float TossDuration)
@@ -271,3 +272,5 @@ void ATennisBall::HandleDistanceIndicatorTargetReached()
 		DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 30.f);
 	}
 }
+
+float ATennisBall::DefaultBallRadius = 3.25f;

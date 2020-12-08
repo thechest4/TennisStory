@@ -4,6 +4,7 @@
 #include "Components/SplineMeshComponent.h"
 #include "Components/SplineComponent.h"
 #include "BallStrikingComponent.h"
+#include "TennisStoryGameState.h"
 
 UTrajectoryPreviewComponent::UTrajectoryPreviewComponent()
 {
@@ -61,7 +62,10 @@ void UTrajectoryPreviewComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 void UTrajectoryPreviewComponent::GeneratePreviewTrajectory()
 {
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParams, GetObjectLocation(StartLocObjPtr.Get()), GetObjectLocation(EndLocObjPtr.Get()));
+	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
+	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
+
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParams, GetObjectLocation(StartLocObjPtr.Get()), GetObjectLocation(EndLocObjPtr.Get()), TennisBall);
 
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, OwnerSplinePreviewComp.Get());
 

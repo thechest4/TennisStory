@@ -54,6 +54,11 @@ public:
 		ShotTagsChangedEvent.Broadcast();
 	}
 
+	FGameplayTagContainer GetShotContextTags()
+	{
+		return CurrentShotContextTags;
+	}
+
 	void SetDesiredShotTypeTag(FGameplayTag ShotTypeTag)
 	{
 		DesiredShotTypeTag = ShotTypeTag;

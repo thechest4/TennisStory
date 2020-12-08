@@ -156,7 +156,7 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSourceTag, FGameplayTagContainer::EmptyContainer, Player->BallStrikingComp->GetDesiredShotTypeTag(), FallbackShotTypeTag);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), nullptr, OrderedSpeedMultipliers[ServeQualityIndex]);
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), TennisBall, OrderedSpeedMultipliers[ServeQualityIndex]);
 			
 			EBoundsContext BoundsContextForServe = (GameState->GetServiceSide() == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
 

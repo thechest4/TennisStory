@@ -9,6 +9,7 @@
 #include "BallAimingFunctionLibrary.generated.h"
 
 class USplineComponent;
+class ATennisBall;
 
 USTRUCT(BlueprintType)
 struct FTrajectoryParams : public FTableRowBase
@@ -143,7 +144,7 @@ class TENNISSTORY_API UBallAimingFunctionLibrary : public UBlueprintFunctionLibr
 	GENERATED_BODY()
 	
 public:
-	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor = nullptr, float VelocityModifier = 1.f);
+	static FBallTrajectoryData GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, ATennisBall* TennisBallActor = nullptr, float VelocityModifier = 1.f);
 
 	static void ApplyTrajectoryDataToSplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 

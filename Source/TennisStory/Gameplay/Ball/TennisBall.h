@@ -11,6 +11,7 @@
 
 class ATennisStoryCharacter;
 class UDistanceIndicatorComponent;
+class USphereComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBallOutOfBoundsEvent, EBoundsContext, FVector)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
@@ -82,6 +83,8 @@ public:
 
 	float GetBallRadius() const;
 
+	static float GetDefaultBallRadius() { return DefaultBallRadius; }
+
 	void StartServiceToss(float TossHeight, float TossDuration);
 
 	void InterruptServiceToss();
@@ -98,6 +101,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	static float DefaultBallRadius;
+
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* BallCollisionBody;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* BallMesh;

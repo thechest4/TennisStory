@@ -5,6 +5,7 @@
 #include "../TrajectoryDataProvider.h"
 #include "../TennisNetActor.h"
 #include <Kismet/KismetSystemLibrary.h>
+#include "TennisBall.h"
 
 void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation)
 {
@@ -18,7 +19,7 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, AActor* WorldContextActor /*= nullptr*/, float VelocityModifier/* = 1.f*/)
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, ATennisBall* TennisBallActor /*= nullptr*/, float VelocityModifier/* = 1.f*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
@@ -43,7 +44,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		float HeightConstantToUse = CurveHeightConstant;
 
 		static const float MAX_HEIGHT = 200.f; //TODO(achester): Maybe there's a way to dynamically get this by checking the height of the character strike zone?
-		static const float BALL_RADIUS = 10.f; //TODO(achester): Maybe there's a better way to get this value that is directly linked to the ball actor?
+		static const float BALL_RADIUS = (TennisBallActor) ? TennisBallActor->GetBallRadius() : ATennisBall::GetDefaultBallRadius();
 
 		static const float ExpectedCurveDuration = 1.f;
 		static const int NumSegments = 20;
@@ -51,7 +52,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 		TrajectoryData.BounceLocationIndex = NumSegments;
 
 		static const float NetXPosition = 0.f; //TODO(achester): even though this likely will always be 0, it would be better to query this from the net actor to be safe
-		static const float NetHeight = 112.f; //TODO(achester): find a way to populate this with some query so that if the net changes it will automatically update
+		static const float NetHeight = 90.f; //TODO(achester): find a way to populate this with some query so that if the net changes it will automatically update
 		
 		//If the trajectory would send the ball into the net, we try to adjust it upwards so that it clears the net (Within reason)
 		bool bNeedsUpwardsAdjustment = false;
@@ -185,9 +186,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				TrajectoryData.AddTrajectoryPoint(TrajectoryPoint);
 			}
 		}
-	}
 
-	TrajectoryData.TrajectoryEndLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.TrajectoryPoints.Num() - 1].Location;
+		TrajectoryData.TrajectoryEndLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.TrajectoryPoints.Num() - 1].Location;
+	}
 
 	return TrajectoryData;
 }
