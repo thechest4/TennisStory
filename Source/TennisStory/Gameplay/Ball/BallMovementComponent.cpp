@@ -88,17 +88,27 @@ void UBallMovementComponent::HandleActorHit(AActor* SelfActor, AActor* OtherActo
 				EnterPhysicalMovementState();
 
 				OwnerPtr->OnBallHitBounceLimit().Broadcast();
-			}
 
-			const float MinImpulseForParticles = 350.f;
-			if (NormalImpulse.Size() > MinImpulseForParticles)
-			{
-				OwnerPtr->Multicast_SpawnBounceParticleEffect(Hit.ImpactPoint);
-
-				ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
-				if (OrderedBounceSFX.Num() == 2)
+				USoundBase* BounceSFX = nullptr;
+				if (ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX")))
 				{
-					OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[0], OwnerPtr->GetActorLocation());
+					BounceSFX = OrderedBounceSFX[0];
+				}
+
+				DoBounceFX(Hit.ImpactPoint, BounceSFX);
+			}
+			else
+			{
+				const float MinImpulseForParticles = 350.f;
+				if (NormalImpulse.Size() > MinImpulseForParticles)
+				{
+					USoundBase* BounceSFX = nullptr;
+					if (ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX")))
+					{
+						BounceSFX = OrderedBounceSFX[0];
+					}
+
+					DoBounceFX(Hit.ImpactPoint, BounceSFX);
 				}
 			}
 
@@ -124,13 +134,13 @@ void UBallMovementComponent::DoFirstBounceLogic()
 			OwnerPtr->OnBallOutOfBounds().Broadcast(BoundsContextForFirstBounce, BounceLocation);
 		}
 
-		OwnerPtr->Multicast_SpawnBounceParticleEffect(BounceLocation);
-
-		ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX"));
-		if (OrderedBounceSFX.Num() == 2)
+		USoundBase* BounceSFX = nullptr;
+		if (ensureMsgf(OrderedBounceSFX.Num() == 2, TEXT("Not the correct number of sounds in OrderedBounceSFX")))
 		{
-			OwnerPtr->Multicast_PlaySound(OrderedBounceSFX[1], OwnerPtr->GetActorLocation());
+			BounceSFX = OrderedBounceSFX[1];
 		}
+
+		DoBounceFX(BounceLocation, BounceSFX);
 
 		LateralVelocity = CurrentTrajectoryData.ModifiedBounceVelocity;
 
@@ -138,6 +148,16 @@ void UBallMovementComponent::DoFirstBounceLogic()
 
 		//NOTE(achester): Purposely disabling bounce lag after implementing swing forgiveness
 		//DoBounceLag();
+	}
+}
+
+void UBallMovementComponent::DoBounceFX(FVector BounceLocation, USoundBase* BounceSFX)
+{
+	OwnerPtr->Multicast_SpawnBounceParticleEffect(BounceLocation);
+
+	if (BounceSFX)
+	{
+		OwnerPtr->Multicast_PlaySound(BounceSFX, OwnerPtr->GetActorLocation());
 	}
 }
 

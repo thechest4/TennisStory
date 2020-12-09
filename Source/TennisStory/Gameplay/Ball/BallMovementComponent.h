@@ -78,6 +78,9 @@ protected:
 
 	void DoFirstBounceLogic();
 
+	//Spawns VFX and plays SFX for bouncing
+	void DoBounceFX(FVector BounceLocation, USoundBase* BounceSFX);
+
 	UPROPERTY()
 	UPrimitiveComponent* BallCollisionComponent;
 
