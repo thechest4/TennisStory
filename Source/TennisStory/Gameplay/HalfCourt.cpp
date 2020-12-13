@@ -440,6 +440,19 @@ void AHalfCourt::ClampLocationToCourtBounds(FVector& Location, EBoundsContext Bo
 		{
 			LowerCornerToUse = LowerCorner;
 			UpperCornerToUse = UpperCorner;
+
+			//Used to modify the clamping bounds so that player targets can't get too close to the net
+			const float XOFFSET_ADJUSTMENT = 0.85f;
+
+			if (CourtSide == ECourtSide::NearCourt)
+			{
+				UpperCornerToUse.X = GetActorLocation().X + (CourtLength / 2.f) * XOFFSET_ADJUSTMENT;
+			}
+			else
+			{
+				LowerCornerToUse.X = GetActorLocation().X - (CourtLength / 2.f) * XOFFSET_ADJUSTMENT;
+			}
+
 			break;
 		}
 	}

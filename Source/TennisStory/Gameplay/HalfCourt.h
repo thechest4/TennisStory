@@ -177,8 +177,8 @@ protected:
 
 	void CalculateCourtCorners();
 
-	FVector2D LowerCorner;
-	FVector2D UpperCorner;
+	FVector2D LowerCorner; //Lower corner on screen, can either be by baseline or by net depending on which court
+	FVector2D UpperCorner; //Upper corner on screen
 	
 	FVector2D LowerCornerServiceDeuce;
 	FVector2D UpperCornerServiceDeuce;
