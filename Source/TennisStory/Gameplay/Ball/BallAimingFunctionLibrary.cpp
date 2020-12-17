@@ -19,14 +19,32 @@ void FBallTrajectoryData::AddTrajectoryPoint(FVector PointLocation, FVector Poin
 	TrajectoryPoints.Add(TrajectoryPoint);
 }
 
-FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, ATennisBall* TennisBallActor /*= nullptr*/, float VelocityModifier/* = 1.f*/)
+void FBallTrajectoryData::ApplyVelocityModifiers(TArray<float> MultiplicativeModifiers)
+{
+	float NetModifier = 1.f;
+
+	for (int i = 0; i < MultiplicativeModifiers.Num(); i++)
+	{
+		NetModifier *= MultiplicativeModifiers[i];
+	}
+
+	ModifiedVelocity = BaseVelocity * NetModifier;
+	ModifiedBounceVelocity = BaseBounceVelocity * NetModifier;
+}
+
+FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajectoryParams TrajParams, FVector StartLocation, FVector EndLocation, ATennisBall* TennisBallActor /*= nullptr*/)
 {
 	FBallTrajectoryData TrajectoryData = FBallTrajectoryData();
 
+	//Set any shot context tags
 	TrajectoryData.ShotTypeTag = TrajParams.ShotTypeTag;
-	
-	TrajectoryData.ModifiedVelocity = TrajParams.BaseVelocity * VelocityModifier;
-	TrajectoryData.ModifiedBounceVelocity = TrajParams.BounceBaseVelocity * VelocityModifier;
+
+	//Set any base values needed to do calculations later on such as velocity modification
+	TrajectoryData.BaseVelocity = TrajParams.BaseVelocity;
+	TrajectoryData.BaseBounceVelocity = TrajParams.BounceBaseVelocity;
+
+	//Set any velocity modifier rules
+	TrajectoryData.DistanceModifierRules = TrajParams.DistanceModifierRules;
 
 	FVector ShotDirectPath = EndLocation - StartLocation;
 	ShotDirectPath.Z = 0;
@@ -34,6 +52,8 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 	FVector TrajectoryDirection = ShotDirectPath.GetSafeNormal();
 
 	float ShotDirectLength = ShotDirectPath.Size();
+
+	TrajectoryData.ShotDistance = ShotDirectLength;
 
 	if (TrajParams.TrajectoryCurve)
 	{

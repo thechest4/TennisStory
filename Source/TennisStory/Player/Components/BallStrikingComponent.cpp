@@ -14,6 +14,7 @@
 #include "TennisStoryGameState.h"
 #include <../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbility.h>
 #include "Net/UnrealNetwork.h"
+#include "Gameplay/Ball/GlobalBallVelocityModifier.h"
 
 UBallStrikingComponent::UBallStrikingComponent()
 {
@@ -201,9 +202,12 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(CurrentShotSourceTag, CurrentShotContextTags, DesiredShotTypeTag, CurrentFallbackShotTypeTag);
 
-		float SpeedMultiplier = GroundstrokeAbility->GetSpeedMultiplier();
+		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), TennisBall);
 
-		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), TennisBall, SpeedMultiplier);
+		TArray<float> MultiplicativeVelocityModifiers = { GroundstrokeAbility->GetSpeedMultiplier() };
+		UGlobalBallVelocityModifier::CalculateGlobalVelocityModifiers(TrajectoryData, MultiplicativeVelocityModifiers);
+
+		TrajectoryData.ApplyVelocityModifiers(MultiplicativeVelocityModifiers);
 
 		TennisBall->Multicast_FollowPath(TrajectoryData, EBoundsContext::FullCourt, OwnerChar);
 

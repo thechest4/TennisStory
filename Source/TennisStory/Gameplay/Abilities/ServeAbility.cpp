@@ -8,6 +8,7 @@
 #include "Gameplay/Ball/BallMovementComponent.h"
 #include "Player/TennisStoryCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "../Ball/GlobalBallVelocityModifier.h"
 
 UServeAbility::UServeAbility()
 {
@@ -156,8 +157,13 @@ void UServeAbility::HandlePlayerHitServe(ATennisStoryCharacter* Player)
 
 			FTrajectoryParams TrajParams = UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(ShotSourceTag, FGameplayTagContainer::EmptyContainer, Player->BallStrikingComp->GetDesiredShotTypeTag(), FallbackShotTypeTag);
 
-			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), TennisBall, OrderedSpeedMultipliers[ServeQualityIndex]);
-			
+			FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), Player->GetCurrentTargetLocation(), TennisBall);
+
+			TArray<float> MultiplicativeVelocityModifiers = { OrderedSpeedMultipliers[ServeQualityIndex] };
+			UGlobalBallVelocityModifier::CalculateGlobalVelocityModifiers(TrajectoryData, MultiplicativeVelocityModifiers);
+
+			TrajectoryData.ApplyVelocityModifiers(MultiplicativeVelocityModifiers);
+
 			EBoundsContext BoundsContextForServe = (GameState->GetServiceSide() == EServiceSide::Deuce) ? EBoundsContext::ServiceDeuce : EBoundsContext::ServiceAd;
 
 			TennisBall->Multicast_FollowPath(TrajectoryData, BoundsContextForServe, Player);
