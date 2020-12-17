@@ -24,6 +24,20 @@ public:
 };
 
 USTRUCT(BlueprintType)
+//Contains the rules for calculating the global velocity modifier based on whether a height adjustment occurred
+struct FHeightAdjustmentModifierRules
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, Category = "Velocity Modifiers | Adjustment")
+	bool bEnableAdjustmentModifier = false;
+
+	UPROPERTY(EditAnywhere, Category = "Velocity Modifiers | Adjustment", meta = (EditCondition = bEnableAdjustmentModifier))
+	UCurveFloat* ModifierCurve;
+};
+
+USTRUCT(BlueprintType)
 struct FTrajectoryParams : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -85,6 +99,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Velocity Modifier")
 	FDistanceModifierRules DistanceModifierRules;
+
+	UPROPERTY(EditAnywhere, Category = "Velocity Modifier")
+	FHeightAdjustmentModifierRules AdjustmentModifierRules;
 };
 
 USTRUCT()
@@ -165,7 +182,17 @@ public:
 	int ValidateFromIndex = 0;
 
 	UPROPERTY()
+	bool bWasAdjustedUpwards = false;
+
+	UPROPERTY()
+	//A representation of the adjustment that took place, calculated height / adjustment height
+	float AdjustmentProportion = 1.f;
+
+	UPROPERTY()
 	FDistanceModifierRules DistanceModifierRules;
+
+	UPROPERTY()
+	FHeightAdjustmentModifierRules AdjustmentModifierRules;
 
 	void AddTrajectoryPoint(FVector PointLocation);
 

@@ -17,4 +17,7 @@ public:
 
 	//Modifies velocity based on the distance of a shot
 	static float CalculateDistanceModifier(FBallTrajectoryData TrajectoryData);
+
+	//Modifies velocity based on whether the shot was adjusted upwards
+	static float CalculateAdjustmentModifier(FBallTrajectoryData TrajectoryData);
 };

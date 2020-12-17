@@ -45,6 +45,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 	//Set any velocity modifier rules
 	TrajectoryData.DistanceModifierRules = TrajParams.DistanceModifierRules;
+	TrajectoryData.AdjustmentModifierRules = TrajParams.AdjustmentModifierRules;
 
 	FVector ShotDirectPath = EndLocation - StartLocation;
 	ShotDirectPath.Z = 0;
@@ -157,9 +158,11 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 				}
 			}
 
+			float AdjustmentProportion = 1.f;
+
 			if (AdjustmentPointIndex >= 0)
 			{
-				float AdjustmentProportion = AdjustmentHeight / TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z;
+				AdjustmentProportion = AdjustmentHeight / TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z;
 				TrajectoryData.TrajectoryPoints[AdjustmentPointIndex].Location.Z = AdjustmentHeight;
 
 				float InterpolatedProportion = 1.f;
@@ -179,6 +182,9 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 					}
 				}
 			}
+
+			TrajectoryData.bWasAdjustedUpwards = true;
+			TrajectoryData.AdjustmentProportion = 1.f / AdjustmentProportion; //Invert the adjustment proportion so it will be easier to predict what values to plot
 
 			TrajectoryData.bShouldBeValidated = true;
 			TrajectoryData.ValidateFromIndex = AdjustmentPointIndex;
