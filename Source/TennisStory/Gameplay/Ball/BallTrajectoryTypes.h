@@ -77,6 +77,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
 	float BounceLengthProportion = 1.f;
 
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory")
+	bool bEnforceMinimumLength = false;
+
+	UPROPERTY(EditAnywhere, Category = "BounceTrajectory", meta = (EditCondition = bEnforceMinimumLength))
+	float MinimumBounceLength = 500.f;
+
 	UPROPERTY(EditAnywhere, Category = "Velocity Modifier")
 	FDistanceModifierRules DistanceModifierRules;
 };

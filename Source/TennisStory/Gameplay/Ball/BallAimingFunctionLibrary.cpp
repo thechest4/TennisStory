@@ -193,6 +193,12 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 			const int NumBounceSegments = 10;
 			const int TotalNumSegments = NumSegments + NumBounceSegments;
 
+			float BounceLength = ShotDirectLength * TrajParams.BounceLengthProportion;
+			if (TrajParams.bEnforceMinimumLength)
+			{
+				BounceLength = FMath::Max(BounceLength, TrajParams.MinimumBounceLength);
+			}
+
 			//Skip NumSegments because that point should just be a repeat of the bounce location
 			for (int i = NumSegments + 1; i <= TotalNumSegments; i++)
 			{
@@ -200,7 +206,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 
 				float CurveVal = BounceCurveData.Eval(CurveAlpha * ExpectedCurveDuration);
 
-				FVector TrajectoryPoint = EndLocation + TrajectoryDirection * CurveAlpha * ShotDirectLength * TrajParams.BounceLengthProportion;
+				FVector TrajectoryPoint = EndLocation + TrajectoryDirection * CurveAlpha * BounceLength;
 				TrajectoryPoint.Z = CurveVal * TrajParams.BaseBounceHeight + BALL_RADIUS;
 
 				TrajectoryData.AddTrajectoryPoint(TrajectoryPoint);
