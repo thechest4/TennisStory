@@ -16,7 +16,7 @@ public:
 	void SetRefCharRef(ADebugReferenceCharacter* RefChar) { RefCharRef = RefChar; }
 
 	UFUNCTION(BlueprintCallable)
-	void PositionRefCharStrikeZone(EStrokeType StrokeType);
+	void PositionRefCharStrikeZone(EStrikeZoneLocation StrokeType);
 
 protected:
 	UPROPERTY(Transient)

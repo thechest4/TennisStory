@@ -338,35 +338,35 @@ void ATennisStoryCharacter::CacheCourtAimVector(FVector AimVector)
 	CachedAimRightVector = FVector::CrossProduct(FVector::UpVector, AimVector);
 }
 
-void ATennisStoryCharacter::PositionStrikeZone(EStrokeType StrokeType)
+void ATennisStoryCharacter::PositionStrikeZone(EStrikeZoneLocation StrokeType)
 {
 	FVector RelativeLocation = GetStrikeZoneLocationForStroke(StrokeType);
 
 	StrikeZone->SetRelativeLocation(RelativeLocation);
 }
 
-FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrokeType StrokeType) const
+FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrikeZoneLocation StrokeType) const
 {
 	switch (StrokeType)
 	{
-		case EStrokeType::Backhand:
+		case EStrikeZoneLocation::Backhand:
 		{
 			return StrikeZoneLocation_Backhand->GetRelativeTransform().GetLocation();
 		}
-		case EStrokeType::Backhand_High:
+		case EStrikeZoneLocation::Backhand_High:
 		{
 			return StrikeZoneLocation_Backhand_High->GetRelativeTransform().GetLocation();
 		}
 		default:
-		case EStrokeType::Forehand:
+		case EStrikeZoneLocation::Forehand:
 		{
 			return StrikeZoneLocation_Forehand->GetRelativeTransform().GetLocation();
 		}
-		case EStrokeType::Forehand_High:
+		case EStrikeZoneLocation::Forehand_High:
 		{
 			return StrikeZoneLocation_Forehand_High->GetRelativeTransform().GetLocation();
 		}
-		case EStrokeType::Dive:
+		case EStrikeZoneLocation::Dive:
 		{
 			return StrikeZoneLocation_Dive->GetRelativeTransform().GetLocation();
 		}

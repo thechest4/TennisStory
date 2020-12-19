@@ -28,7 +28,7 @@ enum class EGroundStrokeAbility :uint8
 };
 
 UENUM(BlueprintType)
-enum class EStrokeType :uint8
+enum class EStrikeZoneLocation :uint8
 {
 	Forehand,
 	Backhand,
@@ -105,9 +105,9 @@ public:
 		return StrikeZone;
 	}
 
-	void PositionStrikeZone(EStrokeType StrokeType);
+	void PositionStrikeZone(EStrikeZoneLocation StrokeType);
 
-	FVector GetStrikeZoneLocationForStroke(EStrokeType StrokeType) const;
+	FVector GetStrikeZoneLocationForStroke(EStrikeZoneLocation StrokeType) const;
 
 	//HACK(achester): This is a hack to try and fix a strange issue where SetActorRotation was not correctly working on the autonomous proxy character
 	UPROPERTY(Transient, Replicated)

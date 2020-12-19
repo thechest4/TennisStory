@@ -233,11 +233,11 @@ void USwingAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
 {
 	if (bCurrentShotIsForehand)
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand);
 	}
 	else
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Backhand);
 	}
 }
 

@@ -2,7 +2,7 @@
 
 #include "RefCharContextMenu.h"
 
-void URefCharContextMenu::PositionRefCharStrikeZone(EStrokeType StrokeType)
+void URefCharContextMenu::PositionRefCharStrikeZone(EStrikeZoneLocation StrokeType)
 {
 	if (RefCharRef)
 	{

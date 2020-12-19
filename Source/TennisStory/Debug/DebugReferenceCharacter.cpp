@@ -35,7 +35,7 @@ void ADebugReferenceCharacter::BeginPlay()
 		ContextMenu->SetRefCharRef(this);
 	}
 
-	PositionStrikeZone(EStrokeType::Forehand);
+	PositionStrikeZone(EStrikeZoneLocation::Forehand);
 }
 
 void ADebugReferenceCharacter::ShowContextMenu()

@@ -265,19 +265,19 @@ void UVolleyAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter
 {
 	if (bCurrentShotIsForehand && bCurrentShotIsHigh)
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand_High);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand_High);
 	}
 	else if (bCurrentShotIsForehand && !bCurrentShotIsHigh)
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Forehand);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand);
 	}
 	else if (!bCurrentShotIsForehand && bCurrentShotIsHigh)
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand_High);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Backhand_High);
 	}
 	else if (!bCurrentShotIsForehand && !bCurrentShotIsHigh)
 	{
-		OwnerCharacter->PositionStrikeZone(EStrokeType::Backhand);
+		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Backhand);
 	}
 }
 

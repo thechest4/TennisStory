@@ -65,7 +65,7 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		DiveDirection = OwnerChar->GetActorForwardVector();
 	}
 
-	OwnerChar->PositionStrikeZone(EStrokeType::Dive);
+	OwnerChar->PositionStrikeZone(EStrikeZoneLocation::Dive);
 
 	CachedPrevRotation = OwnerChar->GetActorRotation();
 	OwnerChar->SetActorRotation(DiveDirection.ToOrientationRotator());
