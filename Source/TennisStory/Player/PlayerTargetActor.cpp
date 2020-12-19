@@ -4,6 +4,7 @@
 #include "PlayerTargetActor.h"
 #include "Gameplay/HalfCourt.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "TennisStoryGameState.h"
 
 APlayerTargetActor::APlayerTargetActor()
@@ -105,12 +106,12 @@ void APlayerTargetActor::Tick(float DeltaSeconds)
 			{
 				const float MINIMUM_SHOT_DISTANCE = 250.f;
 
-				FVector TranslationFromOwner = NewLocation - OwnerChar->GetActorLocation();
+				FVector TranslationFromOwner = NewLocation - OwnerChar->GetStrikeZone()->GetComponentLocation();
 				TranslationFromOwner.Z = 0.f;
 				
 				if (TranslationFromOwner.Size() < MINIMUM_SHOT_DISTANCE)
 				{
-					FVector OwnerLocation2D = OwnerChar->GetActorLocation();
+					FVector OwnerLocation2D = OwnerChar->GetStrikeZone()->GetComponentLocation();
 					OwnerLocation2D.Z = 0.f;
 
 					FVector DirectionFromOwner = TranslationFromOwner.GetSafeNormal();
