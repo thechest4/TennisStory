@@ -44,6 +44,8 @@ public:
 
 	ETennisBallState GetCurrentBallState(){ return CurrentBallState; }
 
+	EBallMovementState GetCurrentMovementState() { return BallMovementComp->CurrentMovementState; }
+
 	UFUNCTION(BlueprintCallable, Category = "Tennis Ball")
 	bool IsInServiceState();
 

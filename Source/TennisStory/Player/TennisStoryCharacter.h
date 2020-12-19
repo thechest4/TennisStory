@@ -21,14 +21,22 @@ class UTrajectoryPreviewComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
 
 UENUM(BlueprintType)
-enum class EGroundStrokeAbility :uint8
+enum class EGroundStrokeAbility : uint8
 {
 	Swing,
 	Volley
 };
 
 UENUM(BlueprintType)
-enum class EStrikeZoneLocation :uint8
+enum class ESwingStance : uint8 
+{
+	Neutral,
+	Forehand,
+	Backhand
+};
+
+UENUM(BlueprintType)
+enum class EStrikeZoneLocation : uint8
 {
 	Forehand,
 	Backhand,
@@ -168,7 +176,14 @@ public:
 
 	bool DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility);
 
-	bool ShouldPerformForehand(ATennisBall* TennisBall);
+	ESwingStance CalculateNewSwingStance(ATennisBall* TennisBall);
+
+	ESwingStance GetCurrentStance() { return CurrentSwingStance; }
+
+	void SetCurrentStance(ESwingStance NewStance)
+	{
+		CurrentSwingStance = NewStance;
+	}
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReleaseForgivingAbility(FGameplayAbilitySpecHandle AbilitySpecHandle);
@@ -334,6 +349,8 @@ protected:
 	FVector ClampLocation2;
 	
 	void PerformDive();
+
+	ESwingStance CurrentSwingStance;
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

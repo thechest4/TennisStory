@@ -15,7 +15,6 @@ UVolleyAbility::UVolleyAbility()
 	bReplicateInputDirectly = true;
 
 	bVolleyReleased = false;
-	bCurrentShotIsForehand = false;
 	bCurrentShotIsHigh = false;
 }
 
@@ -61,6 +60,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	}
 
 	//Can't call UpdateShotContext until shot tags are set since it may trigger a call to get the trajectory params
+	OwnerChar->SetCurrentStance(ESwingStance::Neutral);
 	UpdateShotContext(TennisBall, OwnerChar);
 	UAnimMontage* MontageToPlay = GetVolleyMontage();
 	SetStrikeZonePosition(OwnerChar);
@@ -95,6 +95,8 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
+		OwnerChar->SetCurrentStance(ESwingStance::Neutral);
+
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->StopBallStriking();
@@ -206,10 +208,12 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 
 bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
 {
-	bool bPrevShotForehand = bCurrentShotIsForehand;
+	ESwingStance PrevStance = OwnerCharacter->GetCurrentStance();
 	bool bPrevShotHigh = bCurrentShotIsHigh;
 
-	bCurrentShotIsForehand = OwnerCharacter->ShouldPerformForehand(TennisBall);
+	ESwingStance NewStance = OwnerCharacter->CalculateNewSwingStance(TennisBall);
+	OwnerCharacter->SetCurrentStance(NewStance);
+
 	bCurrentShotIsHigh = false;
 	
 	bool bIsInFrontQuarter = false;
@@ -234,24 +238,26 @@ bool UVolleyAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryChar
 		OwnerCharacter->BallStrikingComp->SetShotContextTags(ContextTags);
 	}
 
-	return bCurrentShotIsForehand != bPrevShotForehand || bCurrentShotIsHigh != bPrevShotHigh;
+	return PrevStance != NewStance || bCurrentShotIsHigh != bPrevShotHigh;
 }
 
 UAnimMontage* UVolleyAbility::GetVolleyMontage()
 {
-	if (bCurrentShotIsForehand && bCurrentShotIsHigh)
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+
+	if (OwnerChar->GetCurrentStance() == ESwingStance::Forehand && bCurrentShotIsHigh)
 	{
 		return ForehandMontage_High;
 	}
-	else if (bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Forehand && !bCurrentShotIsHigh)
 	{
 		return ForehandMontage_Low;
 	}
-	else if (!bCurrentShotIsForehand && bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Backhand && bCurrentShotIsHigh)
 	{
 		return BackhandMontage_High;
 	}
-	else if (!bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Backhand && !bCurrentShotIsHigh)
 	{
 		return BackhandMontage_Low;
 	}
@@ -263,19 +269,21 @@ UAnimMontage* UVolleyAbility::GetVolleyMontage()
 
 void UVolleyAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
 {
-	if (bCurrentShotIsForehand && bCurrentShotIsHigh)
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+
+	if (OwnerChar->GetCurrentStance() == ESwingStance::Forehand  && bCurrentShotIsHigh)
 	{
 		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand_High);
 	}
-	else if (bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Forehand && !bCurrentShotIsHigh)
 	{
 		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand);
 	}
-	else if (!bCurrentShotIsForehand && bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Backhand && bCurrentShotIsHigh)
 	{
 		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Backhand_High);
 	}
-	else if (!bCurrentShotIsForehand && !bCurrentShotIsHigh)
+	else if (OwnerChar->GetCurrentStance() == ESwingStance::Backhand && !bCurrentShotIsHigh)
 	{
 		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Backhand);
 	}

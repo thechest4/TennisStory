@@ -58,6 +58,7 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	ClampLocation2 = FVector(-1.f, -1.f, -1.f);
 	bEnableRotationFix = true;
 	LastShotTypeRequestTimestamp = 0.f;
+	CurrentSwingStance = ESwingStance::Neutral;
 
 	AbilitySystemComp = CreateOptionalDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 
@@ -488,17 +489,38 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 	return false;
 }
 
-bool ATennisStoryCharacter::ShouldPerformForehand(ATennisBall* TennisBall)
+ESwingStance ATennisStoryCharacter::CalculateNewSwingStance(ATennisBall* TennisBall)
 {
-	FVector BallDirection = TennisBall->GetCurrentDirection();
-	float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), GetActorLocation());
+	FVector ProjectedBallLocation;
 
-	FVector ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+	//If we have a trajectory, just get the closest location on the spline
+	if (TennisBall->GetCurrentMovementState() == EBallMovementState::FollowingPath)
+	{
+		ProjectedBallLocation = TennisBall->GetSplineComponent()->FindLocationClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
+	}
+	else //Otherwise use some naive projection
+	{
+		FVector BallDirection = TennisBall->GetCurrentDirection();
+		float DistanceToBall = FVector::Dist(TennisBall->GetActorLocation(), GetActorLocation());
 
-	FVector DirToBallProjection = ProjectedBallLocation - GetActorLocation();
+		ProjectedBallLocation = TennisBall->GetActorLocation() + BallDirection * DistanceToBall;
+	}
+
+	FVector CharacterReferenceLocation = GetActorLocation();
+	if (CurrentSwingStance != ESwingStance::Neutral)
+	{
+		//Distance offset from character center to reduce volatility of stance selection
+		const float STANCE_CHANGE_OFFSET = 30.f;
+
+		FVector StanceOffsetVector = GetAimRightVector() * ((CurrentSwingStance == ESwingStance::Forehand) ? -STANCE_CHANGE_OFFSET : STANCE_CHANGE_OFFSET);
+
+		CharacterReferenceLocation += StanceOffsetVector;
+	}
+
+	FVector DirToBallProjection = ProjectedBallLocation - CharacterReferenceLocation;
 	float DotProd = FVector::DotProduct(DirToBallProjection.GetSafeNormal(), GetAimRightVector());
-	
-	return DotProd >= 0.f;
+
+	return (DotProd >= 0.f) ? ESwingStance::Forehand : ESwingStance::Backhand;
 }
 
 void ATennisStoryCharacter::Multicast_ReleaseForgivingAbility_Implementation(FGameplayAbilitySpecHandle AbilitySpecHandle)

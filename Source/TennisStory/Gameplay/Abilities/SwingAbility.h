@@ -87,8 +87,6 @@ protected:
 
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
-	bool bCurrentShotIsForehand;
-
 	//returns true if Context has changed
 	bool UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);
 

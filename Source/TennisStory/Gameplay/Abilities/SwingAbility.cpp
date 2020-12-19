@@ -15,7 +15,6 @@ USwingAbility::USwingAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bReplicateInputDirectly = true;
 
-	bCurrentShotIsForehand = false;
 	bSwingReleased = false;
 }
 
@@ -54,6 +53,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
+	OwnerChar->SetCurrentStance(ESwingStance::Neutral);
 	UpdateShotContext(TennisBall, OwnerChar);
 	MontageToPlay = GetSwingMontage();
 	SetStrikeZonePosition(OwnerChar);
@@ -96,6 +96,8 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
+		OwnerChar->SetCurrentStance(ESwingStance::Neutral);
+
 		if (OwnerChar->IsLocallyControlled())
 		{
 			OwnerChar->DisablePlayerTargeting();
@@ -217,21 +219,25 @@ void USwingAbility::ReleaseForgiveness()
 
 bool USwingAbility::UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter)
 {
-	bool bPrevShotForehand = bCurrentShotIsForehand;
+	ESwingStance PrevStance = OwnerCharacter->GetCurrentStance();
+	ESwingStance NewStance = OwnerCharacter->CalculateNewSwingStance(TennisBall);
+	OwnerCharacter->SetCurrentStance(NewStance);
 
-	bCurrentShotIsForehand = OwnerCharacter->ShouldPerformForehand(TennisBall);
-
-	return bCurrentShotIsForehand != bPrevShotForehand;
+	return PrevStance != NewStance;
 }
 
 UAnimMontage* USwingAbility::GetSwingMontage()
 {
-	return (bCurrentShotIsForehand) ? ForehandMontage : BackhandMontage;
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+
+	return (OwnerChar->GetCurrentStance() == ESwingStance::Forehand) ? ForehandMontage : BackhandMontage;
 }
 
 void USwingAbility::SetStrikeZonePosition(ATennisStoryCharacter* OwnerCharacter)
 {
-	if (bCurrentShotIsForehand)
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
+
+	if (OwnerChar->GetCurrentStance() == ESwingStance::Forehand)
 	{
 		OwnerCharacter->PositionStrikeZone(EStrikeZoneLocation::Forehand);
 	}
