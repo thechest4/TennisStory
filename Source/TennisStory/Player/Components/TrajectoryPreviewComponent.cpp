@@ -5,6 +5,7 @@
 #include "Components/SplineComponent.h"
 #include "BallStrikingComponent.h"
 #include "TennisStoryGameState.h"
+#include "Gameplay/Ball/TennisBall.h"
 
 UTrajectoryPreviewComponent::UTrajectoryPreviewComponent()
 {
@@ -65,7 +66,14 @@ void UTrajectoryPreviewComponent::GeneratePreviewTrajectory()
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	ATennisBall* TennisBall = (GameState) ? GameState->GetTennisBall().Get() : nullptr;
 
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParams, GetObjectLocation(StartLocObjPtr.Get()), GetObjectLocation(EndLocObjPtr.Get()), TennisBall);
+	FVector StartLocationToUse = GetObjectLocation(StartLocObjPtr.Get());
+
+	if (TennisBall->GetCurrentMovementState() == EBallMovementState::FollowingPath)
+	{
+		StartLocationToUse = TennisBall->GetSplineComponent()->FindLocationClosestToWorldLocation(GetObjectLocation(StartLocObjPtr.Get()), ESplineCoordinateSpace::World);
+	}
+
+	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(CurrentTrajParams, StartLocationToUse, GetObjectLocation(EndLocObjPtr.Get()), TennisBall);
 
 	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, OwnerSplinePreviewComp.Get());
 
