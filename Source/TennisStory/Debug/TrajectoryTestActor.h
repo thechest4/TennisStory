@@ -74,4 +74,5 @@ protected:
 	FVector EndPrevPos;
 
 	FTrajectoryParams TrajParams;
+	FBallTrajectoryData CurrentTrajData;
 };

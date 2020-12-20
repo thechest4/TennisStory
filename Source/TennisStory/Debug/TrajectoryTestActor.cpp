@@ -72,11 +72,11 @@ void ATrajectoryTestActor::Tick(float DeltaSeconds)
 
 void ATrajectoryTestActor::UpdateTrajectory()
 {
-	FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
+	CurrentTrajData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TrajectorySourceComp->GetComponentLocation(), TrajectoryEndComp->GetComponentLocation());
 
-	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(TrajectoryData, TrajectorySplineComp);
+	UBallAimingFunctionLibrary::ApplyTrajectoryDataToSplineComp(CurrentTrajData, TrajectorySplineComp);
 
-	bool bUseValidMat = UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(TrajectoryData, TrajectorySplineComp);
+	bool bUseValidMat = UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(CurrentTrajData, TrajectorySplineComp);
 
 	UpdateSplineMesh(bUseValidMat);
 }
@@ -109,11 +109,36 @@ void ATrajectoryTestActor::UpdateSplineMesh(bool bUseValidMat)
 			SplineMeshComp = SplineMeshComps[i];
 			SplineMeshComp->SetHiddenInGame(false);
 		}
-		
-		SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), 
-										TrajectorySplineComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World),
-										TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World),
-										TrajectorySplineComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
+
+		//Clumsy way to fix the tangents at the bounce location since the spline has a tendency to twist, causing the spline mesh to look weird
+		FVector LeaveTangent = TrajectorySplineComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World);
+
+		if (i == CurrentTrajData.BounceLocationIndex)
+		{
+			FVector StartLocation2D = TrajectorySourceComp->GetComponentLocation();
+			StartLocation2D.Z = 0.f;
+
+			FVector EndLocation2D = TrajectoryEndComp->GetComponentLocation();
+			EndLocation2D.Z = 0.f;
+
+			LeaveTangent = (EndLocation2D - StartLocation2D).GetSafeNormal();
+		}
+
+		FVector ArriveTangent = TrajectorySplineComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World);
+
+		if (i + 1 == CurrentTrajData.BounceLocationIndex)
+		{
+			FVector StartLocation2D = TrajectorySourceComp->GetComponentLocation();
+			StartLocation2D.Z = 0.f;
+
+			FVector EndLocation2D = TrajectoryEndComp->GetComponentLocation();
+			EndLocation2D.Z = 0.f;
+
+			ArriveTangent = (EndLocation2D - StartLocation2D).GetSafeNormal();
+		}
+
+		SplineMeshComp->SetStartAndEnd(TrajectorySplineComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World), LeaveTangent,
+										TrajectorySplineComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World), ArriveTangent);
 
 		if (bUseValidMat)
 		{

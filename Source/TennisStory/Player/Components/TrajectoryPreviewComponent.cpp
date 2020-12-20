@@ -106,10 +106,25 @@ void UTrajectoryPreviewComponent::GeneratePreviewTrajectory()
 			SplineMeshComp->SetHiddenInGame(false);
 		}
 
+		
+		FVector ArriveTangent = OwnerSplinePreviewComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World);
+
+		//Kind of a clumsy way to fix the tangent at the bounce location since it has a tendency to twist, causing the spline mesh to look bad
+		if (i + 1 == NumSegments)
+		{
+			FVector StartLocation2D = StartLocationToUse;
+			StartLocation2D.Z = 0.f;
+
+			FVector EndLocation2D = GetObjectLocation(EndLocObjPtr.Get());
+			EndLocation2D.Z = 0.f;
+
+			ArriveTangent = (EndLocation2D - StartLocation2D).GetSafeNormal();
+		}
+
 		SplineMeshComp->SetStartAndEnd(OwnerSplinePreviewComp->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World),
 			OwnerSplinePreviewComp->GetLeaveTangentAtSplinePoint(i, ESplineCoordinateSpace::World),
 			OwnerSplinePreviewComp->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World),
-			OwnerSplinePreviewComp->GetArriveTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::World));
+			ArriveTangent);
 
 		if (bUseValidMat)
 		{
