@@ -22,14 +22,14 @@
 #include <AbilitySystemBlueprintLibrary.h>
 #include <Kismet/GameplayStatics.h>
 #include "Components/TrajectoryPreviewComponent.h"
+#include <Particles/ParticleSystemComponent.h>
+#include "../Gameplay/TrajectoryDataProvider.h"
+#include "../Gameplay/Abilities/ForgivingAbilityInterface.h"
 
 #if WITH_EDITORONLY_DATA
 #include "Components/BillboardComponent.h"
 #include "Engine/Texture2D.h"
 #endif
-#include <Particles/ParticleSystemComponent.h>
-#include "../Gameplay/TrajectoryDataProvider.h"
-#include "../Gameplay/Abilities/ForgivingAbilityInterface.h"
 
 ATennisStoryCharacter::FOnPlayerSpawnedEvent ATennisStoryCharacter::PlayerSpawnedEvent;
 
@@ -218,6 +218,42 @@ void ATennisStoryCharacter::Tick(float DeltaSeconds)
 	{
 		SetActorRotation(ServerDesiredRotation);
 	}
+
+	if (AbilitySystemComp && IsLocallyControlled())
+	{
+		TArray<FGameplayAbilitySpec> AbilSpecs = AbilitySystemComp->GetActivatableAbilities();
+		FGameplayAbilitySpecHandle ActiveAbilityHandle;
+
+		for (int i = 0; i < AbilSpecs.Num(); i++)
+		{
+			UGameplayAbility* PrimaryInstance = AbilSpecs[i].GetPrimaryInstance();
+			ICoreSwingAbility* CoreSwingAbil = (PrimaryInstance) ? Cast<ICoreSwingAbility>(PrimaryInstance) : nullptr;
+			if (CoreSwingAbil && PrimaryInstance->IsActive() && !CoreSwingAbil->HasReleased()) //If the active ability has already released we don't want to cancel it; it's already in the process of resolving
+			{
+				ActiveAbilityHandle = AbilSpecs[i].Handle;
+			}
+		}
+
+		//We only want to actually call cancel/activate abilities if an ability is already active
+		if (ActiveAbilityHandle.IsValid())
+		{
+			FGameplayTag CoreSwingEventTag;
+			FGameplayAbilitySpecHandle DesiredAbilityHandle = GetHandleForAppropriateCoreSwingAbility(CoreSwingEventTag);
+
+			if (DesiredAbilityHandle.IsValid() && ActiveAbilityHandle != DesiredAbilityHandle)
+			{
+				AbilitySystemComp->CancelAbilityHandle(ActiveAbilityHandle);
+
+				if (CoreSwingEventTag.IsValid())
+				{
+					FGameplayEventData EventData = FGameplayEventData();
+					EventData.InstigatorTags.AddTag(FGameplayTag::RequestGameplayTag(TAG_CORESWING_CONTEXTCHANGE));
+
+					UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, CoreSwingEventTag, EventData);
+				}
+			}
+		}
+	}
 }
 
 void ATennisStoryCharacter::PostInitializeComponents()
@@ -376,22 +412,22 @@ FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrikeZoneLocatio
 
 void ATennisStoryCharacter::Multicast_EnterServiceState_Implementation()
 {
-	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.Service")));
+	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SERVICE));
 }
 
 void ATennisStoryCharacter::Multicast_ExitServiceState_Implementation()
 {
-	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.Service")));
+	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SERVICE));
 }
 
 void ATennisStoryCharacter::Multicast_LockAbilities_Implementation()
 {
-	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.AbilitiesLocked")));
+	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_ABILITIESLOCKED));
 }
 
 void ATennisStoryCharacter::Multicast_UnlockAbilities_Implementation()
 {
-	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Player.State.AbilitiesLocked")));
+	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_ABILITIESLOCKED));
 }
 
 void ATennisStoryCharacter::Multicast_SetActorTransform_Implementation(FTransform NewTransform)
@@ -458,9 +494,12 @@ void ATennisStoryCharacter::Multicast_PlaySound_Implementation(USoundBase* Sound
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, Location);
 }
 
-bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility)
+FGameplayAbilitySpecHandle ATennisStoryCharacter::GetHandleForAppropriateCoreSwingAbility(FGameplayTag& OutEventTag)
 {
-	EGroundStrokeAbility AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Swing;
+	if (!AbilitySystemComp)
+	{
+		return FGameplayAbilitySpecHandle();
+	}
 
 	ATennisStoryGameState* GameState = GetWorld()->GetGameState<ATennisStoryGameState>();
 	if (GameState)
@@ -468,25 +507,41 @@ bool ATennisStoryCharacter::DoesSwingAbilityHavePermissionToActivate(const UGame
 		TWeakObjectPtr<AHalfCourt> Court = GameState->GetCourtForCharacter(this);
 		bool bIsInFrontCourt = Court.IsValid() && Court->IsLocationInFrontHalfOfCourt(GetActorLocation());
 
+		//NOTE(achester): using this enum to match type, because FindAbilitySpecFromClass doesn't seem to work when comparing native base class (USwingAbility) to the bp derived class
+		ECoreSwingAbility CoreSwingAbilityType = ECoreSwingAbility::Swing;
+
 		if (bIsInFrontCourt)
 		{
-			AuthorizedGroundstrokeAbility = EGroundStrokeAbility::Volley;
+			CoreSwingAbilityType = ECoreSwingAbility::Volley;
 		}
-	}
-	
-	switch (AuthorizedGroundstrokeAbility)
-	{
-		case EGroundStrokeAbility::Swing:
+
+		TArray<FGameplayAbilitySpec> AbilSpecs = AbilitySystemComp->GetActivatableAbilities();
+
+		for (int i = 0; i < AbilSpecs.Num(); i++)
 		{
-			return AskingAbility->IsA<USwingAbility>();
-		}
-		case EGroundStrokeAbility::Volley:
-		{
-			return AskingAbility->IsA<UVolleyAbility>();
+			switch (CoreSwingAbilityType)
+			{
+				case ECoreSwingAbility::Swing:
+				{
+					if (AbilSpecs[i].Ability->IsA<USwingAbility>())
+					{
+						OutEventTag = FGameplayTag::RequestGameplayTag(EVENTTAG_SWING);
+						return AbilSpecs[i].Handle;
+					}
+				}
+				case ECoreSwingAbility::Volley:
+				{
+					if (AbilSpecs[i].Ability->IsA<UVolleyAbility>())
+					{
+						OutEventTag = FGameplayTag::RequestGameplayTag(EVENTTAG_VOLLEY);
+						return AbilSpecs[i].Handle;
+					}
+				}
+			}
 		}
 	}
 
-	return false;
+	return FGameplayAbilitySpecHandle();
 }
 
 ESwingStance ATennisStoryCharacter::CalculateNewSwingStance(ATennisBall* TennisBall)
@@ -566,6 +621,9 @@ void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	
 	PlayerInputComponent->BindAxis("MouseAimForward", this, &ATennisStoryCharacter::AddMouseAimForwardInput);
 	PlayerInputComponent->BindAxis("MouseAimRight", this, &ATennisStoryCharacter::AddMouseAimRightInput);
+
+	PlayerInputComponent->BindAction("Swing", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::PerformCoreSwing);
+	PlayerInputComponent->BindAction("Swing", EInputEvent::IE_Released, this, &ATennisStoryCharacter::ReleaseCoreSwing);
 
 	PlayerInputComponent->BindAction("Dive", EInputEvent::IE_Pressed, this, &ATennisStoryCharacter::PerformDive);
 
@@ -735,6 +793,47 @@ void ATennisStoryCharacter::SpawnMouseTargetActor()
 	}
 }
 
+void ATennisStoryCharacter::PerformCoreSwing()
+{
+	//Don't try to activate a core swing ability if we're in service state or currently performing a core swing ability
+	if (!AbilitySystemComp->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SERVICE)) && !GetActiveCoreSwingAbility())
+	{
+		FGameplayTag CoreSwingEventTag;
+		GetHandleForAppropriateCoreSwingAbility(CoreSwingEventTag);
+
+		if (CoreSwingEventTag.IsValid())
+		{
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, CoreSwingEventTag, FGameplayEventData());
+		}
+	}
+}
+
+void ATennisStoryCharacter::ReleaseCoreSwing()
+{
+	ICoreSwingAbility* ActiveCoreSwingAbility = GetActiveCoreSwingAbility();
+	if (!ActiveCoreSwingAbility)
+	{
+		return;
+	}
+
+	ActiveCoreSwingAbility->ReleaseSwing();
+
+	if (!HasAuthority())
+	{
+		Server_ReleaseCoreSwing();
+	}
+}
+
+void ATennisStoryCharacter::Server_ReleaseCoreSwing_Implementation()
+{
+	ReleaseCoreSwing();
+}
+
+bool ATennisStoryCharacter::Server_ReleaseCoreSwing_Validate()
+{
+	return true;
+}
+
 void ATennisStoryCharacter::PerformDive()
 {
 	//NOTE(achester): this function is only ever called by the owning client since it responds directly to input
@@ -749,7 +848,27 @@ void ATennisStoryCharacter::PerformDive()
 	DiveTargetData->DiveInputVector = FVector_NetQuantize(DiveInputVector.X, DiveInputVector.Y, 0.f);
 	DiveEventData.TargetData.Add(DiveTargetData);
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag(TEXT("Player.Event.Dive")), DiveEventData);
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag(EVENTTAG_DIVE), DiveEventData);
+}
+
+ICoreSwingAbility* ATennisStoryCharacter::GetActiveCoreSwingAbility()
+{
+	ensure(AbilitySystemComp);
+
+	TArray<FGameplayAbilitySpec> AbilSpecs = AbilitySystemComp->GetActivatableAbilities();
+	FGameplayAbilitySpecHandle ActiveAbilityHandle;
+
+	for (int i = 0; i < AbilSpecs.Num(); i++)
+	{
+		UGameplayAbility* PrimaryInstance = AbilSpecs[i].GetPrimaryInstance();
+		ICoreSwingAbility* CoreSwingAbil = (PrimaryInstance) ? Cast<ICoreSwingAbility>(PrimaryInstance) : nullptr;
+		if (CoreSwingAbil && PrimaryInstance->IsActive())
+		{
+			return CoreSwingAbil;
+		}
+	}
+
+	return nullptr;
 }
 
 void ATennisStoryCharacter::ChangeDesiredShotType(FGameplayTag DesiredShotTypeTag)
@@ -828,4 +947,14 @@ void ATennisStoryCharacter::HandleCharacterMovementUpdated(float DeltaSeconds, F
 }
 
 const FName ATennisStoryCharacter::AXISNAME_MOVEFORWARD = "MoveForward";
-const FName ATennisStoryCharacter::AXISNAME_MOVERIGHT = "MoveRight";
+const FName ATennisStoryCharacter::AXISNAME_MOVERIGHT	= "MoveRight";
+
+const FName ATennisStoryCharacter::STATETAG_SERVICE			= TEXT("Player.State.Service");
+const FName ATennisStoryCharacter::STATETAG_ABILITIESLOCKED	= TEXT("Player.State.AbilitiesLocked");
+
+const FName ATennisStoryCharacter::EVENTTAG_SWING	= TEXT("Player.Event.Swing");
+const FName ATennisStoryCharacter::EVENTTAG_VOLLEY	= TEXT("Player.Event.Volley");
+const FName ATennisStoryCharacter::EVENTTAG_SMASH	= TEXT("Player.Event.Smash");
+const FName ATennisStoryCharacter::EVENTTAG_DIVE	= TEXT("Player.Event.Dive");
+
+const FName ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE = TEXT("CoreSwing.ContextChange");

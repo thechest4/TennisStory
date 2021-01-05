@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "Gameplay/Abilities/BallStrikingAbility.h"
 #include "ForgivingAbilityInterface.h"
+#include "CoreSwingAbility.h"
 #include "SwingAbility.generated.h"
 
 class ATennisBall;
@@ -14,7 +15,7 @@ class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
 UCLASS()
-class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface, public IForgivingAbilityInterface
+class TENNISSTORY_API USwingAbility : public UGameplayAbility, public IBallStrikingAbility, public IForgivingAbilityInterface, public ICoreSwingAbility
 {
 	GENERATED_BODY()
 	
@@ -30,7 +31,7 @@ public:
 	UFUNCTION()
 	void HandleSwingMontageBlendOut();
 	
-	//IGroundstrokeAbilityInterface implementation
+	//IBallStrikingAbility implementation
 	virtual FGameplayTag GetShotSourceTag() override
 	{
 		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Swing"));
@@ -44,11 +45,17 @@ public:
 	virtual int GetShotQuality() override;
 
 	virtual float GetSpeedMultiplier() override;
-	//IGroundstrokeAbilityInterface end
+	//IBallStrikingAbility end
 
 	//IForgivingAbilityInterface implementation
 	virtual void ReleaseForgiveness() override;
 	//IForgivingAbilityInterface end
+
+	//ICoreSwingAbility implementation
+	virtual void ReleaseSwing() override;
+
+	virtual bool HasReleased() override { return bSwingReleased; }
+	//ICoreSwingAbility end
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
 	FGameplayTag FallbackGameplayTag = FGameplayTag::RequestGameplayTag(TEXT("Shot.Type.Topspin"));
@@ -84,8 +91,6 @@ protected:
 
 	float LastChargeStartTime = 0.0f;
 	float LastChargeEndTime = 0.0f;
-
-	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 	//returns true if Context has changed
 	bool UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);

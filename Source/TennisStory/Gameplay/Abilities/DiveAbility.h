@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "Gameplay/Abilities/BallStrikingAbility.h"
 #include "GameFramework/RootMotionSource.h"
 #include "DiveAbility.generated.h"
 
@@ -92,7 +92,7 @@ struct TStructOpsTypeTraits<FRootMotionSource_DiveMotion> : public TStructOpsTyp
 };
 
 UCLASS()
-class TENNISSTORY_API UDiveAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface
+class TENNISSTORY_API UDiveAbility : public UGameplayAbility, public IBallStrikingAbility
 {
 	GENERATED_BODY()
 	
@@ -108,7 +108,7 @@ public:
 	UFUNCTION()
 	void HandleDiveMontageBlendOut();
 	
-	//IGroundstrokeAbilityInterface implementation
+	//IBallStrikingAbility implementation
 	virtual FGameplayTag GetShotSourceTag() override
 	{
 		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Dive"));
@@ -118,7 +118,7 @@ public:
 	{
 		return FallbackGameplayTag;
 	}
-	//IGroundstrokeAbilityInterface end
+	//IBallStrikingAbility end
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")

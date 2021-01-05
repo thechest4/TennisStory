@@ -12,7 +12,6 @@
 UVolleyAbility::UVolleyAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	bReplicateInputDirectly = true;
 
 	bVolleyReleased = false;
 	bCurrentShotIsHigh = false;
@@ -22,10 +21,7 @@ bool UVolleyAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	bool bSuperResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
-	bool bHasOwnerPermission = (OwnerChar) ? OwnerChar->DoesSwingAbilityHavePermissionToActivate(this) : false;
-
-	return !CurrentMontageTask && bSuperResult && bHasOwnerPermission;
+	return !CurrentMontageTask && bSuperResult;
 }
 
 void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -55,7 +51,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	if (OwnerChar->BallStrikingComp)
 	{
 		OwnerChar->BallStrikingComp->OnBallHit().AddUObject(this, &UVolleyAbility::HandleBallHit);
-		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(this);
 		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
 
@@ -78,8 +74,11 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	//This needs to happen after the shot tags are set
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
+	if (!TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE)))
+	{
+		//This needs to happen after the shot tags are set
+		OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
+	}
 }
 
 void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -102,7 +101,7 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 			OwnerChar->BallStrikingComp->StopBallStriking();
 		}
 
-		if (OwnerChar->IsLocallyControlled())
+		if (OwnerChar->IsLocallyControlled() && !bWasCancelled)
 		{
 			OwnerChar->DisablePlayerTargeting();
 		}
@@ -117,7 +116,7 @@ void UVolleyAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const F
 		if (OwnerChar->BallStrikingComp)
 		{
 			OwnerChar->BallStrikingComp->OnBallHit().RemoveAll(this);
-			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+			OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(nullptr);
 
 			//If this ability has been canceled, we want to retain our DesiredShotTags so the canceling ability can use them (DiveAbility) but we never want to retain our context tags since they are unique to this ability
 			OwnerChar->BallStrikingComp->ResetAllShotTags(true, !bWasCancelled);
@@ -138,7 +137,7 @@ void UVolleyAbility::ReleaseForgiveness()
 	}
 }
 
-void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+void UVolleyAbility::ReleaseSwing()
 {
 	if (bVolleyReleased)
 	{
@@ -153,8 +152,8 @@ void UVolleyAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, cons
 		CurrentTickingTask->OnTaskTick().RemoveAll(this);
 		CurrentTickingTask = nullptr;
 	}
-	
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();

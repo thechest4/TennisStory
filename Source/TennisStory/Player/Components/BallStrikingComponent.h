@@ -13,7 +13,7 @@ class UGameplayAbility;
 class ATennisStoryCharacter;
 class ATennisRacquet;
 class APlayerTargetActor;
-class IGroundstrokeAbilityInterface;
+class IBallStrikingAbility;
 
 DECLARE_EVENT(UBallStrikingComponent, FBallHitEvent)
 DECLARE_EVENT(UBallStrikingComponent, FShotTagsChangedEvent)
@@ -37,7 +37,7 @@ public:
 
 	FTimingForgivenessEndedEvent& OnTimingForgivesnessEnded() { return TimingForgivenessEndedEvent; }
 
-	void SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr);
+	void SetCurrentBallStrikingAbility(UGameplayAbility* AbilityPtr);
 
 	void SetShotSourceAndFallbackTypeTags(FGameplayTag ShotSourceTag, FGameplayTag FallbackShotTypeTag) 
 	{ 
@@ -101,7 +101,7 @@ protected:
 
 	//Current Trajectory Identifiers
 	UPROPERTY()
-	UGameplayAbility* CurrentGroundstrokeAbility;
+	UGameplayAbility* CurrentBallstrikingAbility;
 
 	FGameplayTag CurrentShotSourceTag;
 	FGameplayTag CurrentFallbackShotTypeTag;

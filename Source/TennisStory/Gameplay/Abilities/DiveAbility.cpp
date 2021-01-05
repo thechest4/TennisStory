@@ -87,7 +87,7 @@ void UDiveAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 	if (OwnerChar->BallStrikingComp)
 	{
-		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(this);
 		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
 
@@ -121,7 +121,7 @@ void UDiveAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		
 		if (OwnerChar->BallStrikingComp)
 		{
-			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+			OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(nullptr);
 			OwnerChar->BallStrikingComp->ResetAllShotTags();
 		}
 

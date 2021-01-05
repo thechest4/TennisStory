@@ -17,11 +17,12 @@ class UBoxComponent;
 class UDistanceIndicatorComponent;
 class APlayerMouseTarget;
 class UTrajectoryPreviewComponent;
+class ICoreSwingAbility;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerHitServeEvent, ATennisStoryCharacter*)
 
 UENUM(BlueprintType)
-enum class EGroundStrokeAbility : uint8
+enum class ECoreSwingAbility : uint8
 {
 	Swing,
 	Volley
@@ -174,7 +175,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlaySound(USoundBase* Sound, FVector Location);
 
-	bool DoesSwingAbilityHavePermissionToActivate(const UGameplayAbility* AskingAbility);
+	FGameplayAbilitySpecHandle GetHandleForAppropriateCoreSwingAbility(FGameplayTag& OutEventTag);
 
 	ESwingStance CalculateNewSwingStance(ATennisBall* TennisBall);
 
@@ -190,6 +191,16 @@ public:
 
 	static const FName AXISNAME_MOVEFORWARD;
 	static const FName AXISNAME_MOVERIGHT;
+
+	static const FName STATETAG_SERVICE;
+	static const FName STATETAG_ABILITIESLOCKED;
+
+	static const FName EVENTTAG_SWING;
+	static const FName EVENTTAG_VOLLEY;
+	static const FName EVENTTAG_SMASH;
+	static const FName EVENTTAG_DIVE;
+
+	static const FName TAG_CORESWING_CONTEXTCHANGE;
 
 protected:
 	virtual void BeginPlay() override;
@@ -348,9 +359,18 @@ protected:
 	UPROPERTY(Replicated)
 	FVector ClampLocation2;
 	
+	void PerformCoreSwing();
+
+	void ReleaseCoreSwing();
+
+	UFUNCTION(Server, WithValidation, Reliable)
+	void Server_ReleaseCoreSwing();
+
 	void PerformDive();
 
 	ESwingStance CurrentSwingStance;
+
+	ICoreSwingAbility* GetActiveCoreSwingAbility();
 
 private:
 	static FOnPlayerSpawnedEvent PlayerSpawnedEvent;

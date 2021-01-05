@@ -7,7 +7,7 @@
 #include "Gameplay/Ball/BallAimingFunctionLibrary.h"
 #include "Gameplay/Ball/TennisBall.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
-#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "Gameplay/Abilities/BallStrikingAbility.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "TennisStoryGameMode.h"
@@ -83,11 +83,11 @@ void UBallStrikingComponent::StopBallStriking()
 	}
 }
 
-void UBallStrikingComponent::SetCurrentGroundstrokeAbility(UGameplayAbility* AbilityPtr)
+void UBallStrikingComponent::SetCurrentBallStrikingAbility(UGameplayAbility* AbilityPtr)
 {
-	ensureMsgf(!AbilityPtr || (AbilityPtr && AbilityPtr->GetClass()->ImplementsInterface(UGroundstrokeAbilityInterface::StaticClass())), TEXT("Groundstroke ability did not implement GroundstrokeAbilityInterface!"));
+	ensureMsgf(!AbilityPtr || (AbilityPtr && AbilityPtr->GetClass()->ImplementsInterface(UBallStrikingAbility::StaticClass())), TEXT("BallStriking ability did not implement BallStrikingAbility interface!"));
 
-	CurrentGroundstrokeAbility = AbilityPtr;
+	CurrentBallstrikingAbility = AbilityPtr;
 }
 
 bool UBallStrikingComponent::ShouldWaitForTimingForgiveness(float AnimDelay)
@@ -174,9 +174,9 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 			GameMode->DetermineHitLegality(OwnerChar);
 		}
 
-		IGroundstrokeAbilityInterface* GroundstrokeAbility = Cast<IGroundstrokeAbilityInterface>(CurrentGroundstrokeAbility);
+		IBallStrikingAbility* BallStrikingAbility = Cast<IBallStrikingAbility>(CurrentBallstrikingAbility);
 
-		ensureMsgf(GroundstrokeAbility, TEXT("Invalid groundstroke ability object - no provided ball speed or trajectory"));
+		ensureMsgf(BallStrikingAbility, TEXT("Invalid ball striking ability object - no provided ball speed or trajectory"));
 		
 		if (OwnerChar->HasAuthority())
 		{
@@ -188,7 +188,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 				TennisBall->Multicast_SpawnHitParticleEffect(HitFX, TennisBall->GetActorLocation());
 			}
 
-			int ShotQuality = GroundstrokeAbility->GetShotQuality();
+			int ShotQuality = BallStrikingAbility->GetShotQuality();
 
 			int SFXIndex = (ShotQuality >= 0 && ShotQuality < OrderedHitSFX.Num()) ? ShotQuality : 0;
 			if (OrderedHitSFX.Num() > 0)
@@ -204,7 +204,7 @@ void UBallStrikingComponent::HandleRacquetOverlapBegin(UPrimitiveComponent* Over
 
 		FBallTrajectoryData TrajectoryData = UBallAimingFunctionLibrary::GenerateTrajectoryData(TrajParams, TennisBall->GetActorLocation(), OwnerTarget->GetActorLocation(), TennisBall);
 
-		TArray<float> MultiplicativeVelocityModifiers = { GroundstrokeAbility->GetSpeedMultiplier() };
+		TArray<float> MultiplicativeVelocityModifiers = { BallStrikingAbility->GetSpeedMultiplier() };
 		UGlobalBallVelocityModifier::CalculateGlobalVelocityModifiers(TrajectoryData, MultiplicativeVelocityModifiers);
 
 		TrajectoryData.ApplyVelocityModifiers(MultiplicativeVelocityModifiers);

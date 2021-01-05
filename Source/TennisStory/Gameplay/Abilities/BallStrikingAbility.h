@@ -4,17 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "GroundstrokeAbilityInterface.generated.h"
+#include "GameplayTags.h"
+#include "BallStrikingAbility.generated.h"
 
 class UCurveFloat;
 
 UINTERFACE(MinimalAPI)
-class UGroundstrokeAbilityInterface : public UInterface
+class UBallStrikingAbility : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class TENNISSTORY_API IGroundstrokeAbilityInterface
+class TENNISSTORY_API IBallStrikingAbility
 {
 	GENERATED_BODY()
 

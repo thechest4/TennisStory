@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Gameplay/Abilities/GroundstrokeAbilityInterface.h"
+#include "Gameplay/Abilities/BallStrikingAbility.h"
 #include "ForgivingAbilityInterface.h"
+#include "CoreSwingAbility.h"
 #include "VolleyAbility.generated.h"
 
 class ATennisBall;
@@ -14,7 +15,7 @@ class UTS_AbilityTask_PlayMontageAndWait;
 class UAbilityTask_Tick;
 
 UCLASS()
-class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IGroundstrokeAbilityInterface, public IForgivingAbilityInterface
+class TENNISSTORY_API UVolleyAbility : public UGameplayAbility, public IBallStrikingAbility, public IForgivingAbilityInterface, public ICoreSwingAbility
 {
 	GENERATED_BODY()
 	
@@ -30,7 +31,7 @@ public:
 	UFUNCTION()
 	void HandleVolleyMontageBlendOut();
 	
-	//IGroundstrokeAbilityInterface implementation
+	//IBallStrikingAbility implementation
 	virtual FGameplayTag GetShotSourceTag() override
 	{
 		return FGameplayTag::RequestGameplayTag(TEXT("Shot.Source.Volley"));
@@ -40,11 +41,17 @@ public:
 	{
 		return FallbackGameplayTag;
 	}
-	//IGroundstrokeAbilityInterface end
+	//IBallStrikingAbility end
 
 	//IForgivingAbilityInterface implementation
 	virtual void ReleaseForgiveness() override;
 	//IForgivingAbilityInterface end
+
+	//ICoreSwingAbility implementation
+	virtual void ReleaseSwing() override;
+
+	virtual bool HasReleased() override { return bVolleyReleased; }
+	//ICoreSwingAbility end
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Tags")
@@ -85,8 +92,6 @@ protected:
 
 	bool bVolleyReleased;
 	bool bCurrentShotIsHigh;
-
-	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 	//returns true if Context has changed
 	bool UpdateShotContext(ATennisBall* TennisBall, ATennisStoryCharacter* OwnerCharacter);

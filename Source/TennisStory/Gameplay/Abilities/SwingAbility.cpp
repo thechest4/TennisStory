@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SwingAbility.h"
 #include "Gameplay/Abilities/Tasks/TS_AbilityTask_PlayMontageAndWait.h"
 #include "Gameplay/Abilities/Tasks/AbilityTask_Tick.h"
@@ -13,7 +12,6 @@
 USwingAbility::USwingAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	bReplicateInputDirectly = true;
 
 	bSwingReleased = false;
 }
@@ -22,10 +20,7 @@ bool USwingAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 {
 	bool bSuperResult = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
-	bool bHasOwnerPermission = (OwnerChar) ? OwnerChar->DoesSwingAbilityHavePermissionToActivate(this) : false;
-
-	return !CurrentMontageTask && bSuperResult && bHasOwnerPermission;
+	return !CurrentMontageTask && bSuperResult;
 }
 
 void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* OwnerInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -75,12 +70,15 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (OwnerChar->BallStrikingComp)
 	{
-		OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(this);
+		OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(this);
 		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
 
-	//This needs to happen after the shot tags are set
-	OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
+	if (!TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE)))
+	{
+		//This needs to happen after the shot tags are set
+		OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
+	}
 }
 
 void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -98,7 +96,7 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	{
 		OwnerChar->SetCurrentStance(ESwingStance::Neutral);
 
-		if (OwnerChar->IsLocallyControlled())
+		if (OwnerChar->IsLocallyControlled() && !bWasCancelled)
 		{
 			OwnerChar->DisablePlayerTargeting();
 		}
@@ -112,7 +110,7 @@ void USwingAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		
 		if (OwnerChar->BallStrikingComp)
 		{
-			OwnerChar->BallStrikingComp->SetCurrentGroundstrokeAbility(nullptr);
+			OwnerChar->BallStrikingComp->SetCurrentBallStrikingAbility(nullptr);
 
 			//If this ability has been canceled, we want to retain our DesiredShotTags so the canceling ability can use them (DiveAbility) but we never want to retain our context tags since they are unique to this ability
 			OwnerChar->BallStrikingComp->ResetAllShotTags(true, !bWasCancelled);
@@ -139,7 +137,15 @@ int USwingAbility::GetShotQuality()
 	return (ChargeQuality > ChargeThresholdForMediumHitSFX) ? 1 : 0;
 }
 
-void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+void USwingAbility::ReleaseForgiveness()
+{
+	if (CurrentMontageTask)
+	{
+		CurrentMontageTask->JumpToSection(TEXT("Swing"));
+	}
+}
+
+void USwingAbility::ReleaseSwing()
 {
 	if (bSwingReleased)
 	{
@@ -155,7 +161,7 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 		CurrentTickingTask = nullptr;
 	}
 
-	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(ActorInfo->OwnerActor);
+	ATennisStoryCharacter* OwnerChar = Cast<ATennisStoryCharacter>(CurrentActorInfo->OwnerActor);
 	if (OwnerChar)
 	{
 		OwnerChar->DisablePlayerTargeting();
@@ -206,14 +212,6 @@ void USwingAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const
 				HandleSwingForgivenessEnded();
 			}
 		}
-	}
-}
-
-void USwingAbility::ReleaseForgiveness()
-{
-	if (CurrentMontageTask)
-	{
-		CurrentMontageTask->JumpToSection(TEXT("Swing"));
 	}
 }
 
