@@ -45,6 +45,8 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
+	bool bFromContextChange = !TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE));
+
 	bSwingReleased = false;
 	UAnimMontage* MontageToPlay = ForehandMontage;
 
@@ -53,7 +55,9 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	MontageToPlay = GetSwingMontage();
 	SetStrikeZonePosition(OwnerChar);
 
-	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+	FName StartSection = bFromContextChange ? TEXT("Wind Up") : TEXT("Wind Up Loop");
+
+	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, StartSection);
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 	
@@ -74,7 +78,7 @@ void USwingAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		OwnerChar->BallStrikingComp->SetShotSourceAndFallbackTypeTags(GetShotSourceTag(), GetFallbackShotTypeTag());
 	}
 
-	if (!TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE)))
+	if (bFromContextChange)
 	{
 		//This needs to happen after the shot tags are set
 		OwnerChar->EnablePlayerTargeting(ETargetingContext::GroundStroke);
@@ -268,7 +272,7 @@ void USwingAbility::HandleTaskTick(float DeltaTime)
 		UAnimMontage* MontageToPlay = GetSwingMontage();
 		SetStrikeZonePosition(OwnerChar);
 
-		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlaySwingMontage"), MontageToPlay, 1.0f, TEXT("Wind Up Loop"));
 		CurrentMontageTask->OnBlendOut.AddDynamic(this, &USwingAbility::HandleSwingMontageBlendOut);
 		CurrentMontageTask->ReadyForActivation();
 	}

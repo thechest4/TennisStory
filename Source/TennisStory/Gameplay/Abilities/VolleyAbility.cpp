@@ -46,6 +46,8 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		return;
 	}
 
+	bool bFromContextChange = !TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE));
+
 	bVolleyReleased = false;
 
 	if (OwnerChar->BallStrikingComp)
@@ -61,7 +63,9 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	UAnimMontage* MontageToPlay = GetVolleyMontage();
 	SetStrikeZonePosition(OwnerChar);
 
-	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+	FName StartSection = bFromContextChange ? TEXT("Wind Up") : TEXT("Wind Up Loop");
+
+	CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, StartSection);
 	CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 	CurrentMontageTask->ReadyForActivation();
 	
@@ -74,7 +78,7 @@ void UVolleyAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		OwnerChar->Multicast_ModifyBaseSpeed(BaseSpeedDuringAbility);
 	}
 
-	if (!TriggerEventData->InstigatorTags.HasTagExact(FGameplayTag::RequestGameplayTag(ATennisStoryCharacter::TAG_CORESWING_CONTEXTCHANGE)))
+	if (bFromContextChange)
 	{
 		//This needs to happen after the shot tags are set
 		OwnerChar->EnablePlayerTargeting(ETargetingContext::Volley);
@@ -329,7 +333,7 @@ void UVolleyAbility::HandleTaskTick(float DeltaTime)
 		UAnimMontage* MontageToPlay = GetVolleyMontage();
 		SetStrikeZonePosition(OwnerChar);
 
-		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up"));
+		CurrentMontageTask = UTS_AbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayVolleyMontage"), MontageToPlay, 1.0f, TEXT("Wind Up Loop"));
 		CurrentMontageTask->OnBlendOut.AddDynamic(this, &UVolleyAbility::HandleVolleyMontageBlendOut);
 		CurrentMontageTask->ReadyForActivation();
 	}
