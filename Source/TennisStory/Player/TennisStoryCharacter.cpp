@@ -18,6 +18,7 @@
 #include "Gameplay/Abilities/SwingAbility.h"
 #include "Gameplay/Abilities/VolleyAbility.h"
 #include "Gameplay/Abilities/DiveAbility.h"
+#include "Gameplay/Abilities/SmashAbility.h"
 #include "Net/UnrealNetwork.h"
 #include <AbilitySystemBlueprintLibrary.h>
 #include <Kismet/GameplayStatics.h>
@@ -41,6 +42,7 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -88,6 +90,9 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 	
 	StrikeZoneLocation_Dive = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Dive Strike Zone Location"));
 	StrikeZoneLocation_Dive->SetupAttachment(RootComponent);
+
+	StrikeZoneLocation_Smash = CreateOptionalDefaultSubobject<USceneComponent>(TEXT("Smash Strike Zone Location"));
+	StrikeZoneLocation_Smash->SetupAttachment(RootComponent);
 	
 #if WITH_EDITORONLY_DATA
 	static ConstructorHelpers::FObjectFinder<UTexture2D> TennisRacquetSprite(TEXT("/Game/Art/Icons/game-icons-dot-net/tennis-racket"));
@@ -161,6 +166,20 @@ ATennisStoryCharacter::ATennisStoryCharacter(const FObjectInitializer& ObjectIni
 		if (TennisRacquetSprite.Succeeded())
 		{
 			StrikeZoneIcon_Dive->SetSprite(TennisRacquetSprite.Object);
+		}
+	}
+
+	StrikeZoneIcon_Smash = CreateEditorOnlyDefaultSubobject<UBillboardComponent>(TEXT("Strike Zone Icon Smash"));
+	if (StrikeZoneIcon_Smash)
+	{
+		StrikeZoneIcon_Smash->SetupAttachment(StrikeZoneLocation_Smash);
+		StrikeZoneIcon_Smash->SetHiddenInGame(true);
+		StrikeZoneIcon_Smash->SetRelativeLocation(FVector::ZeroVector);
+		StrikeZoneIcon_Smash->SetEditorScale(IconEditorScale);
+
+		if (TennisRacquetSprite.Succeeded())
+		{
+			StrikeZoneIcon_Smash->SetSprite(TennisRacquetSprite.Object);
 		}
 	}
 #endif
@@ -407,6 +426,10 @@ FVector ATennisStoryCharacter::GetStrikeZoneLocationForStroke(EStrikeZoneLocatio
 		{
 			return StrikeZoneLocation_Dive->GetRelativeTransform().GetLocation();
 		}
+		case EStrikeZoneLocation::Smash:
+		{
+			return StrikeZoneLocation_Smash->GetRelativeTransform().GetLocation();
+		}
 	}
 }
 
@@ -510,7 +533,11 @@ FGameplayAbilitySpecHandle ATennisStoryCharacter::GetHandleForAppropriateCoreSwi
 		//NOTE(achester): using this enum to match type, because FindAbilitySpecFromClass doesn't seem to work when comparing native base class (USwingAbility) to the bp derived class
 		ECoreSwingAbility CoreSwingAbilityType = ECoreSwingAbility::Swing;
 
-		if (bIsInFrontCourt)
+		if (AbilitySystemComp->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SMASHENABLED)))
+		{
+			CoreSwingAbilityType = ECoreSwingAbility::Smash;
+		}
+		else if (bIsInFrontCourt)
 		{
 			CoreSwingAbilityType = ECoreSwingAbility::Volley;
 		}
@@ -534,6 +561,14 @@ FGameplayAbilitySpecHandle ATennisStoryCharacter::GetHandleForAppropriateCoreSwi
 					if (AbilSpecs[i].Ability->IsA<UVolleyAbility>())
 					{
 						OutEventTag = FGameplayTag::RequestGameplayTag(EVENTTAG_VOLLEY);
+						return AbilSpecs[i].Handle;
+					}
+				}
+				case ECoreSwingAbility::Smash:
+				{
+					if (AbilSpecs[i].Ability->IsA<USmashAbility>())
+					{
+						OutEventTag = FGameplayTag::RequestGameplayTag(EVENTTAG_SMASH);
 						return AbilSpecs[i].Handle;
 					}
 				}
@@ -605,6 +640,36 @@ void ATennisStoryCharacter::Multicast_RestoreBaseSpeed_Implementation()
 {
 	GetCharacterMovement()->MaxWalkSpeed = DefaultBaseMovementSpeed;
 	CurrentBaseMovementSpeed = DefaultBaseMovementSpeed;
+}
+
+void ATennisStoryCharacter::EnableSmashAbility()
+{
+	if (HasAuthority())
+	{
+		Multicast_EnableSmashAbility();
+	}
+}
+
+void ATennisStoryCharacter::DisableSmashAbility()
+{
+	if (HasAuthority())
+	{
+		Multicast_DisableSmashAbility();
+	}
+}
+
+void ATennisStoryCharacter::Multicast_EnableSmashAbility_Implementation()
+{
+	ensure(AbilitySystemComp);
+
+	AbilitySystemComp->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SMASHENABLED));
+}
+
+void ATennisStoryCharacter::Multicast_DisableSmashAbility_Implementation()
+{
+	ensure(AbilitySystemComp);
+
+	AbilitySystemComp->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(STATETAG_SMASHENABLED));
 }
 
 void ATennisStoryCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -951,6 +1016,7 @@ const FName ATennisStoryCharacter::AXISNAME_MOVERIGHT	= "MoveRight";
 
 const FName ATennisStoryCharacter::STATETAG_SERVICE			= TEXT("Player.State.Service");
 const FName ATennisStoryCharacter::STATETAG_ABILITIESLOCKED	= TEXT("Player.State.AbilitiesLocked");
+const FName ATennisStoryCharacter::STATETAG_SMASHENABLED	= TEXT("Player.State.SmashEnabled");
 
 const FName ATennisStoryCharacter::EVENTTAG_SWING	= TEXT("Player.Event.Swing");
 const FName ATennisStoryCharacter::EVENTTAG_VOLLEY	= TEXT("Player.Event.Volley");

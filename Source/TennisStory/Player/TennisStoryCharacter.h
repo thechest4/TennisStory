@@ -25,7 +25,8 @@ UENUM(BlueprintType)
 enum class ECoreSwingAbility : uint8
 {
 	Swing,
-	Volley
+	Volley,
+	Smash
 };
 
 UENUM(BlueprintType)
@@ -43,7 +44,8 @@ enum class EStrikeZoneLocation : uint8
 	Backhand,
 	Forehand_High,
 	Backhand_High,
-	Dive
+	Dive,
+	Smash
 };
 
 UENUM(BlueprintType)
@@ -167,6 +169,16 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_RestoreBaseSpeed();
 
+	//If authority, calls the multicast version.  Otherwise does nothing
+	void EnableSmashAbility();
+	void DisableSmashAbility();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_EnableSmashAbility();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_DisableSmashAbility();
+
 	//Resets any necessary state for beginning a point
 	void ResetPlayStates();
 
@@ -194,6 +206,7 @@ public:
 
 	static const FName STATETAG_SERVICE;
 	static const FName STATETAG_ABILITIESLOCKED;
+	static const FName STATETAG_SMASHENABLED;
 
 	static const FName EVENTTAG_SWING;
 	static const FName EVENTTAG_VOLLEY;
@@ -317,6 +330,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
 	USceneComponent* StrikeZoneLocation_Dive;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Swing Detection")
+	USceneComponent* StrikeZoneLocation_Smash;
 	
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
@@ -331,6 +347,9 @@ protected:
 	
 	UPROPERTY()
 	UBillboardComponent* StrikeZoneIcon_Dive;
+
+	UPROPERTY()
+	UBillboardComponent* StrikeZoneIcon_Smash;
 #endif
 
 	//Team Color
