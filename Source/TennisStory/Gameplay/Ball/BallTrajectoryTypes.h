@@ -38,6 +38,19 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FSmashZoneRules
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, Category = "Smash Zone")
+	bool bSpawnSmashZone = false;
+
+	UPROPERTY(EditAnywhere, Category = "Smash Zone", meta = (EditCondition = bSpawnSmashZone))
+	float HeightToSpawnAt = 250.f; //The height on the trajectory that determines the spawn location of the smash zone
+};
+
+USTRUCT(BlueprintType)
 struct FTrajectoryParams : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -102,6 +115,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Velocity Modifier")
 	FHeightAdjustmentModifierRules AdjustmentModifierRules;
+
+	UPROPERTY(EditAnywhere, Category = "Smash Zone")
+	FSmashZoneRules SmashZoneRules;
 };
 
 USTRUCT()
@@ -193,6 +209,9 @@ public:
 
 	UPROPERTY()
 	FHeightAdjustmentModifierRules AdjustmentModifierRules;
+
+	UPROPERTY()
+	FSmashZoneRules SmashZoneRules;
 
 	void AddTrajectoryPoint(FVector PointLocation);
 

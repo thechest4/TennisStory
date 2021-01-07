@@ -148,6 +148,8 @@ void UBallMovementComponent::DoFirstBounceLogic()
 
 		//NOTE(achester): Purposely disabling bounce lag after implementing swing forgiveness
 		//DoBounceLag();
+
+		OnFirstBounce().Broadcast();
 	}
 }
 

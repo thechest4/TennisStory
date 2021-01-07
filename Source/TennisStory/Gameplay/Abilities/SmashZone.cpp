@@ -8,6 +8,8 @@ ASmashZone::ASmashZone()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	bReplicates = true;
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
 	PlayerDetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PlayerDetectionSphere"));
@@ -22,11 +24,16 @@ ASmashZone::ASmashZone()
 	RingMesh->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
-// Called when the game starts or when spawned
-void ASmashZone::BeginPlay()
+void ASmashZone::BeginDestroy()
 {
-	Super::BeginPlay();
-	
+	Super::BeginDestroy();
+
+	for (int i = 0; i < AffectedPlayers.Num(); i++)
+	{
+		AffectedPlayers[i]->DisableSmashAbility();
+	}
+
+	AffectedPlayers.Empty();
 }
 
 void ASmashZone::HandleSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

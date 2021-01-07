@@ -46,6 +46,7 @@ FBallTrajectoryData UBallAimingFunctionLibrary::GenerateTrajectoryData(FTrajecto
 	//Set any velocity modifier rules
 	TrajectoryData.DistanceModifierRules = TrajParams.DistanceModifierRules;
 	TrajectoryData.AdjustmentModifierRules = TrajParams.AdjustmentModifierRules;
+	TrajectoryData.SmashZoneRules = TrajParams.SmashZoneRules;
 
 	FVector ShotDirectPath = EndLocation - StartLocation;
 	ShotDirectPath.Z = 0;
@@ -292,6 +293,35 @@ bool UBallAimingFunctionLibrary::ValidateTrajectorySplineComp(FBallTrajectoryDat
 	}
 
 	return true;
+}
+
+bool UBallAimingFunctionLibrary::GetSmashZoneLocationOnTrajectory(FVector& OutSmashZoneLocation, FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp)
+{
+	//Test the spline height on an interval starting from the halfway point until the height is lower than the smash zone height.  
+	//If within some threshold return that location.  If we've passed the height without being within threshold, average the last 2 locations
+
+	if (!TrajectoryData.SmashZoneRules.bSpawnSmashZone)
+	{
+		return false;
+	}
+
+	//The smash zone should only spawn on the back half of the trajectory, as the ball is descending
+	static const int StartingIndex = 11;
+	
+	FVector StartingLocation = SplineComp->GetWorldLocationAtSplinePoint(StartingIndex);
+
+	for (int i = StartingIndex; i < TrajectoryData.TrajectoryPoints.Num(); i++)
+	{
+		FVector LocationAtIndex = SplineComp->GetWorldLocationAtSplinePoint(i);
+
+		if (LocationAtIndex.Z <= TrajectoryData.SmashZoneRules.HeightToSpawnAt)
+		{
+			OutSmashZoneLocation = FVector(LocationAtIndex.X, LocationAtIndex.Y, 0.f);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 FTrajectoryParams UBallAimingFunctionLibrary::RetrieveTrajectoryParamsFromDataProvider(FGameplayTag SourceTag, FGameplayTagContainer argContextTags, FGameplayTag argShotTypeTag, FGameplayTag FallbackTypeTag)

@@ -22,6 +22,8 @@ public:
 
 	static bool ValidateTrajectorySplineComp(FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
 
+	static bool GetSmashZoneLocationOnTrajectory(FVector& OutSmashZoneLocation, FBallTrajectoryData& TrajectoryData, USplineComponent* SplineComp);
+
 	static FTrajectoryParams RetrieveTrajectoryParamsFromDataProvider(FGameplayTag SourceTag, FGameplayTagContainer ContextTags, FGameplayTag ShotTypeTag, FGameplayTag FallbackTypeTag);
 
 	static void DebugVisualizeSplineComp(USplineComponent* SplineComp);

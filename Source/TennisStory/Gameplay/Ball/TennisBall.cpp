@@ -6,6 +6,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Gameplay/Ball/BallMovementComponent.h"
+#include "Gameplay/Abilities/SmashZone.h"
 #include "Components/SplineComponent.h"
 #include "Components/DecalComponent.h"
 #include "Player/Components/BallStrikingComponent.h"
@@ -86,6 +87,8 @@ void ATennisBall::BeginPlay()
 	DistanceIndicatorComp->VisualComp = DistanceIndicatorRing;
 	DistanceIndicatorComp->OnTargetReached().AddUObject(this, &ATennisBall::HandleDistanceIndicatorTargetReached);
 	DynamicBallMat = BallMesh->CreateDynamicMaterialInstance(0);
+
+	BallMovementComp->OnFirstBounce().AddUObject(this, &ATennisBall::HandleFirstBounce);
 }
 
 bool ATennisBall::IsInServiceState()
@@ -169,11 +172,28 @@ void ATennisBall::Multicast_FollowPath_Implementation(FBallTrajectoryData Trajec
 
 	if (HasAuthority())
 	{
+		if (ActiveSmashZone.IsValid())
+		{
+			ActiveSmashZone->Destroy();
+		}
+
 		FVector BounceLocation = TrajectoryData.TrajectoryPoints[TrajectoryData.BounceLocationIndex].Location;
 		BounceLocation.Z = 0;
 
 		//NOTE(achester): Purposely disabling bounce location indicator after implementing swing forgiveness
 		//Multicast_SpawnBounceLocationParticleEffect(BounceLocation);
+
+		if (TrajectoryData.SmashZoneRules.bSpawnSmashZone && SmashZoneClass)
+		{
+			FVector SpawnLocation;
+			bool bFoundSmashZoneLocation = UBallAimingFunctionLibrary::GetSmashZoneLocationOnTrajectory(SpawnLocation, TrajectoryData, BallTrajectorySplineComp);
+
+			if (bFoundSmashZoneLocation)
+			{
+				FRotator SpawnRotation = FRotator::ZeroRotator;
+				ActiveSmashZone = Cast<ASmashZone>(GetWorld()->SpawnActor(SmashZoneClass, &SpawnLocation, &SpawnRotation));
+			}
+		}
 	}
 
 	ATennisStoryGameState* TSGameState = GetWorld()->GetGameState<ATennisStoryGameState>();
@@ -220,6 +240,12 @@ void ATennisBall::OnRep_BallState()
 		if (DistanceIndicatorComp->IsVisualizingDistance())
 		{
 			DistanceIndicatorComp->StopVisualizingDistance();
+		}
+
+		if (ActiveSmashZone.IsValid())
+		{
+			ActiveSmashZone->Destroy();
+			ActiveSmashZone = nullptr;
 		}
 	}
 }
@@ -270,6 +296,15 @@ void ATennisBall::HandleDistanceIndicatorTargetReached()
 	if (DynamicBallMat)
 	{
 		DynamicBallMat->SetScalarParameterValue(TEXT("Emission"), 30.f);
+	}
+}
+
+void ATennisBall::HandleFirstBounce()
+{
+	if (ActiveSmashZone.IsValid())
+	{
+		ActiveSmashZone->Destroy();
+		ActiveSmashZone = nullptr;
 	}
 }
 

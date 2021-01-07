@@ -13,6 +13,8 @@ class USplineComponent;
 class USplineMeshComponent;
 class UCurveFloat;
 
+DECLARE_EVENT(UBallMovementComponent, FFirstBounceEvent);
+
 UENUM(BlueprintType)
 enum class EBallMovementState : uint8
 {
@@ -65,6 +67,8 @@ public:
 	}
 
 	const FBallTrajectoryData& GetCurrentTrajectoryData() { return CurrentTrajectoryData; }
+
+	FFirstBounceEvent& OnFirstBounce() { return FirstBounceEvent; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -131,6 +135,8 @@ protected:
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+	FFirstBounceEvent FirstBounceEvent;
 
 	friend class ATennisBall;
 };

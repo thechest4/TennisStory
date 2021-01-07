@@ -12,6 +12,7 @@
 class ATennisStoryCharacter;
 class UDistanceIndicatorComponent;
 class USphereComponent;
+class ASmashZone;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBallOutOfBoundsEvent, EBoundsContext, FVector)
 DECLARE_MULTICAST_DELEGATE(FOnBallHitBounceLimitEvent)
@@ -151,6 +152,13 @@ protected:
 
 	UFUNCTION()
 	void HandleDistanceIndicatorTargetReached();
+
+	UPROPERTY(EditAnywhere, Category = "Smash Zone")
+	TSubclassOf<ASmashZone> SmashZoneClass;
+
+	TWeakObjectPtr<ASmashZone> ActiveSmashZone;
+
+	void HandleFirstBounce();
 
 private:
 	static FOnBallSpawnedEvent BallSpawnedEvent;
